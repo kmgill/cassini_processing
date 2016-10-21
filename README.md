@@ -83,4 +83,14 @@ Convert all files in current directory using RED GRN and BL1 filters (excluding 
 match.py RED GRN BL1
 ```
 
+Convert all files in current directory of Titan:
+```
+match.py TITAN
+```
+
+Convert specified files (file names can be partial):
+```
+match.py W1677421231 W1677421264 W1677421297
+```
+
 
