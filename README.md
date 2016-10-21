@@ -66,3 +66,21 @@ Convert an entire directory, limiting to Enceladus images taken in RED, GRN, and
 ```
 find . -name "*.LBL" -exec process.py -d '{}' -t ENCELADUS -f RED GRN BL1 \;
 ```
+
+
+### match.py
+Computes min/max values for a group of cube files and exports them to tiff file with a matching stretch. This is used to ensure a correct luminance across filters. Any command line values are used to filter the files included in the processes.
+
+#### Examples:
+
+Convert all files in current directory:
+```
+match.py
+```
+
+Convert all files in current directory using RED GRN and BL1 filters (excluding other filters):
+```
+match.py RED GRN BL1
+```
+
+
