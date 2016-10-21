@@ -42,12 +42,6 @@ def get_field_value(lbl_file_name, keyword, objname=None):
         cmd += ["objname=%s"%objname]
     s = subprocess.check_output(cmd)
     return s.strip()
-    #with open(lblFilename, "r") as f:
-    #    for line in f.readlines():
-    #        parts = line.split(" = ")
-    #        if parts[0].strip() == field:
-    #            return parts[1].strip().replace("\"", "")
-
 
 
 if __name__ == "__main__":
