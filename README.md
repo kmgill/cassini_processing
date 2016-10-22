@@ -102,3 +102,19 @@ For example, to download coiss_2099.tar.gz use:
 ```
 get_coiss.sh 2099
 ```
+
+
+### compose_rgb.py
+Process three PDS files and compose them into a single color image.
+
+```
+usage: compose_rgb.py [-h] -r RED -g GREEN -b BLUE [-v]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -r RED, --red RED     Data label for the red channel
+  -g GREEN, --green GREEN
+                        Data label for the green channel
+  -b BLUE, --blue BLUE  Data label for the blue channel
+  -v, --verbose         Verbose output (includes ISIS3 command output)
+```
