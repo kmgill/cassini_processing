@@ -93,4 +93,10 @@ Convert specified files (file names can be partial):
 match.py W1677421231 W1677421264 W1677421297
 ```
 
+### get_coiss.sh
+Simple script to fetch ISS archives. Specified by archive number.
 
+For example, to download coiss_2099.tar.gz use:
+```
+get_coiss.sh 2099
+```
