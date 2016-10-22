@@ -3,7 +3,9 @@ Scripts for Cassini Imagery Processing
 
 ## Overview
 
-This is a collection of Python and shell scripts for processing Cassini imagery from their PDS archived IMG files into either ISIS3 cube files or TIFFs. The scripts require a working and initialized installation of the USGS ISIS3 software from https://isis.astrogeology.usgs.gov/. Ensure the Cassini kernels are all installed.
+This is a collection of Python and shell scripts for processing Cassini imagery from their PDS archived IMG files into both ISIS3 cube files and TIFFs. The scripts require a working and initialized installation of the USGS ISIS3 software from https://isis.astrogeology.usgs.gov/. Ensure the Cassini kernels are all installed.
+
+These alone do not produce the lovely full-color images you see as the finished products. Images output by these scripts would likely require additional work in Photoshop (or your favorite photo editing software). A working knowledge of ISIS3 also comes in handy.
 
 ## Scripts
 
