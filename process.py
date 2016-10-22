@@ -7,6 +7,8 @@ import datetime
 import glob
 import argparse
 
+from isis3 import utils
+
 def printProgress (iteration, total, prefix = '', suffix = '', decimals = 1, barLength = 100):
     """
     Call in a loop to create terminal progress bar
@@ -35,13 +37,6 @@ def guess_from_filename_prefix(filename):
     if os.path.exists("%s_1.LBL"%filename):
         return "%s_1.LBL"%filename
 
-
-def get_field_value(lbl_file_name, keyword, objname=None):
-    cmd = ["getkey", "from=%s"%lbl_file_name, "keyword=%s"%keyword]
-    if objname is not None:
-        cmd += ["objname=%s"%objname]
-    s = subprocess.check_output(cmd)
-    return s.strip()
 
 
 if __name__ == "__main__":
@@ -78,50 +73,37 @@ if __name__ == "__main__":
     else:
         print "Processing", source
 
-    target = get_field_value(source, "TARGET_NAME").replace(" ", "_")
+    target = utils.get_target(source)
     print "Target:", target
 
-    product_id = get_field_value(source, "PRODUCT_ID")[2:-4]
+    product_id = utils.get_product_id(source)
     print "Product Id:", product_id
 
     print "Ringplane shape:", ("Yes" if is_ringplane else "No")
 
-    filters = get_field_value(source, "FILTER_NAME")
-    pattern = re.compile(r"^(?P<f1>[A-Z0-9]*)\, (?P<f2>[A-Z0-9]*)")
-    match = pattern.match(filters)
-    if match is not None:
-        filter1 = match.group("f1")
-        filter2 = match.group("f2")
-    else:
-        filter1 = filter2 = "UNK"
+    filter1, filter2 = utils.get_filters(source)
 
     print "Filter #1:", filter1
     print "Filter #2:", filter2
 
-    lines = get_field_value(source, "LINES", objname="IMAGE")
+    lines = utils.get_num_lines(source)
     print "Lines:", lines
 
-    line_samples = get_field_value(source, "LINE_SAMPLES", objname="IMAGE")
+    line_samples = utils.get_num_line_samples(source)
     print "Samples per line:", line_samples
 
-    sample_bits = get_field_value(source, "SAMPLE_BITS", objname="IMAGE")
+    sample_bits = utils.get_sample_bits(source)
     print "Bits per sample:", sample_bits
 
-    image_date = datetime.datetime.strptime(get_field_value(source, "IMAGE_TIME"), '%Y-%jT%H:%M:%S.%f')
+    image_date = utils.get_image_time(source)
     print "Image Date:", image_date
 
-    out_file_tiff = "{product_id}_{target}_{filter1}_{filter2}_{image_date}.tif".format(product_id=product_id,
-                                                                                        target=target,
-                                                                                        filter1=filter1,
-                                                                                        filter2=filter2,
-                                                                                        image_date=image_date.strftime('%Y-%m-%d_%H.%M.%S'))
+    out_file_base = utils.output_filename_from_label(source)
+
+    out_file_tiff = "%s.tif"%out_file_base
     print "Target TIFF:", out_file_tiff
 
-    out_file_cub = "{product_id}_{target}_{filter1}_{filter2}_{image_date}.cub".format(product_id=product_id,
-                                                                                        target=target,
-                                                                                        filter1=filter1,
-                                                                                        filter2=filter2,
-                                                                                        image_date=image_date.strftime('%Y-%m-%d_%H.%M.%S'))
+    out_file_cub = "%s.cub"%out_file_base
     print "Target ISIS3 cube:", out_file_cub
 
     if metadata_only:
@@ -146,97 +128,84 @@ if __name__ == "__main__":
 
     cmd_runner = subprocess.call if is_verbose else subprocess.check_output
 
+
     if is_verbose:
         print "Importing to cube..."
     else:
         printProgress(0, 9)
-    cmd_runner(["ciss2isis",
-                    "from=%s"%source,
-                    "to=%s/__%s_raw.cub"%(work_dir, product_id)])
+    s = utils.import_to_cube(source, "%s/__%s_raw.cub"%(work_dir, product_id))
+    if is_verbose:
+        print s
+
 
     if is_verbose:
         print "Filling in Gaps..."
     else:
         printProgress(1, 9)
-    cmd_runner(["fillgap",
-                    "from=%s/__%s_raw.cub"%(work_dir, product_id),
-                    "to=%s/__%s_fill0.cub"%(work_dir, product_id),
-                    "interp=cubic",
-                    "direction=sample"])
+    s = utils.fill_gaps("%s/__%s_raw.cub"%(work_dir, product_id),
+                        "%s/__%s_fill0.cub"%(work_dir, product_id))
+    if is_verbose:
+        print s
+
+
 
     if is_verbose:
         print "Initializing Spice..."
     else:
         printProgress(2, 9)
-    cmd_runner(["spiceinit",
-                    "from=%s/__%s_fill0.cub"%(work_dir, product_id),
-                    "shape=%s"%("ringplane" if is_ringplane else "system")]) #ringplane, "ellipsoid"
+    s = utils.init_spice("%s/__%s_fill0.cub"%(work_dir, product_id), is_ringplane)
+    if is_verbose:
+        print s
+
 
     if is_verbose:
         print "Calibrating cube..."
     else:
         printProgress(3, 9)
-    cmd_runner(["cisscal",
-                    "from=%s/__%s_fill0.cub"%(work_dir, product_id),
-                    "to=%s/__%s_cal.cub"%(work_dir, product_id),
-                    "units=intensity"])
+    s = utils.calibrate_cube("%s/__%s_fill0.cub"%(work_dir, product_id),
+                            "%s/__%s_cal.cub"%(work_dir, product_id))
+    if is_verbose:
+        print s
+
 
     if is_verbose:
         print "Running Noise Filter..."
     else:
         printProgress(4, 9)
-    cmd_runner(["noisefilter",
-                    "from=%s/__%s_cal.cub"%(work_dir, product_id),
-                    "to=%s/__%s_stdz.cub"%(work_dir, product_id),
-                    "toldef=stddev",
-                    "tolmin=2.5",
-                    "tolmax=2.5",
-                    "replace=null",
-                    "samples=5",
-                    "lines=5"])
+    s = utils.noise_filter("%s/__%s_cal.cub"%(work_dir, product_id),
+                            "%s/__%s_stdz.cub"%(work_dir, product_id))
+    if is_verbose:
+        print s
 
     if is_verbose:
         print "Filling in Nulls..."
     else:
         printProgress(5, 9)
-    cmd_runner(["lowpass",
-                    "from=%s/__%s_stdz.cub"%(work_dir, product_id),
-                    "to=%s/__%s_fill.cub"%(work_dir, product_id),
-                    "samples=3",
-                    "lines=3",
-                    "filter=outside",
-                    "null=yes",
-                    "hrs=no",
-                    "his=no",
-                    "lrs=no",
-                    "replacement=center"
-                    ])
+    s = utils.fill_nulls("%s/__%s_stdz.cub"%(work_dir, product_id),
+                        "%s/__%s_fill.cub"%(work_dir, product_id))
+    if is_verbose:
+        print s
+
 
     if is_verbose:
         print "Removing Frame-Edge Noise..."
     else:
         printProgress(6, 9)
-    cmd_runner(["trim",
-                    "from=%s/__%s_fill.cub"%(work_dir, product_id),
-                    "to=%s/%s"%(work_dir, out_file_cub),
-                    "top=2",
-                    "bottom=2",
-                    "left=2",
-                    "right=2"
-                    ])
+    s = utils.trim_edges("%s/__%s_fill.cub"%(work_dir, product_id),
+                        "%s/%s"%(work_dir, out_file_cub))
+    if is_verbose:
+        print s
+
 
     if is_verbose:
         print "Exporting TIFF..."
     else:
         printProgress(7, 9)
-    cmd_runner(["isis2std",
-                    "from=%s/%s"%(work_dir, out_file_cub),
-                    "to=%s/%s"%(work_dir, out_file_tiff),
-                    "format=tiff",
-                    "bittype=u16bit",
-                    "maxpercent=99.999"
-                    ])
-    #subprocess.call(["isis2std", "from="+f, "to="+totiff, "format=tiff", "bittype=u16bit", "stretch=manual", "minimum=%f"%minimum, "maximum=%f"%maximum])
+    s = utils.export_tiff_grayscale("%s/%s"%(work_dir, out_file_cub),
+                                    "%s/%s"%(work_dir, out_file_tiff))
+    if is_verbose:
+        print s
+
 
     if is_verbose:
         print "Cleaning up..."
