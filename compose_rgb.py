@@ -27,10 +27,13 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--red", help="Data label for the red channel", required=True, type=str)
     parser.add_argument("-g", "--green", help="Data label for the green channel", required=True, type=str)
     parser.add_argument("-b", "--blue", help="Data label for the blue channel", required=True, type=str)
+    parser.add_argument("-m", "--match", help="Force matching stretch values", action="store_true")
     parser.add_argument("-v", "--verbose", help="Verbose output (includes ISIS3 command output)", action="store_true")
     args = parser.parse_args()
 
     is_verbose = args.verbose
+
+    match_stretch = args.match
 
     red_lbl_file = args.red
     red_lbl_file = utils.guess_from_filename_prefix(red_lbl_file)
@@ -82,7 +85,7 @@ if __name__ == "__main__":
 
     output_tiff = "%s_%s_%s_%s_RGB-composed.tif"%(red_product_id, green_product_id, blue_product_id, targets)
 
-    s = utils.export_tiff_rgb(red_cub_file, green_cub_file, blue_cub_file, output_tiff, minimum=None, maximum=None)
+    s = utils.export_tiff_rgb(red_cub_file, green_cub_file, blue_cub_file, output_tiff, minimum=min, maximum=max, match_stretch=match_stretch)
 
     if is_verbose:
         print s

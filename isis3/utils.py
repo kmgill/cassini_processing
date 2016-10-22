@@ -181,7 +181,7 @@ gmin=-440408270.95628 gmax=983089162022.5
 bmin=255821068.98457 bmax=558701129942.1
 """
 
-def export_tiff_rgb(from_cube_red, from_cube_green, from_cube_blue, to_tiff, minimum=None, maximum=None):
+def export_tiff_rgb(from_cube_red, from_cube_green, from_cube_blue, to_tiff, minimum=None, maximum=None, match_stretch=False):
     cmd = ["isis2std",
                     "red=%s"%from_cube_red,
                     "green=%s"%from_cube_green,
@@ -191,7 +191,7 @@ def export_tiff_rgb(from_cube_red, from_cube_green, from_cube_blue, to_tiff, min
                     "bittype=u16bit",
                     "mode=rgb"
                     ]
-    if minimum is not None and maximum is not None:
+    if match_stretch and minimum is not None and maximum is not None:
         cmd += ["stretch=manual", "rmin=%f"%minimum, "rmax=%f"%maximum]
         cmd += ["gmin=%f"%minimum, "gmax=%f"%maximum]
         cmd += ["bmin=%f"%minimum, "bmax=%f"%maximum]
