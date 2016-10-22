@@ -9,33 +9,8 @@ import argparse
 
 from isis3 import utils
 
-def printProgress (iteration, total, prefix = '', suffix = '', decimals = 1, barLength = 100):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        barLength   - Optional  : character length of bar (Int)
-    """
-    formatStr       = "{0:." + str(decimals) + "f}"
-    percents        = formatStr.format(100 * (iteration / float(total)))
-    filledLength    = int(round(barLength * iteration / float(total)))
-    bar             = '*' * filledLength + '-' * (barLength - filledLength)
-    sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, percents, '%', suffix)),
-    if iteration == total:
-        sys.stdout.write('\n')
-    sys.stdout.flush()
 
-def guess_from_filename_prefix(filename):
-    if os.path.exists(filename):
-        return filename
-    if os.path.exists("%s.LBL"%filename):
-        return "%s.LBL"%filename
-    if os.path.exists("%s_1.LBL"%filename):
-        return "%s_1.LBL"%filename
+
 
 
 
@@ -52,7 +27,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     source = args.data
-    source = guess_from_filename_prefix(source)
+    source = utils.guess_from_filename_prefix(source)
 
     is_ringplane = args.ringplane
     metadata_only = args.metadata
@@ -121,99 +96,6 @@ if __name__ == "__main__":
         print "Filter mismatch, exiting."
         sys.exit(0)
 
-    # Now, we start actually doing stuff
-    work_dir = "%s/work"%source_dirname
-    if not os.path.exists(work_dir):
-        os.mkdir(work_dir)
-
-    cmd_runner = subprocess.call if is_verbose else subprocess.check_output
-
-
-    if is_verbose:
-        print "Importing to cube..."
-    else:
-        printProgress(0, 9)
-    s = utils.import_to_cube(source, "%s/__%s_raw.cub"%(work_dir, product_id))
-    if is_verbose:
-        print s
-
-
-    if is_verbose:
-        print "Filling in Gaps..."
-    else:
-        printProgress(1, 9)
-    s = utils.fill_gaps("%s/__%s_raw.cub"%(work_dir, product_id),
-                        "%s/__%s_fill0.cub"%(work_dir, product_id))
-    if is_verbose:
-        print s
-
-
-
-    if is_verbose:
-        print "Initializing Spice..."
-    else:
-        printProgress(2, 9)
-    s = utils.init_spice("%s/__%s_fill0.cub"%(work_dir, product_id), is_ringplane)
-    if is_verbose:
-        print s
-
-
-    if is_verbose:
-        print "Calibrating cube..."
-    else:
-        printProgress(3, 9)
-    s = utils.calibrate_cube("%s/__%s_fill0.cub"%(work_dir, product_id),
-                            "%s/__%s_cal.cub"%(work_dir, product_id))
-    if is_verbose:
-        print s
-
-
-    if is_verbose:
-        print "Running Noise Filter..."
-    else:
-        printProgress(4, 9)
-    s = utils.noise_filter("%s/__%s_cal.cub"%(work_dir, product_id),
-                            "%s/__%s_stdz.cub"%(work_dir, product_id))
-    if is_verbose:
-        print s
-
-    if is_verbose:
-        print "Filling in Nulls..."
-    else:
-        printProgress(5, 9)
-    s = utils.fill_nulls("%s/__%s_stdz.cub"%(work_dir, product_id),
-                        "%s/__%s_fill.cub"%(work_dir, product_id))
-    if is_verbose:
-        print s
-
-
-    if is_verbose:
-        print "Removing Frame-Edge Noise..."
-    else:
-        printProgress(6, 9)
-    s = utils.trim_edges("%s/__%s_fill.cub"%(work_dir, product_id),
-                        "%s/%s"%(work_dir, out_file_cub))
-    if is_verbose:
-        print s
-
-
-    if is_verbose:
-        print "Exporting TIFF..."
-    else:
-        printProgress(7, 9)
-    s = utils.export_tiff_grayscale("%s/%s"%(work_dir, out_file_cub),
-                                    "%s/%s"%(work_dir, out_file_tiff))
-    if is_verbose:
-        print s
-
-
-    if is_verbose:
-        print "Cleaning up..."
-    else:
-        printProgress(8, 9)
-    map(os.unlink, glob.glob('%s/__%s*.cub'%(work_dir, product_id)))
-
-    if not is_verbose:
-        printProgress(9, 9)
+    utils.process_pds_date_file(source, is_ringplane=is_ringplane, is_verbose=is_verbose)
 
     print "Done"
