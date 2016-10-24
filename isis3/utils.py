@@ -40,22 +40,33 @@ def is_isis3_initialized():
     return True
 
 
-def get_field_value(lbl_file_name, keyword, objname=None):
+def get_field_value(lbl_file_name, keyword, objname=None, grpname=None):
     cmd = ["getkey", "from=%s"%lbl_file_name, "keyword=%s"%keyword]
     if objname is not None:
         cmd += ["objname=%s"%objname]
+    if grpname is not None:
+        cmd += ["grpname=%s"%grpname]
     s = subprocess.check_output(cmd)
     return s.strip()
 
 def get_product_id(lbl_file_name):
     return get_field_value(lbl_file_name, "PRODUCT_ID")[2:-4]
 
-def get_target(lbl_file_name):
-    return get_field_value(lbl_file_name, "TARGET_NAME").replace(" ", "_")
+def get_target(file_name):
+    if file_name[-3:].upper() == "LBL":
+        return get_field_value(file_name, "TARGET_NAME").replace(" ", "_")
+    elif file_name[-3:].upper() == "CUB":
+        return get_field_value(file_name, keyword="TargetName", grpname="Instrument")
+    else:
+        raise Exception("Unrecognized/Unsupported file")
 
-def get_filters(lbl_file_name):
-    filters = get_field_value(lbl_file_name, "FILTER_NAME")
-    pattern = re.compile(r"^(?P<f1>[A-Z0-9]*)\, (?P<f2>[A-Z0-9]*)")
+def get_filters(file_name):
+    if file_name[-3:].upper() == "LBL":
+        filters = get_field_value(file_name, "FILTER_NAME")
+        pattern = re.compile(r"^(?P<f1>[A-Z0-9]*)\, (?P<f2>[A-Z0-9]*)")
+    elif file_name[-3:].upper() == "CUB":
+        filters = get_field_value(file_name, keyword="FilterName", grpname="BandBin")
+        pattern = re.compile(r"^(?P<f1>[A-Z0-9]*)/(?P<f2>[A-Z0-9]*)")
     match = pattern.match(filters)
     if match is not None:
         filter1 = match.group("f1")
