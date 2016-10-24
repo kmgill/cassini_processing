@@ -14,12 +14,13 @@ These alone do not produce the lovely full-color images you see as the finished 
 Performs the nessessary steps for converting a PDS IMG file into a calibrated Tiff file. Tiff files are created as unsigned 16 bit grayscale. Files are output in a [PRODUCT_ID]\_[TARGET]\_[FILTER 1]\_[FILTER 2]\_[IMAGE DATE/TIME].(cub|tif) format (i.e. "N1674923569_SATURN_HAL_CL2_2011-01-28_15.45.16.tif").
 
 ```
-usage: process.py [-h] -d DATA [-r] [-m] [-f FILTER [FILTER ...]] [-t TARGET]
-                  [-s] [-v]
+usage: process.py [-h] -d DATA [DATA ...] [-r] [-m] [-f FILTER [FILTER ...]]
+                  [-t TARGET] [-s] [-v]
 
 optional arguments:
   -h, --help            show this help message and exit
-  -d DATA, --data DATA  Source PDS dataset
+  -d DATA [DATA ...], --data DATA [DATA ...]
+                        Source PDS dataset
   -r, --ringplane       Input data is of a ring plane
   -m, --metadata        Print metadata and exit
   -f FILTER [FILTER ...], --filter FILTER [FILTER ...]
@@ -28,8 +29,8 @@ optional arguments:
                         Require target or exit
   -s, --skipexisting    Skip processing if output already exists
   -v, --verbose         Verbose output (includes ISIS3 command output)
-```
 
+```
 
 
 #### Examples:
@@ -66,7 +67,7 @@ process.py -d N1674923569_1.LBL -r
 
 Convert an entire directory, limiting to Enceladus images taken in RED, GRN, and BL1:
 ```
-find . -name "*.LBL" -exec process.py -d '{}' -t ENCELADUS -f RED GRN BL1 \;
+process.py -d *.LBL -t ENCELADUS -f RED GRN BL
 ```
 
 
