@@ -108,7 +108,7 @@ get_coiss.sh 2099
 Process three PDS files and compose them into a single color image.
 
 ```
-usage: compose_rgb.py [-h] -r RED -g GREEN -b BLUE [-v]
+usage: compose_rgb.py [-h] -r RED -g GREEN -b BLUE [-m] [-v]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -116,5 +116,12 @@ optional arguments:
   -g GREEN, --green GREEN
                         Data label for the green channel
   -b BLUE, --blue BLUE  Data label for the blue channel
+  -m, --match           Force matching stretch values
   -v, --verbose         Verbose output (includes ISIS3 command output)
+```
+
+#### Examples:
+Process three files and create a RGB output using shared stretch min/max values:
+```
+compose_rgb.py -r W1677421297_1.LBL -g W1677421264_1.LBL -b W1677421231_1.LBL -m
 ```
