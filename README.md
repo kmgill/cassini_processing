@@ -140,7 +140,7 @@ optional arguments:
 
 #### Examples:
 ```
-cissident.py *.LBL
+cissident.py -d *.LBL
 ```
 Prints output similar to the following, with columns as Target, Filter \#1, Filter \#2, Image Time, Width, Height, Bits per pixel, Camera, and File.
 ```
