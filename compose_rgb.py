@@ -59,15 +59,15 @@ if __name__ == "__main__":
         print "Processing", blue_lbl_file
 
 
-    utils.process_pds_date_file(red_lbl_file, is_ringplane=False, is_verbose=is_verbose, skip_if_cub_exists=True)
+    utils.process_pds_data_file(red_lbl_file, is_ringplane=False, is_verbose=is_verbose, skip_if_cub_exists=True)
     red_cub_file = utils.output_cub_from_label(red_lbl_file)
     r_min, r_max = utils.get_data_min_max(red_cub_file)
 
-    utils.process_pds_date_file(green_lbl_file, is_ringplane=False, is_verbose=is_verbose, skip_if_cub_exists=True)
+    utils.process_pds_data_file(green_lbl_file, is_ringplane=False, is_verbose=is_verbose, skip_if_cub_exists=True)
     green_cub_file = utils.output_cub_from_label(green_lbl_file)
     g_min, g_max = utils.get_data_min_max(green_cub_file)
 
-    utils.process_pds_date_file(blue_lbl_file, is_ringplane=False, is_verbose=is_verbose, skip_if_cub_exists=True)
+    utils.process_pds_data_file(blue_lbl_file, is_ringplane=False, is_verbose=is_verbose, skip_if_cub_exists=True)
     blue_cub_file = utils.output_cub_from_label(blue_lbl_file)
     b_min, b_max = utils.get_data_min_max(blue_cub_file)
 

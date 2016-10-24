@@ -96,6 +96,6 @@ if __name__ == "__main__":
         print "Filter mismatch, exiting."
         sys.exit(0)
 
-    utils.process_pds_date_file(source, is_ringplane=is_ringplane, is_verbose=is_verbose)
+    utils.process_pds_data_file(source, is_ringplane=is_ringplane, is_verbose=is_verbose)
 
     print "Done"

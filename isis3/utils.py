@@ -222,13 +222,14 @@ def guess_from_filename_prefix(filename):
         return "%s_1.LBL"%filename
 
 
-def process_pds_date_file(lbl_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False):
+def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False):
     product_id = get_product_id(lbl_file_name)
 
     out_file_tiff = output_tiff_from_label(lbl_file_name)
     out_file_cub = output_cub_from_label(lbl_file_name)
 
     if skip_if_cub_exists and os.path.exists(out_file_cub):
+        print "File %s exists, skipping processing"%out_file_cub
         return
 
     source_dirname = os.path.dirname(lbl_file_name)
@@ -303,7 +304,7 @@ def process_pds_date_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
     else:
         printProgress(6, 9)
     s = trim_edges("%s/__%s_fill.cub"%(work_dir, product_id),
-                        "%s/%s"%(work_dir, out_file_cub))
+                        "%s"%(out_file_cub))
     if is_verbose:
         print s
 
@@ -312,8 +313,8 @@ def process_pds_date_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
         print "Exporting TIFF..."
     else:
         printProgress(7, 9)
-    s = export_tiff_grayscale("%s/%s"%(work_dir, out_file_cub),
-                                    "%s/%s"%(work_dir, out_file_tiff))
+    s = export_tiff_grayscale("%s"%(out_file_cub),
+                                    "%s"%(out_file_tiff))
     if is_verbose:
         print s
 
