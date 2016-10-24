@@ -125,3 +125,31 @@ Process three files and create a RGB output using shared stretch min/max values:
 ```
 compose_rgb.py -r W1677421297_1.LBL -g W1677421264_1.LBL -b W1677421231_1.LBL -m
 ```
+
+### cissident.py
+Prints out image metadata for a list of label files
+
+```
+usage: cissident.py [-h] -d DATA [DATA ...]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d DATA [DATA ...], --data DATA [DATA ...]
+                        PDS Label Files
+```
+
+#### Examples:
+```
+cissident.py *.LBL
+```
+Prints output similar to the following, with columns as Target, Filter \#1, Filter \#2, Image Time, Width, Height, Bits per pixel, Camera, and File.
+```
+                    TITAN|  CL1|  CB3|   2011-04-20_12.28.45| 1024| 1024|  16|  Narrow| N1681996622_1.LBL
+                    TITAN|  CL1|  MT1|   2011-04-20_12.45.45| 1024| 1024|  16|  Narrow| N1681997642_1.LBL
+                    TITAN|  CB3|  CL2|   2011-04-19_11.56.10| 1024| 1024|   8|    Wide| W1681908267_1.LBL
+                    TITAN|  CL1|  VIO|   2011-04-19_11.56.58| 1024| 1024|   8|    Wide| W1681908315_1.LBL
+                    TITAN|  CL1|  BL1|   2011-04-19_11.57.31| 1024| 1024|   8|    Wide| W1681908348_1.LBL
+                    TITAN|  CL1|  GRN|   2011-04-19_11.58.04| 1024| 1024|   8|    Wide| W1681908381_1.LBL
+                    TITAN|  CL1|  RED|   2011-04-19_11.58.37| 1024| 1024|   8|    Wide| W1681908414_1.LBL
+                    TITAN|  CB2|  CL2|   2011-04-19_12.13.44| 1024| 1024|   8|    Wide| W1681909321_1.LBL
+```
