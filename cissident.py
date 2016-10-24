@@ -32,6 +32,11 @@ def printInfo(lbl_file_name):
 
 
 if __name__ == "__main__":
+    try:
+        utils.is_isis3_initialized()
+    except:
+        print "ISIS3 has not been initialized. Please do so. Now."
+        sys.exit(1)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--data", help="PDS Label Files", required=True, type=str, nargs='+')

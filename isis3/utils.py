@@ -29,6 +29,17 @@ def printProgress (iteration, total, prefix = '', suffix = '', decimals = 1, bar
         sys.stdout.write('\n')
     sys.stdout.flush()
 
+"""
+Note: Probably need a better check than just looking at two environment variables
+"""
+def is_isis3_initialized():
+    if not "ISISROOT" in os.environ:
+        raise Exception("ISISROOT not set!")
+    if not "ISIS3DATA" in os.environ:
+        raise Exception("ISIS3DATA not set!")
+    return True
+
+
 def get_field_value(lbl_file_name, keyword, objname=None):
     cmd = ["getkey", "from=%s"%lbl_file_name, "keyword=%s"%keyword]
     if objname is not None:
@@ -247,7 +258,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
     if is_verbose:
         print "Importing to cube..."
     else:
-        printProgress(0, 9)
+        printProgress(0, 9, prefix="%s: "%lbl_file_name)
     s = import_to_cube(lbl_file_name, "%s/__%s_raw.cub"%(work_dir, product_id))
     if is_verbose:
         print s
@@ -256,7 +267,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
     if is_verbose:
         print "Filling in Gaps..."
     else:
-        printProgress(1, 9)
+        printProgress(1, 9, prefix="%s: "%lbl_file_name)
     s = fill_gaps("%s/__%s_raw.cub"%(work_dir, product_id),
                         "%s/__%s_fill0.cub"%(work_dir, product_id))
     if is_verbose:
@@ -267,7 +278,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
     if is_verbose:
         print "Initializing Spice..."
     else:
-        printProgress(2, 9)
+        printProgress(2, 9, prefix="%s: "%lbl_file_name)
     s = init_spice("%s/__%s_fill0.cub"%(work_dir, product_id), is_ringplane)
     if is_verbose:
         print s
@@ -276,7 +287,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
     if is_verbose:
         print "Calibrating cube..."
     else:
-        printProgress(3, 9)
+        printProgress(3, 9, prefix="%s: "%lbl_file_name)
     s = calibrate_cube("%s/__%s_fill0.cub"%(work_dir, product_id),
                             "%s/__%s_cal.cub"%(work_dir, product_id))
     if is_verbose:
@@ -286,7 +297,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
     if is_verbose:
         print "Running Noise Filter..."
     else:
-        printProgress(4, 9)
+        printProgress(4, 9, prefix="%s: "%lbl_file_name)
     s = noise_filter("%s/__%s_cal.cub"%(work_dir, product_id),
                             "%s/__%s_stdz.cub"%(work_dir, product_id))
     if is_verbose:
@@ -295,7 +306,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
     if is_verbose:
         print "Filling in Nulls..."
     else:
-        printProgress(5, 9)
+        printProgress(5, 9, prefix="%s: "%lbl_file_name)
     s = fill_nulls("%s/__%s_stdz.cub"%(work_dir, product_id),
                         "%s/__%s_fill.cub"%(work_dir, product_id))
     if is_verbose:
@@ -305,7 +316,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
     if is_verbose:
         print "Removing Frame-Edge Noise..."
     else:
-        printProgress(6, 9)
+        printProgress(6, 9, prefix="%s: "%lbl_file_name)
     s = trim_edges("%s/__%s_fill.cub"%(work_dir, product_id),
                         "%s"%(out_file_cub))
     if is_verbose:
@@ -315,7 +326,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
     if is_verbose:
         print "Exporting TIFF..."
     else:
-        printProgress(7, 9)
+        printProgress(7, 9, prefix="%s: "%lbl_file_name)
     s = export_tiff_grayscale("%s"%(out_file_cub),
                                     "%s"%(out_file_tiff))
     if is_verbose:
@@ -325,8 +336,8 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
     if is_verbose:
         print "Cleaning up..."
     else:
-        printProgress(8, 9)
+        printProgress(8, 9, prefix="%s: "%lbl_file_name)
     map(os.unlink, glob.glob('%s/__%s*.cub'%(work_dir, product_id)))
 
     if not is_verbose:
-        printProgress(9, 9)
+        printProgress(9, 9, prefix="%s: "%lbl_file_name)

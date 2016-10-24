@@ -22,8 +22,13 @@ def get_target_filename_portion(red_lbl_file, green_lbl_file, blue_lbl_file):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser()
+    try:
+        utils.is_isis3_initialized()
+    except:
+        print "ISIS3 has not been initialized. Please do so. Now."
+        sys.exit(1)
 
+    parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--red", help="Data label for the red channel", required=True, type=str)
     parser.add_argument("-g", "--green", help="Data label for the green channel", required=True, type=str)
     parser.add_argument("-b", "--blue", help="Data label for the blue channel", required=True, type=str)
