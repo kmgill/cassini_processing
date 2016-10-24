@@ -66,6 +66,9 @@ def get_num_line_samples(lbl_file_name):
 def get_sample_bits(lbl_file_name):
     return int(get_field_value(lbl_file_name, "SAMPLE_BITS", objname="IMAGE"))
 
+def get_instrument_id(lbl_file_name):
+    return get_field_value(lbl_file_name, "INSTRUMENT_ID")
+
 def output_filename_from_label(lbl_file_name):
     product_id = get_product_id(lbl_file_name)
     target = get_target(lbl_file_name)
