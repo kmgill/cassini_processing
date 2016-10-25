@@ -72,29 +72,43 @@ process.py -d *.LBL -t ENCELADUS -f RED GRN BL
 
 
 ### match.py
-Computes min/max values for a group of cube files and exports them to tiff file with a matching stretch. This is used to ensure a correct luminance across filters. Any command line values are used to filter the files included in the processes.
+Computes min/max values for a group of cube files and exports them to tiff file with a matching stretch. This is used to ensure a correct luminance across filters. 
+
+```
+usage: match.py [-h] -d DATA [DATA ...] [-f FILTERS [FILTERS ...]]
+                [-t TARGETS [TARGETS ...]]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d DATA [DATA ...], --data DATA [DATA ...]
+                        Source PDS dataset(s)
+  -f FILTERS [FILTERS ...], --filters FILTERS [FILTERS ...]
+                        Require filter(s) or exit
+  -t TARGETS [TARGETS ...], --targets TARGETS [TARGETS ...]
+                        Require target(s) or exit
+```
 
 #### Examples:
 
-Convert all files in current directory:
+Process all the cubes in the working directory:
 ```
-match.py
+match.py -d *.cub
 ```
-
-Convert all files in current directory using RED GRN and BL1 filters (excluding other filters):
+Process a set of specific files:
 ```
-match.py RED GRN BL1
-```
-
-Convert all files in current directory of Titan:
-```
-match.py TITAN
+match.py -d N1684428714_TITAN_CL1_GRN_2011-05-18_16.03.21.cub N1684686374_TITAN_RED_CL2_2011-05-21_15.37.40.cub N1684686408_TITAN_CL1_GRN_2011-05-21_15.38.14.cub 
 ```
 
-Convert specified files (file names can be partial):
+Process all the cubes in the working directory that target Titan:
 ```
-match.py W1677421231 W1677421264 W1677421297
+match.py -d *.cub -t titan
 ```
+
+Process all the cubes in the working directory that target Titan and use RED/GRN/BL1 filters:
+```
+match.py -d *.cub -t titan -f RED GRN BL1
+```
+
 
 ### get_coiss.sh
 Simple script to fetch ISS archives. Specified by archive number.
@@ -131,7 +145,7 @@ compose_rgb.py -r W1677421297_1.LBL -g W1677421264_1.LBL -b W1677421231_1.LBL -m
 Prints out image metadata for a list of label files
 
 ```
-usage: cissident.py [-h] -d DATA [DATA ...]
+usage: cissident.py [-h] [-d DATA [DATA ...]]
 
 optional arguments:
   -h, --help            show this help message and exit
