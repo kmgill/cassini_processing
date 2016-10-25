@@ -223,16 +223,6 @@ def export_tiff_grayscale(from_cube, to_tiff, minimum=None, maximum=None):
     s = subprocess.check_output(cmd)
     return s
 
-"""
-isis2std red=W1677421297_SATURN_CL1_RED_2011-02-26_13.33.49.cub
-green=W1677421264_SATURN_CL1_GRN_2011-02-26_13.33.16.cub
-blue=W1677421231_SATURN_CL1_BL1_2011-02-26_13.32.43.cub
-to=SATURN_RGB_2011-02-26_13.33.49.tif
-mode=rgb format=tiff bittype=u16bit
-stretch=manual rmin=420385584.164833 rmax=1089320782191.1
-gmin=-440408270.95628 gmax=983089162022.5
-bmin=255821068.98457 bmax=558701129942.1
-"""
 
 def export_tiff_rgb(from_cube_red, from_cube_green, from_cube_blue, to_tiff, minimum=None, maximum=None, match_stretch=False):
     cmd = ["isis2std",
