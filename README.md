@@ -168,3 +168,27 @@ Prints output similar to the following, with columns as Target, Filter \#1, Filt
                     TITAN|  CL1|  RED|   2011-04-19_11.58.37| 1024| 1024|   8|    Wide| W1681908414_1.LBL
                     TITAN|  CB2|  CL2|   2011-04-19_12.13.44| 1024| 1024|   8|    Wide| W1681909321_1.LBL
 ```
+
+### getmodel.py
+Downloads a simulated view of the specified image from http://space.jpl.nasa.gov/
+
+```
+usage: getmodel.py [-h] -d DATA [-f FOV] [-p PCT]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d DATA, --data DATA  Source dataset to model
+  -f FOV, --fov FOV     Field of view (angle)
+  -p PCT, --pct PCT     Body width as percentage of image
+```
+
+#### Examples:
+Fetch a simulated image for a specified dataset with defaults selected:
+```
+getmodel.py -d W1692470929_1.LBL
+```
+
+Fetch a simluated image using a custom field of view (degrees):
+```
+getmodel.py -d W1692470929_1.LBL -f 40
+```
