@@ -67,6 +67,8 @@ def get_filters(file_name):
     elif file_name[-3:].upper() == "CUB":
         filters = get_field_value(file_name, keyword="FilterName", grpname="BandBin")
         pattern = re.compile(r"^(?P<f1>[A-Z0-9]*)/(?P<f2>[A-Z0-9]*)")
+    else:
+        raise Exception("Unrecognized/Unsupported file")
     match = pattern.match(filters)
     if match is not None:
         filter1 = match.group("f1")
@@ -75,21 +77,47 @@ def get_filters(file_name):
         filter1 = filter2 = "UNK"
     return filter1, filter2
 
-def get_image_time(lbl_file_name):
-    image_time = datetime.datetime.strptime(get_field_value(lbl_file_name, "IMAGE_TIME"), '%Y-%jT%H:%M:%S.%f')
-    return image_time
+def get_image_time(file_name):
+    if file_name[-3:].upper() == "LBL":
+        image_time = get_field_value(file_name, "IMAGE_TIME")
+    elif file_name[-3:].upper() == "CUB":
+        image_time = get_field_value(file_name, "ImageTime", grpname="Instrument")
+    else:
+        raise Exception("Unrecognized/Unsupported file")
+    return datetime.datetime.strptime(image_time, '%Y-%jT%H:%M:%S.%f')
 
-def get_num_lines(lbl_file_name):
-    return int(get_field_value(lbl_file_name, "LINES", objname="IMAGE"))
 
-def get_num_line_samples(lbl_file_name):
-    return int(get_field_value(lbl_file_name, "LINE_SAMPLES", objname="IMAGE"))
+def get_num_lines(file_name):
+    if file_name[-3:].upper() == "LBL":
+        return int(get_field_value(file_name, "LINES", objname="IMAGE"))
+    elif file_name[-3:].upper() == "CUB":
+        return int(get_field_value(file_name, "Lines", objname="IsisCube", grpname="Dimensions"))
+    else:
+        raise Exception("Unrecognized/Unsupported file")
 
-def get_sample_bits(lbl_file_name):
-    return int(get_field_value(lbl_file_name, "SAMPLE_BITS", objname="IMAGE"))
+def get_num_line_samples(file_name):
+    if file_name[-3:].upper() == "LBL":
+        return int(get_field_value(file_name, "LINE_SAMPLES", objname="IMAGE"))
+    elif file_name[-3:].upper() == "CUB":
+        return int(get_field_value(file_name, "Samples", objname="IsisCube", grpname="Dimensions"))
+    else:
+        raise Exception("Unrecognized/Unsupported file")
 
-def get_instrument_id(lbl_file_name):
-    return get_field_value(lbl_file_name, "INSTRUMENT_ID")
+def get_sample_bits(file_name):
+    if file_name[-3:].upper() == "LBL":
+        return int(get_field_value(file_name, "SAMPLE_BITS", objname="IMAGE"))
+    elif file_name[-3:].upper() == "CUB":
+        return 32
+    else:
+        raise Exception("Unrecognized/Unsupported file")
+
+def get_instrument_id(file_name):
+    if file_name[-3:].upper() == "LBL":
+        return get_field_value(file_name, "INSTRUMENT_ID")
+    elif file_name[-3:].upper() == "CUB":
+        return get_field_value(file_name, "InstrumentId", grpname="Instrument")
+    else:
+        raise Exception("Unrecognized/Unsupported file")   
 
 def output_filename_from_label(lbl_file_name):
     product_id = get_product_id(lbl_file_name)

@@ -39,12 +39,10 @@ if __name__ == "__main__":
         sys.exit(1)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--data", help="PDS Label Files", required=True, type=str, nargs='+')
+    parser.add_argument("-d", "--data", help="PDS Label Files", required=False, type=str, nargs='+')
     args = parser.parse_args()
 
-    data = args.data
+    data = args.data if args.data is not None else os.listdir(".")
     for file_name in data:
-        if file_name[-3:].upper() != "LBL":
-            print "Not a label file %s"%file_name
-        else:
+        if file_name[-3:].upper() in ("LBL", "CUB"):
             printInfo(file_name)
