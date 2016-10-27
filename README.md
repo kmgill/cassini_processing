@@ -147,8 +147,20 @@ optional arguments:
 #### Examples:
 Process three files and create a RGB output using shared stretch min/max values:
 ```
-compose_rgb.py -r W1677421297_1.LBL -g W1677421264_1.LBL -b W1677421231_1.LBL -m
+compose_rgb.py -r N1713218719_1.LBL -g N1713218686_1.LBL -b N1713218653_1.LBL -m
 ```
+
+Output:
+<img src="https://raw.githubusercontent.com/kmgill/cassini_processing/master/docs/images/compose_rgb-matched.jpg" width="400">
+
+Process three files and create a RGB output, each channel independently stretched:
+```
+compose_rgb.py -r N1713218719_1.LBL -g N1713218686_1.LBL -b N1713218653_1.LBL
+```
+
+Output:
+<img src="https://raw.githubusercontent.com/kmgill/cassini_processing/master/docs/images/compose_rgb-unmatched.jpg" width="400">
+
 
 ### cissident.py
 Prints out image metadata for a list of label files
@@ -196,6 +208,11 @@ Fetch a simulated image for a specified dataset with defaults selected:
 ```
 getmodel.py -d W1692470929_1.LBL
 ```
+Original Image:
+<img src="https://raw.githubusercontent.com/kmgill/cassini_processing/master/docs/images/getmodel-actual.jpg" width="400">
+
+Modeled Image:
+<img src="https://raw.githubusercontent.com/kmgill/cassini_processing/master/docs/images/getmodel-model.jpg" width="400">
 
 Fetch a simluated image using a custom field of view (degrees):
 ```
