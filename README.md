@@ -9,6 +9,15 @@ These alone do not produce the lovely full-color images you see as the finished 
 
 ## Scripts
 
+### initcass.sh
+
+Performs initalization of ISIS3 and adds these scripts to your shell's search path. **_EDIT this file before using so it reflects your installation environment._** 
+
+To Use, 'script' it:
+```
+. /path/to/initcass.sh
+```
+
 ### process.py
 
 Performs the nessessary steps for converting a PDS IMG file into a calibrated Tiff file. Tiff files are created as unsigned 16 bit grayscale. Files are output in a [PRODUCT_ID]\_[TARGET]\_[FILTER 1]\_[FILTER 2]\_[IMAGE DATE/TIME].(cub|tif) format (i.e. "N1674923569_SATURN_HAL_CL2_2011-01-28_15.45.16.tif").
