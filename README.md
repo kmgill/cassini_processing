@@ -97,6 +97,10 @@ optional arguments:
                         Require target(s) or exit
 ```
 
+#### Output Example:
+Once mosaicked, brightness matched images will blend without requiring post-processing adjustments.
+<img src="https://raw.githubusercontent.com/kmgill/cassini_processing/master/docs/images/match-examples.jpg" width="400">
+
 #### Examples:
 
 Process all the cubes in the working directory:
