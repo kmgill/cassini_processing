@@ -108,6 +108,9 @@ if __name__ == "__main__":
         if lbl_file_name[-3:].upper() != "LBL":
             print "Not a PDS label file. Skipping '%s'"%lbl_file_name
         else:
-            process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, metadata_only, is_verbose)
+            try:
+                process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, metadata_only, is_verbose)
+            except Exception as ex:
+                print "Error processing '%s'"%lbl_file_name
 
     print_if_verbose("Done", is_verbose)

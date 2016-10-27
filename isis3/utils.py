@@ -5,6 +5,7 @@ import re
 import subprocess
 import datetime
 import glob
+import numpy as np
 
 """
 I stole this from someone on stackexchange.
@@ -49,8 +50,13 @@ def get_field_value(lbl_file_name, keyword, objname=None, grpname=None):
     s = subprocess.check_output(cmd)
     return s.strip()
 
-def get_product_id(lbl_file_name):
-    return get_field_value(lbl_file_name, "PRODUCT_ID")[2:-4]
+def get_product_id(file_name):
+    if file_name[-3:].upper() == "LBL":
+        return get_field_value(file_name, "PRODUCT_ID")[2:-4]
+    elif file_name[-3:].upper() == "CUB":
+        return get_field_value(file_name, keyword="ProductId", grpname="Archive")[2:-4]
+    else:
+        raise Exception("Unrecognized/Unsupported file")
 
 def get_target(file_name):
     if file_name[-3:].upper() == "LBL":
@@ -247,10 +253,22 @@ def export_tiff_rgb(from_cube_red, from_cube_green, from_cube_blue, to_tiff, min
 
 def get_data_min_max(from_cube):
     out = subprocess.check_output(["stats", "from=%s"%from_cube])
-    parts = out.split("\n")
-    _min = float(parts[9].split("=")[1])
-    _max = float(parts[10].split("=")[1])
-    return _min, _max
+
+    min = 0
+    max = 0
+
+    pattern = re.compile(r"^ *(?P<key>[a-zA-Z0-9]*)[ =]+(?P<value>[\-A-Z0-9.]*)")
+    for line in out.split("\n"):
+        match = pattern.match(line)
+        if match is not None:
+            key = match.group("key")
+            value = match.group("value")
+            if key == "Minimum":
+                min = float(value)
+            elif key == "Maximum":
+                max = float(value)
+    return min, max
+
 
 
 """

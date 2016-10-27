@@ -49,7 +49,7 @@ if __name__ == "__main__":
         _min, _max = utils.get_data_min_max(f)
         values.append(_min)
         values.append(_max)
-        print _min, "%f"%_max
+        print _min, _max
 
 
     minimum = np.min(values)
