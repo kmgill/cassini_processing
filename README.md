@@ -222,3 +222,15 @@ Fetch a simluated image using a custom field of view (degrees):
 ```
 getmodel.py -d W1692470929_1.LBL -f 40
 ```
+
+### cub2tiff.py
+Converts a Cassini ISS cube file into a 16 bit (unsigned integer) tiff. 
+
+```
+usage: cub2tiff.py [-h] -d DATA [DATA ...]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d DATA [DATA ...], --data DATA [DATA ...]
+                        Source cube file
+```
