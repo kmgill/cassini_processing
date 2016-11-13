@@ -21,12 +21,13 @@ def get_target_filename_portion(red_lbl_file, green_lbl_file, blue_lbl_file):
     return "_".join(targets)
 
 def process_file(input_name):
+
+    cub_file = None
     if input_name[-3:].upper() == "CUB":
         if not os.path.exists(input_name):
             print "File %s does not exist"%input_name
             raise Exception("File %s does not exist"%input_name)
-        min_value, max_value = utils.get_data_min_max(input_name)
-        return input_name, min_value, max_value
+        cub_file = input_name
     else:
         lbl_file = utils.guess_from_filename_prefix(input_name)
         if not os.path.exists(lbl_file):
@@ -37,9 +38,9 @@ def process_file(input_name):
 
         utils.process_pds_data_file(lbl_file, is_ringplane=False, is_verbose=is_verbose, skip_if_cub_exists=True)
         cub_file = utils.output_cub_from_label(lbl_file)
-        min_value, max_value = utils.get_data_min_max(cub_file)
-
-        return cub_file, min_value, max_value
+        
+    min_value, max_value = utils.get_data_min_max(cub_file)
+    return cub_file, min_value, max_value
 
 
 
