@@ -20,6 +20,29 @@ def get_target_filename_portion(red_lbl_file, green_lbl_file, blue_lbl_file):
 
     return "_".join(targets)
 
+def process_file(input_name):
+    if input_name[-3:].upper() == "CUB":
+        if not os.path.exists(input_name):
+            print "File %s does not exist"%input_name
+            raise Exception("File %s does not exist"%input_name)
+        min_value, max_value = utils.get_data_min_max(input_name)
+        return input_name, min_value, max_value
+    else:
+        lbl_file = utils.guess_from_filename_prefix(input_name)
+        if not os.path.exists(lbl_file):
+            print "File %s does not exist"%lbl_file
+            raise Exception("File %s does not exist"%lbl_file)
+        else:
+            print "Processing", lbl_file
+
+        utils.process_pds_data_file(lbl_file, is_ringplane=False, is_verbose=is_verbose, skip_if_cub_exists=True)
+        cub_file = utils.output_cub_from_label(lbl_file)
+        min_value, max_value = utils.get_data_min_max(cub_file)
+
+        return cub_file, min_value, max_value
+
+
+
 if __name__ == "__main__":
 
     try:
@@ -40,41 +63,9 @@ if __name__ == "__main__":
 
     match_stretch = args.match
 
-    red_lbl_file = args.red
-    red_lbl_file = utils.guess_from_filename_prefix(red_lbl_file)
-    if not os.path.exists(red_lbl_file):
-        print "File (red) %s does not exist"%red_lbl_file
-    else:
-        print "Processing", red_lbl_file
-
-
-
-    green_lbl_file = args.green
-    green_lbl_file = utils.guess_from_filename_prefix(green_lbl_file)
-    if not os.path.exists(green_lbl_file):
-        print "File (green) %s does not exist"%green_lbl_file
-    else:
-        print "Processing", green_lbl_file
-
-    blue_lbl_file = args.blue
-    blue_lbl_file = utils.guess_from_filename_prefix(blue_lbl_file)
-    if not os.path.exists(blue_lbl_file):
-        print "File (blue) %s does not exist"%blue_lbl_file
-    else:
-        print "Processing", blue_lbl_file
-
-
-    utils.process_pds_data_file(red_lbl_file, is_ringplane=False, is_verbose=is_verbose, skip_if_cub_exists=True)
-    red_cub_file = utils.output_cub_from_label(red_lbl_file)
-    r_min, r_max = utils.get_data_min_max(red_cub_file)
-
-    utils.process_pds_data_file(green_lbl_file, is_ringplane=False, is_verbose=is_verbose, skip_if_cub_exists=True)
-    green_cub_file = utils.output_cub_from_label(green_lbl_file)
-    g_min, g_max = utils.get_data_min_max(green_cub_file)
-
-    utils.process_pds_data_file(blue_lbl_file, is_ringplane=False, is_verbose=is_verbose, skip_if_cub_exists=True)
-    blue_cub_file = utils.output_cub_from_label(blue_lbl_file)
-    b_min, b_max = utils.get_data_min_max(blue_cub_file)
+    red_cub_file, r_min, r_max = process_file(args.red)
+    green_cub_file, g_min, g_max = process_file(args.green)
+    blue_cub_file, b_min, b_max = process_file(args.blue)
 
     a = np.array([r_min, r_max, g_min, g_max, b_min, b_max])
     min = np.min(a)
@@ -83,10 +74,10 @@ if __name__ == "__main__":
     print "Max:", max
     print "Min:", min
 
-    red_product_id = utils.get_product_id(red_lbl_file)
-    green_product_id = utils.get_product_id(green_lbl_file)
-    blue_product_id = utils.get_product_id(blue_lbl_file)
-    targets = get_target_filename_portion(red_lbl_file, green_lbl_file, blue_lbl_file)
+    red_product_id = utils.get_product_id(red_cub_file)
+    green_product_id = utils.get_product_id(green_cub_file)
+    blue_product_id = utils.get_product_id(blue_cub_file)
+    targets = get_target_filename_portion(red_cub_file, green_cub_file, blue_cub_file)
 
     output_tiff = "%s_%s_%s_%s_RGB-composed.tif"%(red_product_id, green_product_id, blue_product_id, targets)
 
