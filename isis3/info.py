@@ -1,26 +1,7 @@
 import re
 import datetime
 from isis3._core import isis_command
-
-
-def get_field_value(lbl_file_name, keyword, objname=None, grpname=None):
-    try:
-        cmd = "getkey"
-        params = {
-            "from" : lbl_file_name,
-            "keyword": keyword
-        }
-
-        if objname is not None:
-            params["objname"] = objname
-
-        if grpname is not None:
-            params["grpname"] = grpname
-
-        s = isis_command(cmd, params)
-        return s.strip()
-    except:
-        return None
+from isis3.scripting import getkey as get_field_value
 
 
 def get_product_id(file_name):

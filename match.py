@@ -8,6 +8,7 @@ import argparse
 
 
 from isis3 import utils
+import isis3.importexport as importexport
 
 if __name__ == "__main__":
 
@@ -61,4 +62,4 @@ if __name__ == "__main__":
     for f in matching_files:
         totiff = f[:-4]+".tif"
         print totiff
-        utils.export_tiff_grayscale(f, totiff, minimum=minimum, maximum=maximum)
+        importexport.isis2std_grayscale(f, totiff, minimum=minimum, maximum=maximum)

@@ -9,7 +9,8 @@ import argparse
 import numpy as np
 
 from isis3 import utils
-
+import isis3.importexport as importexport
+import isis3.mathandstats as mathandstats
 
 def get_target_filename_portion(red_lbl_file, green_lbl_file, blue_lbl_file):
     target_red = utils.get_target(red_lbl_file)
@@ -39,7 +40,7 @@ def process_file(input_name):
         utils.process_pds_data_file(lbl_file, is_ringplane=False, is_verbose=is_verbose, skip_if_cub_exists=True)
         cub_file = utils.output_cub_from_label(lbl_file)
         
-    min_value, max_value = utils.get_data_min_max(cub_file)
+    min_value, max_value = mathandstats.get_data_min_max(cub_file)
     return cub_file, min_value, max_value
 
 
@@ -82,7 +83,7 @@ if __name__ == "__main__":
 
     output_tiff = "%s_%s_%s_%s_RGB-composed.tif"%(red_product_id, green_product_id, blue_product_id, targets)
 
-    s = utils.export_tiff_rgb(red_cub_file, green_cub_file, blue_cub_file, output_tiff, minimum=min, maximum=max, match_stretch=match_stretch)
+    s = importexport.isis2std_rgb(red_cub_file, green_cub_file, blue_cub_file, output_tiff, minimum=min, maximum=max, match_stretch=match_stretch)
 
     if is_verbose:
         print s

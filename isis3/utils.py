@@ -10,6 +10,13 @@ import numpy as np
 import isis3.info as info
 from _core import isis_command
 
+import isis3.cassini as cissisis
+import isis3.cameras as cameras
+import isis3.filters as filters
+import isis3.trimandmask as trimandmask
+import isis3.mathandstats as mathandstats
+import isis3.importexport as importexport
+
 """
 I stole this from someone on stackexchange.
 """
@@ -68,128 +75,11 @@ def output_cub_from_label(lbl_file_name):
     return out_file_cub
 
 def import_to_cube(lbl_file_name, to_cube):
-    s = isis_command("ciss2isis", {"from":lbl_file_name, "to": to_cube})
-    return s
-
-def fill_gaps(from_cube, to_cube):
-    s = isis_command("fillgap", {"from":from_cube, "to": to_cube, "interp": "cubic", "direction": "sample"})
-    return s
-
-def init_spice(from_cube, is_ringplane=False):
-    shape = "ringplane" if is_ringplane else "system"
-    s = isis_command("spiceinit", {"from": from_cube, "shape": shape})
-    return s
+    return cissisis.ciss2isis(lbl_file_name, to_cube)
 
 def calibrate_cube(from_cube, to_cube):
-    s = isis_command("cisscal", {"from": from_cube, "to": to_cube, "units": "intensity"})
-    return s
+    return cissisis.cisscal(from_cube, to_cube, units="intensity")
 
-def noise_filter(from_cube, to_cube):
-    s = isis_command("noisefilter", {
-        "from": from_cube,
-        "to": to_cube,
-        "toldef": "stddev",
-        "tolmin": 2.5,
-        "tolmax": 2.5,
-        "replace": "null",
-        "samples": 5,
-        "lines": 5
-    })
-    return s
-
-def fill_nulls(from_cube, to_cube):
-    s = isis_command("lowpass", {
-        "from": from_cube,
-        "to": to_cube,
-        "samples": 3,
-        "lines": 3,
-        "filter": "outside",
-        "null": "yes",
-        "hrs": "no",
-        "his": "no",
-        "lrs": "no",
-        "replacement": "center"
-    })
-    return s
-
-def trim_edges(from_cube, to_cube):
-    s = isis_command("trim", {
-        "from": from_cube,
-        "to": to_cube,
-        "top": 2,
-        "bottom": 2,
-        "left": 2,
-        "right": 2
-    })
-    return s
-
-def export_tiff_grayscale(from_cube, to_tiff, minimum=None, maximum=None):
-    cmd = "isis2std"
-    params = {
-        "from": from_cube,
-        "to": to_tiff,
-        "format": "tiff",
-        "bittype": "u16bit"
-    }
-
-    if minimum is not None and maximum is not None:
-        params["stretch"] = "manual"
-        params["minimum"] = minimum,
-        params["maximum"] = maximum
-    else:
-        params["maxpercent"] = 99.999
-
-    s = isis_command(cmd, params)
-
-    return s
-
-
-def export_tiff_rgb(from_cube_red, from_cube_green, from_cube_blue, to_tiff, minimum=None, maximum=None, match_stretch=False):
-    cmd = "isis2std"
-    params = {
-        "red": from_cube_red,
-        "green": from_cube_green,
-        "blue": from_cube_blue,
-        "to": to_tiff,
-        "format": "tiff",
-        "bittype": "u16bit",
-        "mode": "rgb"
-    }
-
-    if match_stretch and minimum is not None and maximum is not None:
-        params += {
-            "stretch": "manual",
-            "rmin": minimum,
-            "rmax": maximum,
-            "gmin": minimum,
-            "gmax": maximum,
-            "bmin": minimum,
-            "bmax": maximum
-        }
-    else:
-        params += {"maxpercent": 99.999}
-
-    s = isis_command(cmd, params)
-    return s
-
-
-def get_data_min_max(from_cube):
-    out = isis_command("stats", {"from": from_cube})
-
-    min = 0
-    max = 0
-
-    pattern = re.compile(r"^ *(?P<key>[a-zA-Z0-9]*)[ =]+(?P<value>[\-A-Z0-9.]*)")
-    for line in out.split("\n"):
-        match = pattern.match(line)
-        if match is not None:
-            key = match.group("key")
-            value = match.group("value")
-            if key == "Minimum":
-                min = float(value)
-            elif key == "Maximum":
-                max = float(value)
-    return min, max
 
 
 
@@ -237,7 +127,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
         print "Filling in Gaps..."
     else:
         printProgress(1, 9, prefix="%s: "%lbl_file_name)
-    s = fill_gaps("%s/__%s_raw.cub"%(work_dir, product_id),
+    s = mathandstats.fillgap("%s/__%s_raw.cub"%(work_dir, product_id),
                         "%s/__%s_fill0.cub"%(work_dir, product_id))
     if is_verbose:
         print s
@@ -248,7 +138,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
         print "Initializing Spice..."
     else:
         printProgress(2, 9, prefix="%s: "%lbl_file_name)
-    s = init_spice("%s/__%s_fill0.cub"%(work_dir, product_id), is_ringplane)
+    s = cameras.spiceinit("%s/__%s_fill0.cub"%(work_dir, product_id), is_ringplane)
     if is_verbose:
         print s
 
@@ -267,7 +157,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
         print "Running Noise Filter..."
     else:
         printProgress(4, 9, prefix="%s: "%lbl_file_name)
-    s = noise_filter("%s/__%s_cal.cub"%(work_dir, product_id),
+    s = filters.noisefilter("%s/__%s_cal.cub"%(work_dir, product_id),
                             "%s/__%s_stdz.cub"%(work_dir, product_id))
     if is_verbose:
         print s
@@ -276,7 +166,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
         print "Filling in Nulls..."
     else:
         printProgress(5, 9, prefix="%s: "%lbl_file_name)
-    s = fill_nulls("%s/__%s_stdz.cub"%(work_dir, product_id),
+    s = filters.lowpass("%s/__%s_stdz.cub"%(work_dir, product_id),
                         "%s/__%s_fill.cub"%(work_dir, product_id))
     if is_verbose:
         print s
@@ -286,7 +176,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
         print "Removing Frame-Edge Noise..."
     else:
         printProgress(6, 9, prefix="%s: "%lbl_file_name)
-    s = trim_edges("%s/__%s_fill.cub"%(work_dir, product_id),
+    s = trimandmask.trim("%s/__%s_fill.cub"%(work_dir, product_id),
                         "%s"%(out_file_cub))
     if is_verbose:
         print s
@@ -296,7 +186,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
         print "Exporting TIFF..."
     else:
         printProgress(7, 9, prefix="%s: "%lbl_file_name)
-    s = export_tiff_grayscale("%s"%(out_file_cub),
+    s = importexport.isis2std_grayscale("%s"%(out_file_cub),
                                     "%s"%(out_file_tiff))
     if is_verbose:
         print s
