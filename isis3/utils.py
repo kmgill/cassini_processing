@@ -6,6 +6,7 @@ import subprocess
 import datetime
 import glob
 import numpy as np
+from isis3.info import get_field_value
 
 """
 I stole this from someone on stackexchange.
@@ -41,17 +42,6 @@ def is_isis3_initialized():
     return True
 
 
-def get_field_value(lbl_file_name, keyword, objname=None, grpname=None):
-    try:
-        cmd = ["getkey", "from=%s"%lbl_file_name, "keyword=%s"%keyword]
-        if objname is not None:
-            cmd += ["objname=%s"%objname]
-        if grpname is not None:
-            cmd += ["grpname=%s"%grpname]
-        s = subprocess.check_output(cmd)
-        return s.strip()
-    except:
-        return None
 
 def get_product_id(file_name):
     if file_name[-3:].upper() == "LBL":
