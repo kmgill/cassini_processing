@@ -6,7 +6,9 @@ import subprocess
 import datetime
 import glob
 import numpy as np
-from isis3.info import get_field_value
+#from isis3.info import get_field_value
+import isis3.info as info
+from _core import isis_command
 
 """
 I stole this from someone on stackexchange.
@@ -42,87 +44,11 @@ def is_isis3_initialized():
     return True
 
 
-
-def get_product_id(file_name):
-    if file_name[-3:].upper() == "LBL":
-        return get_field_value(file_name, "PRODUCT_ID")[2:-4]
-    elif file_name[-3:].upper() == "CUB":
-        return get_field_value(file_name, keyword="ProductId", grpname="Archive")[2:-4]
-    else:
-        raise Exception("Unrecognized/Unsupported file")
-
-def get_target(file_name):
-    if file_name[-3:].upper() == "LBL":
-        return get_field_value(file_name, "TARGET_NAME").replace(" ", "_")
-    elif file_name[-3:].upper() == "CUB":
-        return get_field_value(file_name, keyword="TargetName", grpname="Instrument")
-    else:
-        raise Exception("Unrecognized/Unsupported file")
-
-def get_filters(file_name):
-    if file_name[-3:].upper() == "LBL":
-        filters = get_field_value(file_name, "FILTER_NAME")
-        pattern = re.compile(r"^(?P<f1>[A-Z0-9]*)\, (?P<f2>[A-Z0-9]*)")
-    elif file_name[-3:].upper() == "CUB":
-        filters = get_field_value(file_name, keyword="FilterName", grpname="BandBin")
-        pattern = re.compile(r"^(?P<f1>[A-Z0-9]*)/(?P<f2>[A-Z0-9]*)")
-    else:
-        raise Exception("Unrecognized/Unsupported file")
-    match = pattern.match(filters)
-    if match is not None:
-        filter1 = match.group("f1")
-        filter2 = match.group("f2")
-    else:
-        filter1 = filter2 = "UNK"
-    return filter1, filter2
-
-def get_image_time(file_name):
-    if file_name[-3:].upper() == "LBL":
-        image_time = get_field_value(file_name, "IMAGE_TIME")
-    elif file_name[-3:].upper() == "CUB":
-        image_time = get_field_value(file_name, "ImageTime", grpname="Instrument")
-    else:
-        raise Exception("Unrecognized/Unsupported file")
-    return datetime.datetime.strptime(image_time, '%Y-%jT%H:%M:%S.%f')
-
-
-def get_num_lines(file_name):
-    if file_name[-3:].upper() == "LBL":
-        return int(get_field_value(file_name, "LINES", objname="IMAGE"))
-    elif file_name[-3:].upper() == "CUB":
-        return int(get_field_value(file_name, "Lines", objname="IsisCube", grpname="Dimensions"))
-    else:
-        raise Exception("Unrecognized/Unsupported file")
-
-def get_num_line_samples(file_name):
-    if file_name[-3:].upper() == "LBL":
-        return int(get_field_value(file_name, "LINE_SAMPLES", objname="IMAGE"))
-    elif file_name[-3:].upper() == "CUB":
-        return int(get_field_value(file_name, "Samples", objname="IsisCube", grpname="Dimensions"))
-    else:
-        raise Exception("Unrecognized/Unsupported file")
-
-def get_sample_bits(file_name):
-    if file_name[-3:].upper() == "LBL":
-        return int(get_field_value(file_name, "SAMPLE_BITS", objname="IMAGE"))
-    elif file_name[-3:].upper() == "CUB":
-        return 32
-    else:
-        raise Exception("Unrecognized/Unsupported file")
-
-def get_instrument_id(file_name):
-    if file_name[-3:].upper() == "LBL":
-        return get_field_value(file_name, "INSTRUMENT_ID")
-    elif file_name[-3:].upper() == "CUB":
-        return get_field_value(file_name, "InstrumentId", grpname="Instrument")
-    else:
-        raise Exception("Unrecognized/Unsupported file")   
-
 def output_filename_from_label(lbl_file_name):
-    product_id = get_product_id(lbl_file_name)
-    target = get_target(lbl_file_name)
-    filter1, filter2 = get_filters(lbl_file_name)
-    image_time = get_image_time(lbl_file_name)
+    product_id = info.get_product_id(lbl_file_name)
+    target = info.get_target(lbl_file_name)
+    filter1, filter2 = info.get_filters(lbl_file_name)
+    image_time = info.get_image_time(lbl_file_name)
     out_file = "{product_id}_{target}_{filter1}_{filter2}_{image_date}".format(product_id=product_id,
                                                                                         target=target,
                                                                                         filter1=filter1,
@@ -142,110 +68,113 @@ def output_cub_from_label(lbl_file_name):
     return out_file_cub
 
 def import_to_cube(lbl_file_name, to_cube):
-    s = subprocess.check_output(["ciss2isis",
-                                "from=%s"%lbl_file_name,
-                                "to=%s"%to_cube])
+    s = isis_command("ciss2isis", {"from":lbl_file_name, "to": to_cube})
     return s
 
 def fill_gaps(from_cube, to_cube):
-    s = subprocess.check_output(["fillgap",
-                    "from=%s"%from_cube,
-                    "to=%s"%to_cube,
-                    "interp=cubic",
-                    "direction=sample"])
+    s = isis_command("fillgap", {"from":from_cube, "to": to_cube, "interp": "cubic", "direction": "sample"})
     return s
 
 def init_spice(from_cube, is_ringplane=False):
-    s = subprocess.check_output(["spiceinit",
-                    "from=%s"%from_cube,
-                    "shape=%s"%("ringplane" if is_ringplane else "system")]) #ringplane, "ellipsoid"
+    shape = "ringplane" if is_ringplane else "system"
+    s = isis_command("spiceinit", {"from": from_cube, "shape": shape})
     return s
 
 def calibrate_cube(from_cube, to_cube):
-    s = subprocess.check_output(["cisscal",
-                    "from=%s"%from_cube,
-                    "to=%s"%to_cube,
-                    "units=intensity"])
+    s = isis_command("cisscal", {"from": from_cube, "to": to_cube, "units": "intensity"})
     return s
 
 def noise_filter(from_cube, to_cube):
-    s = subprocess.check_output(["noisefilter",
-                    "from=%s"%from_cube,
-                    "to=%s"%to_cube,
-                    "toldef=stddev",
-                    "tolmin=2.5",
-                    "tolmax=2.5",
-                    "replace=null",
-                    "samples=5",
-                    "lines=5"])
+    s = isis_command("noisefilter", {
+        "from": from_cube,
+        "to": to_cube,
+        "toldef": "stddev",
+        "tolmin": 2.5,
+        "tolmax": 2.5,
+        "replace": "null",
+        "samples": 5,
+        "lines": 5
+    })
     return s
 
 def fill_nulls(from_cube, to_cube):
-    s = subprocess.check_output(["lowpass",
-                    "from=%s"%from_cube,
-                    "to=%s"%to_cube,
-                    "samples=3",
-                    "lines=3",
-                    "filter=outside",
-                    "null=yes",
-                    "hrs=no",
-                    "his=no",
-                    "lrs=no",
-                    "replacement=center"
-                    ])
+    s = isis_command("lowpass", {
+        "from": from_cube,
+        "to": to_cube,
+        "samples": 3,
+        "lines": 3,
+        "filter": "outside",
+        "null": "yes",
+        "hrs": "no",
+        "his": "no",
+        "lrs": "no",
+        "replacement": "center"
+    })
     return s
 
 def trim_edges(from_cube, to_cube):
-    s = subprocess.check_output(["trim",
-                    "from=%s"%from_cube,
-                    "to=%s"%to_cube,
-                    "top=2",
-                    "bottom=2",
-                    "left=2",
-                    "right=2"
-                    ])
+    s = isis_command("trim", {
+        "from": from_cube,
+        "to": to_cube,
+        "top": 2,
+        "bottom": 2,
+        "left": 2,
+        "right": 2
+    })
     return s
 
 def export_tiff_grayscale(from_cube, to_tiff, minimum=None, maximum=None):
-    cmd = ["isis2std",
-                    "from=%s"%from_cube,
-                    "to=%s"%to_tiff,
-                    "format=tiff",
-                    "bittype=u16bit"
-                    ]
+    cmd = "isis2std"
+    params = {
+        "from": from_cube,
+        "to": to_tiff,
+        "format": "tiff",
+        "bittype": "u16bit"
+    }
 
     if minimum is not None and maximum is not None:
-        cmd += ["stretch=manual", "minimum=%f"%minimum, "maximum=%f"%maximum]
+        params["stretch"] = "manual"
+        params["minimum"] = minimum,
+        params["maximum"] = maximum
     else:
-        cmd.append("maxpercent=99.999")
+        params["maxpercent"] = 99.999
 
-    s = subprocess.check_output(cmd)
+    s = isis_command(cmd, params)
+
     return s
 
 
 def export_tiff_rgb(from_cube_red, from_cube_green, from_cube_blue, to_tiff, minimum=None, maximum=None, match_stretch=False):
-    cmd = ["isis2std",
-                    "red=%s"%from_cube_red,
-                    "green=%s"%from_cube_green,
-                    "blue=%s"%from_cube_blue,
-                    "to=%s"%to_tiff,
-                    "format=tiff",
-                    "bittype=u16bit",
-                    "mode=rgb"
-                    ]
-    if match_stretch and minimum is not None and maximum is not None:
-        cmd += ["stretch=manual", "rmin=%f"%minimum, "rmax=%f"%maximum]
-        cmd += ["gmin=%f"%minimum, "gmax=%f"%maximum]
-        cmd += ["bmin=%f"%minimum, "bmax=%f"%maximum]
-    else:
-        cmd.append("maxpercent=99.999")
+    cmd = "isis2std"
+    params = {
+        "red": from_cube_red,
+        "green": from_cube_green,
+        "blue": from_cube_blue,
+        "to": to_tiff,
+        "format": "tiff",
+        "bittype": "u16bit",
+        "mode": "rgb"
+    }
 
-    s = subprocess.check_output(cmd)
+    if match_stretch and minimum is not None and maximum is not None:
+        params += {
+            "stretch": "manual",
+            "rmin": minimum,
+            "rmax": maximum,
+            "gmin": minimum,
+            "gmax": maximum,
+            "bmin": minimum,
+            "bmax": maximum
+        }
+    else:
+        params += {"maxpercent": 99.999}
+
+    s = isis_command(cmd, params)
     return s
 
 
 def get_data_min_max(from_cube):
-    out = subprocess.check_output(["stats", "from=%s"%from_cube])
+    out = isis_command("stats", {"from": from_cube})
 
     min = 0
     max = 0
@@ -277,7 +206,7 @@ def guess_from_filename_prefix(filename):
 
 
 def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False):
-    product_id = get_product_id(lbl_file_name)
+    product_id = info.get_product_id(lbl_file_name)
 
     out_file_tiff = output_tiff_from_label(lbl_file_name)
     out_file_cub = output_cub_from_label(lbl_file_name)
