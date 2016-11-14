@@ -1,15 +1,9 @@
 #!/usr/bin/python
 import os
 import sys
-import re
-import subprocess
-import datetime
 import glob
-import numpy as np
-#from isis3.info import get_field_value
-import isis3.info as info
-from _core import isis_command
 
+import isis3.info as info
 import isis3.cassini as cissisis
 import isis3.cameras as cameras
 import isis3.filters as filters

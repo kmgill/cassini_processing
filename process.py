@@ -6,8 +6,10 @@ import subprocess
 import datetime
 import glob
 import argparse
+import traceback
 
 from isis3 import utils
+from isis3 import info
 
 def print_if_verbose(s, is_verbose=True):
     if is_verbose:
@@ -24,28 +26,28 @@ def process_data_file(lbl_file_name, is_ringplane, require_target, require_filte
     else:
         print_if_verbose("Processing %s"%source, is_verbose)
 
-    target = utils.get_target(source)
+    target = info.get_target(source)
     print_if_verbose("Target: %s"%target, is_verbose)
 
-    product_id = utils.get_product_id(source)
+    product_id = info.get_product_id(source)
     print_if_verbose("Product ID: %s"%product_id, is_verbose)
 
     print_if_verbose("Ringplace Shape: %s"%("Yes" if is_ringplane else "No"), is_verbose)
 
-    filter1, filter2 = utils.get_filters(source)
+    filter1, filter2 = info.get_filters(source)
     print_if_verbose("Filter #1: %s"%filter1, is_verbose)
     print_if_verbose("Filter #2: %s"%filter2, is_verbose)
 
-    lines = utils.get_num_lines(source)
+    lines = info.get_num_lines(source)
     print_if_verbose("Lines: %s"%lines, is_verbose)
 
-    line_samples = utils.get_num_line_samples(source)
+    line_samples = info.get_num_line_samples(source)
     print_if_verbose("Samples per line: %s"%line_samples, is_verbose)
 
-    sample_bits = utils.get_sample_bits(source)
+    sample_bits = info.get_sample_bits(source)
     print_if_verbose("Bits per sample: %s"%sample_bits, is_verbose)
 
-    image_date = utils.get_image_time(source)
+    image_date = info.get_image_time(source)
     print_if_verbose("Image Date: %s"%image_date, is_verbose)
 
     out_file_base = utils.output_filename_from_label(source)
@@ -112,5 +114,7 @@ if __name__ == "__main__":
                 process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, metadata_only, is_verbose)
             except Exception as ex:
                 print "Error processing '%s'"%lbl_file_name
+                traceback.print_exc(file=sys.stdout)
+
 
     print_if_verbose("Done", is_verbose)
