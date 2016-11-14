@@ -34,7 +34,7 @@ def isis2std_rgb(from_cube_red, from_cube_green, from_cube_blue, to_tiff, minimu
     }
 
     if match_stretch and minimum is not None and maximum is not None:
-        params += {
+        params.update({
             "stretch": "manual",
             "rmin": minimum,
             "rmax": maximum,
@@ -42,9 +42,9 @@ def isis2std_rgb(from_cube_red, from_cube_green, from_cube_blue, to_tiff, minimu
             "gmax": maximum,
             "bmin": minimum,
             "bmax": maximum
-        }
+        })
     else:
-        params += {"maxpercent": maxpercent}
+        params["maxpercent"] = maxpercent
 
     s = isis_command(cmd, params)
     return s

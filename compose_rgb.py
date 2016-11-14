@@ -9,13 +9,14 @@ import argparse
 import numpy as np
 
 from isis3 import utils
+from isis3 import info
 import isis3.importexport as importexport
 import isis3.mathandstats as mathandstats
 
 def get_target_filename_portion(red_lbl_file, green_lbl_file, blue_lbl_file):
-    target_red = utils.get_target(red_lbl_file)
-    target_green = utils.get_target(green_lbl_file)
-    target_blue = utils.get_target(blue_lbl_file)
+    target_red = info.get_target(red_lbl_file)
+    target_green = info.get_target(green_lbl_file)
+    target_blue = info.get_target(blue_lbl_file)
 
     targets = np.unique([target_red, target_green, target_blue])
 
@@ -76,9 +77,9 @@ if __name__ == "__main__":
     print "Max:", max
     print "Min:", min
 
-    red_product_id = utils.get_product_id(red_cub_file)
-    green_product_id = utils.get_product_id(green_cub_file)
-    blue_product_id = utils.get_product_id(blue_cub_file)
+    red_product_id = info.get_product_id(red_cub_file)
+    green_product_id = info.get_product_id(green_cub_file)
+    blue_product_id = info.get_product_id(blue_cub_file)
     targets = get_target_filename_portion(red_cub_file, green_cub_file, blue_cub_file)
 
     output_tiff = "%s_%s_%s_%s_RGB-composed.tif"%(red_product_id, green_product_id, blue_product_id, targets)
