@@ -1,7 +1,7 @@
 from isis3._core import isis_command
 
 
-def isis2std_grayscale(from_cube, to_tiff, format="tiff", bittype="u16bit", minimum=None, maximum=None, maxpercent=9.999):
+def isis2std_grayscale(from_cube, to_tiff, format="tiff", bittype="u16bit", minimum=None, maximum=None, maxpercent=99.999):
     cmd = "isis2std"
     params = {
         "from": from_cube,
