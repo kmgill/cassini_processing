@@ -9,16 +9,16 @@ import argparse
 import numpy as np
 
 from isis3 import utils
-
+from isis3 import info
 
 def printInfo(lbl_file_name):
-    target = utils.get_target(lbl_file_name)
-    filter1, filter2 = utils.get_filters(lbl_file_name)
-    image_time = utils.get_image_time(lbl_file_name)
-    num_lines = utils.get_num_lines(lbl_file_name)
-    num_line_samples = utils.get_num_line_samples(lbl_file_name)
-    sample_bits = utils.get_sample_bits(lbl_file_name)
-    camera = "Narrow" if utils.get_instrument_id(lbl_file_name) == "ISSNA" else "Wide"
+    target = info.get_target(lbl_file_name)
+    filter1, filter2 = info.get_filters(lbl_file_name)
+    image_time = info.get_image_time(lbl_file_name)
+    num_lines = info.get_num_lines(lbl_file_name)
+    num_line_samples = info.get_num_line_samples(lbl_file_name)
+    sample_bits = info.get_sample_bits(lbl_file_name)
+    camera = "Narrow" if info.get_instrument_id(lbl_file_name) == "ISSNA" else "Wide"
     print "%25s|%5s|%5s|%22s|%5s|%5s|%4s|%8s| %s"%(target,
                                                 filter1,
                                                 filter2,
