@@ -46,11 +46,15 @@ def is_isis3_initialized():
 
 
 def output_filename_from_label(lbl_file_name):
+    dirname = os.path.dirname(lbl_file_name)
+    if len(dirname) > 0:
+        dirname += "/"
     product_id = info.get_product_id(lbl_file_name)
     target = info.get_target(lbl_file_name)
     filter1, filter2 = info.get_filters(lbl_file_name)
     image_time = info.get_image_time(lbl_file_name)
-    out_file = "{product_id}_{target}_{filter1}_{filter2}_{image_date}".format(product_id=product_id,
+    out_file = "{dirname}{product_id}_{target}_{filter1}_{filter2}_{image_date}".format(dirname=dirname,
+                                                                                        product_id=product_id,
                                                                                         target=target,
                                                                                         filter1=filter1,
                                                                                         filter2=filter2,
@@ -87,6 +91,8 @@ def guess_from_filename_prefix(filename):
         return "%s.LBL"%filename
     if os.path.exists("%s_1.LBL"%filename):
         return "%s_1.LBL"%filename
+    if os.path.exists("%s_2.LBL"%filename):
+        return "%s_2.LBL"%filename
 
 
 def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False):

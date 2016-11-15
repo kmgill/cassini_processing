@@ -5,6 +5,7 @@ import argparse
 import requests
 
 from isis3 import utils
+from isis3 import info
 
 JPL_SIM_URL = "http://space.jpl.nasa.gov/cgi-bin/wspace"
 
@@ -59,11 +60,11 @@ if __name__ == "__main__":
 
     output_path = "%s_Simulated.jpg"%utils.output_filename_from_label(source)
 
-    image_time = utils.get_image_time(source)
-    target = utils.get_target(source).upper()
+    image_time = info.get_image_time(source)
+    target = info.get_target(source).upper()
 
     default_fov = 1
-    camera = utils.get_instrument_id(source)
+    camera = info.get_instrument_id(source)
     if camera == "ISSNA":
         default_fov = 0.35
     elif camera == "ISSWA":
