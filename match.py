@@ -8,7 +8,9 @@ import argparse
 
 
 from isis3 import utils
+from isis3 import info
 import isis3.importexport as importexport
+import isis3.mathandstats as mathandstats
 
 if __name__ == "__main__":
 
@@ -36,8 +38,8 @@ if __name__ == "__main__":
         if f[-3:].upper() != "CUB":
             print "File %s is not supported, skipping"%f
             continue
-        target = utils.get_target(f)
-        filter1, filter2 = utils.get_filters(f)
+        target = info.get_target(f)
+        filter1, filter2 = info.get_filters(f)
         if len(targets) > 0 and  target.upper() not in targets:
             continue
         elif len(filters) > 0 and (filter1.upper() not in filters and filter2.upper() not in filters):
@@ -47,7 +49,7 @@ if __name__ == "__main__":
 
     values = []
     for f in matching_files:
-        _min, _max = utils.get_data_min_max(f)
+        _min, _max = mathandstats.get_data_min_max(f)
         values.append(_min)
         values.append(_max)
         print _min, _max

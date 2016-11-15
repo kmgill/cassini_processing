@@ -12,7 +12,7 @@ def isis2std_grayscale(from_cube, to_tiff, format="tiff", bittype="u16bit", mini
 
     if minimum is not None and maximum is not None:
         params["stretch"] = "manual"
-        params["minimum"] = minimum,
+        params["minimum"] = minimum
         params["maximum"] = maximum
     else:
         params["maxpercent"] = maxpercent
