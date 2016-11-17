@@ -2,6 +2,8 @@
 import info
 import utils
 import cassini
+import galileo
+import voyager
 import scripting
 import cameras
 import filters

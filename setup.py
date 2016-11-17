@@ -17,7 +17,7 @@ setup(
     description="Cassini image processing and simplified ISIS3 API",
     long_description=open('README.md').read(),
 
-    packages=['isis3', 'isis3.cassini_iss', 'isis3.galileo', 'isis3.voyager'],
+    packages=['isis3', 'isis3.cassini_iss', 'isis3.galileo_iss', 'isis3.voyager_iss'],
     package_data={},
     data_files=[],
     platforms='any',
