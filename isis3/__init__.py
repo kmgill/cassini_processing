@@ -10,3 +10,7 @@ import filters
 import trimandmask
 import mathandstats
 import importexport
+import geometry
+import cassini_iss
+import galileo_iss
+import voyager_iss

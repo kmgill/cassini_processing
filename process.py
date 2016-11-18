@@ -10,6 +10,7 @@ import traceback
 
 from isis3 import utils
 from isis3 import info
+from isis3 import _core
 
 def print_if_verbose(s, is_verbose=True):
     if is_verbose:
@@ -50,7 +51,7 @@ def process_data_file(lbl_file_name, is_ringplane, require_target, require_filte
     image_date = info.get_image_time(source)
     print_if_verbose("Image Date: %s"%image_date, is_verbose)
 
-    out_file_base = utils.output_filename_from_label(source)
+    out_file_base = utils.output_filename(source)
 
     out_file_tiff = "%s.tif"%out_file_base
     print_if_verbose("Output Tiff: %s"%out_file_tiff, is_verbose)
@@ -79,7 +80,7 @@ def process_data_file(lbl_file_name, is_ringplane, require_target, require_filte
 if __name__ == "__main__":
 
     try:
-        utils.is_isis3_initialized()
+        _core.is_isis3_initialized()
     except:
         print "ISIS3 has not been initialized. Please do so. Now."
         sys.exit(1)
@@ -107,14 +108,15 @@ if __name__ == "__main__":
     is_verbose = args.verbose
 
     for lbl_file_name in source:
-        if lbl_file_name[-3:].upper() != "LBL":
+        if lbl_file_name[-3:].upper() not in  ("LBL", "IMQ"):
             print "Not a PDS label file. Skipping '%s'"%lbl_file_name
         else:
             try:
                 process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, metadata_only, is_verbose)
             except Exception as ex:
                 print "Error processing '%s'"%lbl_file_name
-                traceback.print_exc(file=sys.stdout)
+                if is_verbose:
+                    traceback.print_exc(file=sys.stdout)
 
 
     print_if_verbose("Done", is_verbose)

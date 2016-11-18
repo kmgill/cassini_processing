@@ -2,8 +2,14 @@ from isis3._core import isis_command
 import os
 
 def spiceinit(from_cube, is_ringplane=False):
-    shape = "ringplane" if is_ringplane else "system"
-    s = isis_command("spiceinit", {"from": from_cube, "shape": shape})
+    params = {
+        "from": from_cube
+    }
+    # web=yes ckpredicted=true cknadir=true spkpredicted=true
+    if is_ringplane is True:
+        params["shape"] = "ringplane"
+
+    s = isis_command("spiceinit", params)
     return s
 
 
@@ -22,4 +28,15 @@ def cam2map(from_cube, to_cube, projection="equirectangular", map=None, resoluti
         params["pixres"] = "map"
 
     s = isis_command("cam2map", params)
+    return s
+
+def caminfo(from_cube, to_pvl, isislabel=True, originallabel=True):
+    cmd = "caminfo"
+    params = {
+        "from": from_cube,
+        "to": to_pvl,
+        "isislabel": ("yes" if isislabel is True else "no"),
+        "originallabel": ("yes" if originallabel is True else "no")
+    }
+    s = isis_command(cmd, params)
     return s

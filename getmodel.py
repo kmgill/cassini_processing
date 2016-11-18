@@ -6,6 +6,7 @@ import requests
 
 from isis3 import utils
 from isis3 import info
+from isis3 import _core
 
 JPL_SIM_URL = "http://space.jpl.nasa.gov/cgi-bin/wspace"
 
@@ -36,7 +37,7 @@ TARGET_IDS = {
 if __name__ == "__main__":
 
     try:
-        utils.is_isis3_initialized()
+        _core.is_isis3_initialized()
     except:
         print "ISIS3 has not been initialized. Please do so. Now."
         sys.exit(1)
@@ -58,7 +59,7 @@ if __name__ == "__main__":
         print "Specified dataset %s not found"%source
         sys.exit(1)
 
-    output_path = "%s_Simulated.jpg"%utils.output_filename_from_label(source)
+    output_path = "%s_Simulated.jpg"%utils.output_filename(source)
 
     image_time = info.get_image_time(source)
     target = info.get_target(source).upper()

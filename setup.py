@@ -40,7 +40,8 @@ setup(
 
     install_requires=[
         'requests',
-        'numpy'
+        'numpy',
+        'pvl'
     ],
 
     classifiers=[

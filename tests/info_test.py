@@ -2,7 +2,7 @@
 import sys
 import unittest
 from isis3 import info
-from isis3 import utils
+from isis3 import _core
 
 
 class TestIsis3Info(unittest.TestCase):
@@ -12,16 +12,17 @@ class TestIsis3Info(unittest.TestCase):
     TIF_FILE = "tests/data/N1489034146_ENCELADUS_CL1_IR3_2005-03-09_04.09.10.tif"
 
     def test_get_product_id_lbl(self):
-        assert info.get_product_id(TestIsis3Info.LBL_FILE) == "N1489034146"
+
+        assert info.get_product_id(TestIsis3Info.LBL_FILE) == "1_N1489034146.123"
 
     def test_get_product_id_cub(self):
-        assert info.get_product_id(TestIsis3Info.CUB_FILE) == "N1489034146"
+        assert info.get_product_id(TestIsis3Info.CUB_FILE) == "1_N1489034146.123"
 
     def test_get_target_lbl(self):
         assert info.get_target(TestIsis3Info.LBL_FILE) == "ENCELADUS"
 
     def test_get_target_cub(self):
-        assert info.get_target(TestIsis3Info.CUB_FILE) == "Enceladus"
+        assert info.get_target(TestIsis3Info.CUB_FILE) == "ENCELADUS"
 
     def test_get_filters_lbl(self):
         filter1, filter2 = info.get_filters(TestIsis3Info.LBL_FILE)
@@ -68,7 +69,7 @@ class TestIsis3Info(unittest.TestCase):
 if __name__ == "__main__":
 
     try:
-        utils.is_isis3_initialized()
+        _core.is_isis3_initialized()
     except:
         print "ISIS3 has not been initialized. Please do so before running tests"
         sys.exit(1)

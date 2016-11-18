@@ -10,6 +10,7 @@ import numpy as np
 
 from isis3 import utils
 from isis3 import info
+from isis3 import _core
 import isis3.importexport as importexport
 import isis3.mathandstats as mathandstats
 
@@ -39,7 +40,7 @@ def process_file(input_name):
             print "Processing", lbl_file
 
         utils.process_pds_data_file(lbl_file, is_ringplane=False, is_verbose=is_verbose, skip_if_cub_exists=True)
-        cub_file = utils.output_cub_from_label(lbl_file)
+        cub_file = utils.output_cub(lbl_file)
         
     min_value, max_value = mathandstats.get_data_min_max(cub_file)
     return cub_file, min_value, max_value
@@ -49,7 +50,7 @@ def process_file(input_name):
 if __name__ == "__main__":
 
     try:
-        utils.is_isis3_initialized()
+        _core.is_isis3_initialized()
     except:
         print "ISIS3 has not been initialized. Please do so. Now."
         sys.exit(1)
