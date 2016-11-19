@@ -60,7 +60,7 @@ class TestIsis3Voyager(unittest.TestCase):
         assert info.get_num_line_samples(TestIsis3Voyager.CUB_FILE) == 800
 
     def test_get_sample_bits_imq(self):
-        assert info.get_sample_bits(TestIsis3Voyager.IMQ_FILE) == 32
+        assert info.get_sample_bits(TestIsis3Voyager.IMQ_FILE) == 8
 
     def test_get_sample_bits_cub(self):
         assert info.get_sample_bits(TestIsis3Voyager.CUB_FILE) == 32

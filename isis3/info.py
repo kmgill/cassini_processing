@@ -2,6 +2,7 @@ import re
 import datetime
 from isis3._core import isis_command
 from isis3.scripting import getkey as get_field_value
+from isis3.metadata import load_pvl
 
 __UNSUPPORTED_UNRECOGNIZED__ = "Unrecognized/Unsupported file"
 
@@ -22,36 +23,45 @@ def time_string_matches_format(s, format):
 
 
 def get_product_id(file_name):
-    if file_name[-3:].upper() in ("LBL",):
-        if has_keyword(file_name, "PRODUCT_ID"):
-            return get_field_value(file_name, "PRODUCT_ID").replace("+", "_")
-        elif has_keyword(file_name, "IMAGE_ID"):
-            return get_field_value(file_name, "IMAGE_ID").replace("+", "_")
-    elif file_name[-3:].upper() in ("CUB", "IMQ"):
-        return get_field_value(file_name, keyword="ProductId", grpname="Archive").replace("+", "_")
+    p = load_pvl(file_name)
+    if file_name[-3:].upper() in ("LBL", "IMQ"):
+        if "PRODUCT_ID" in p:
+            return p["PRODUCT_ID"].replace("+", "_")
+        if "IMAGE_ID" in p:
+            return p["IMAGE_ID"].replace("+", "_")
+    elif file_name[-3:].upper() in ("CUB", ):
+        return p["IsisCube"]["Archive"]["ProductId"].replace("+", "_")
     else:
         raise Exception(__UNSUPPORTED_UNRECOGNIZED__)
 
 
 
 def get_target(file_name):
-    if file_name[-3:].upper() in ("LBL", ):
-        return get_field_value(file_name, "TARGET_NAME").replace(" ", "_")
-    elif file_name[-3:].upper() in ("CUB", "IMQ"):
-        return get_field_value(file_name, keyword="TargetName", grpname="Instrument").upper()
+    p = load_pvl(file_name
+                 )
+    if file_name[-3:].upper() in ("LBL", "IMQ"):
+        return p["TARGET_NAME"].replace(" ", "_")
+    elif file_name[-3:].upper() in ("CUB", ):
+        return p["IsisCube"]["Instrument"]["TargetName"].upper()
     else:
         raise Exception(__UNSUPPORTED_UNRECOGNIZED__)
 
 
 def get_filters(file_name):
-    if file_name[-3:].upper() in ("LBL",):
-        filters = get_field_value(file_name, "FILTER_NAME")
+    p = load_pvl(file_name)
+
+    if file_name[-3:].upper() in ("LBL", "IMQ"):
+        filters = p["FILTER_NAME"]
         pattern = re.compile(r"^(?P<f1>[A-Z0-9]*)\, (?P<f2>[A-Z0-9]*)")
-    elif file_name[-3:].upper() in ("CUB", "IMQ"):
-        filters = get_field_value(file_name, keyword="FilterName", grpname="BandBin")
+    elif file_name[-3:].upper() in ("CUB", ):
+        filters = p["IsisCube"]["BandBin"]["FilterName"]
         pattern = re.compile(r"^(?P<f1>[A-Z0-9]*)/(?P<f2>[A-Z0-9]*)")
     else:
         raise Exception(__UNSUPPORTED_UNRECOGNIZED__)
+
+    if type(filters) == list:
+        return filters
+
     match = pattern.match(filters)
     if match is not None:
         filter1 = match.group("f1")
@@ -62,62 +72,69 @@ def get_filters(file_name):
 
 
 def get_image_time(file_name):
-    if file_name[-3:].upper() in ("LBL", ):
-        if has_keyword(file_name, "IMAGE_TIME"):
-            image_time = get_field_value(file_name, "IMAGE_TIME")
-        elif has_keyword(file_name, "START_TIME"):
-            image_time = get_field_value(file_name, "START_TIME")
-    elif file_name[-3:].upper() in ("CUB", "IMQ"):
-        if has_keyword(file_name, "ImageTime", grpname="Instrument"):
-            image_time = get_field_value(file_name, "ImageTime", grpname="Instrument")
-        elif has_keyword(file_name, "StartTime", grpname="Instrument"):
-            image_time = get_field_value(file_name, "StartTime", grpname="Instrument")
+    p = load_pvl(file_name)
+
+    if file_name[-3:].upper() in ("LBL", "IMQ"):
+        if "IMAGE_TIME" in p:
+            image_time = p["IMAGE_TIME"]
+        elif "START_TIME" in p:
+            image_time = p["START_TIME"]
+
+    elif file_name[-3:].upper() in ("CUB",):
+
+        try:
+            image_time = p["IsisCube"]["Instrument"]["ImageTime"]
+        except:
+            image_time = p["IsisCube"]["Instrument"]["StartTime"]
+
     else:
         raise Exception(__UNSUPPORTED_UNRECOGNIZED__)
 
-    if time_string_matches_format(image_time, '%Y-%jT%H:%M:%S.%f'):
-        return datetime.datetime.strptime(image_time, '%Y-%jT%H:%M:%S.%f')
-    elif time_string_matches_format(image_time, '%Y-%m-%dT%H:%M:%S.%f'):
-        return datetime.datetime.strptime(image_time, '%Y-%m-%dT%H:%M:%S.%f')
-    elif time_string_matches_format(image_time, '%Y-%m-%dT%H:%M:%SZ'):
-        return datetime.datetime.strptime(image_time, '%Y-%m-%dT%H:%M:%SZ')
+    return image_time
 
 
 def get_num_lines(file_name):
-    if file_name[-3:].upper() in ("LBL",):
-        return int(get_field_value(file_name, "LINES", objname="IMAGE"))
-    elif file_name[-3:].upper() in ("CUB", "IMQ"):
-        return int(get_field_value(file_name, "Lines", objname="IsisCube", grpname="Dimensions"))
+    p = load_pvl(file_name)
+    if file_name[-3:].upper() in ("LBL", "IMQ"):
+        return p["IMAGE"]["LINES"]
+    elif file_name[-3:].upper() in ("CUB", ):
+        return p["IsisCube"]["Core"]["Dimensions"]["Lines"]
     else:
         raise Exception(__UNSUPPORTED_UNRECOGNIZED__)
 
 
 def get_num_line_samples(file_name):
-    if file_name[-3:].upper() in ("LBL",):
-        return int(get_field_value(file_name, "LINE_SAMPLES", objname="IMAGE"))
-    elif file_name[-3:].upper() in ("CUB", "IMQ"):
-        return int(get_field_value(file_name, "Samples", objname="IsisCube", grpname="Dimensions"))
+    p = load_pvl(file_name)
+
+    if file_name[-3:].upper() in ("LBL", "IMQ"):
+        return p["IMAGE"]["LINE_SAMPLES"]
+    elif file_name[-3:].upper() in ("CUB",):
+        return p["IsisCube"]["Core"]["Dimensions"]["Samples"]
     else:
         raise Exception(__UNSUPPORTED_UNRECOGNIZED__)
 
 
 def get_sample_bits(file_name):
-    if file_name[-3:].upper() in ("LBL",):
-        return int(get_field_value(file_name, "SAMPLE_BITS", objname="IMAGE"))
-    elif file_name[-3:].upper() in ("CUB", "IMQ"):
+    p = load_pvl(file_name)
+
+    if file_name[-3:].upper() in ("LBL", "IMQ"):
+        return p["IMAGE"]["SAMPLE_BITS"]
+    elif file_name[-3:].upper() in ("CUB", ):
         return 32  # Note: Don't assume this, Kevin. Use the byte type field
     else:
         raise Exception(__UNSUPPORTED_UNRECOGNIZED__)
 
 
 def get_instrument_id(file_name):
-    if file_name[-3:].upper() in ("LBL",):
-        if has_keyword(file_name, "INSTRUMENT_ID"):
-            return get_field_value(file_name, "INSTRUMENT_ID")
-        elif has_keyword(file_name, "INSTRUMENT_NAME"):
-            return get_field_value(file_name, "INSTRUMENT_NAME")
-    elif file_name[-3:].upper() in ("CUB", "IMQ"):
-        return get_field_value(file_name, "InstrumentId", grpname="Instrument")
+    p = load_pvl(file_name)
+
+    if file_name[-3:].upper() in ("LBL", "IMQ"):
+        if "INSTRUMENT_ID" in p:
+            return p["INSTRUMENT_ID"]
+        elif "INSTRUMENT_NAME" in p:
+            return p["INSTRUMENT_NAME"]
+    elif file_name[-3:].upper() in ("CUB", ):
+        return p["IsisCube"]["Instrument"]["InstrumentId"]
     else:
         raise Exception(__UNSUPPORTED_UNRECOGNIZED__)
 

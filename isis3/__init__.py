@@ -11,6 +11,8 @@ import trimandmask
 import mathandstats
 import importexport
 import geometry
+import metadata
+import utility
 import cassini_iss
 import galileo_iss
 import voyager_iss
