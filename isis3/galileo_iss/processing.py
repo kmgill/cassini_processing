@@ -1,9 +1,37 @@
 
-from isis3 import voyager
+import os
+from isis3 import info
+from isis3 import galileo
 from isis3 import cameras
 from isis3 import filters
 from isis3 import mathandstats
 from isis3 import trimandmask
+
+
+def output_filename(file_name):
+    dirname = os.path.dirname(file_name)
+    if len(dirname) > 0:
+        dirname += "/"
+    product_id = info.get_product_id(file_name)
+    target = info.get_target(file_name)
+    filter1, filter2 = info.get_filters(file_name)
+    image_time = info.get_image_time(file_name)
+    out_file = "{dirname}{product_id}_{target}_{filter1}_{image_date}".format(dirname=dirname,
+                                                                                        product_id=product_id,
+                                                                                        target=target,
+                                                                                        filter1=filter1,
+                                                                                        image_date=image_time.strftime('%Y-%m-%d_%H.%M.%S'))
+    return out_file
+
+def is_supported_file(file_name):
+    if file_name[-3:].upper() in ("CUB",):
+        value = info.get_field_value(file_name,  "SpacecraftName", grpname="Instrument")
+        return value == "Galileo Orbiter"
+    elif file_name[-3:].upper() in ("LBL", ):
+        value = info.get_field_value(file_name, "SPACECRAFT_NAME")
+        return value == "GALILEO ORBITER"
+    else:
+        return False
 
 
 def process(from_file_name, is_verbose=False, skip_if_cub_exists=False):
