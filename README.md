@@ -1,5 +1,5 @@
-# Cassini & Voyager Image Processing
-Scripts and utilities for processing Cassini and Voyager imagery from NASA PDS archived data. Support for Galileo images is coming soon.
+# Cassini, Voyager, & Galileo Image Processing
+Scripts and utilities for processing Cassini, Voyager, & Galileo imagery from NASA PDS archived data. 
 
 ## Overview
 
