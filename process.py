@@ -108,7 +108,7 @@ if __name__ == "__main__":
     is_verbose = args.verbose
 
     for lbl_file_name in source:
-        if lbl_file_name[-3:].upper() not in  ("LBL", "IMQ"):
+        if lbl_file_name[-3:].upper() not in ("LBL", "IMQ"):
             print "Not a PDS label file. Skipping '%s'"%lbl_file_name
         else:
             try:

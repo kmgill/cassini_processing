@@ -13,7 +13,7 @@ import isis3.importexport as importexport
 
 import isis3.cassini_iss.processing as cassproc
 import isis3.voyager_iss.processing as voyproc
-
+import isis3.galileo_iss.processing as galproc
 
 
 
@@ -23,6 +23,8 @@ def output_filename(lbl_file_name):
         return cassproc.output_filename(lbl_file_name)
     elif voyproc.is_supported_file(lbl_file_name):
         return voyproc.output_filename(lbl_file_name)
+    elif galproc.is_supported_file(lbl_file_name):
+        return galproc.output_filename(lbl_file_name)
     else:
         raise Exception("Unsupported file type")
 
@@ -36,12 +38,6 @@ def output_cub(lbl_file_name):
     out_file_base = output_filename(lbl_file_name)
     out_file_cub = "%s.cub"%out_file_base
     return out_file_cub
-
-def import_to_cube(lbl_file_name, to_cube):
-    return cissisis.ciss2isis(lbl_file_name, to_cube)
-
-def calibrate_cube(from_cube, to_cube):
-    return cissisis.cisscal(from_cube, to_cube, units="intensity")
 
 
 """
@@ -63,5 +59,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
         return cassproc.process_pds_data_file(lbl_file_name, is_ringplane, is_verbose, skip_if_cub_exists)
     elif voyproc.is_supported_file(lbl_file_name):
         return voyproc.process_pds_data_file(lbl_file_name, is_ringplane, is_verbose, skip_if_cub_exists)
+    elif galproc.is_supported_file(lbl_file_name):
+        return galproc.process_pds_data_file(lbl_file_name, is_ringplane, is_verbose, skip_if_cub_exists)
     else:
         raise Exception("Unsupported file type")
