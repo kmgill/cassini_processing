@@ -26,7 +26,7 @@ def output_filename(lbl_file_name):
     elif galproc.is_supported_file(lbl_file_name):
         return galproc.output_filename(lbl_file_name)
     else:
-        raise Exception("Unsupported file type")
+        return lbl_file_name[:-4]
 
 
 def output_tiff(lbl_file_name):
