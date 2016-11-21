@@ -26,5 +26,5 @@ if __name__ == "__main__":
         if file_name[-3:].upper() != "CUB":
             print "Not a ISIS cube file file. Skipping '%s'"%file_name
         else:
-            out_file_tiff = utils.output_tiff(file_name)
+            out_file_tiff = "%s.tif"%file_name[:-4]
             importexport.isis2std_grayscale(file_name, out_file_tiff, minimum=None, maximum=None)
