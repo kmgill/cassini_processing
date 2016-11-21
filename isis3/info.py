@@ -24,15 +24,22 @@ def time_string_matches_format(s, format):
 
 def get_product_id(file_name):
     p = load_pvl(file_name)
+    pid = None
+
     if file_name[-3:].upper() in ("LBL", "IMQ"):
         if "PRODUCT_ID" in p:
-            return p["PRODUCT_ID"].replace("+", "_")
-        if "IMAGE_ID" in p:
-            return p["IMAGE_ID"].replace("+", "_")
+            pid = p["PRODUCT_ID"]
+        elif "IMAGE_ID" in p:
+            pid = p["IMAGE_ID"]
     elif file_name[-3:].upper() in ("CUB", ):
-        return p["IsisCube"]["Archive"]["ProductId"].replace("+", "_")
+        pid = p["IsisCube"]["Archive"]["ProductId"]
     else:
         raise Exception(__UNSUPPORTED_UNRECOGNIZED__)
+
+    if type(pid) == str:
+        pid = pid.replace("+", "_")
+
+    return pid
 
 
 
