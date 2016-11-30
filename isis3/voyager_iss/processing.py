@@ -10,6 +10,7 @@ from isis3 import filters
 from isis3 import mathandstats
 from isis3 import trimandmask
 from isis3 import scripting
+from isis3 import utility
 from isis3 import geometry
 from isis3 import importexport
 from isis3._core import printProgress
@@ -26,8 +27,13 @@ def output_filename(file_name):
     target = info.get_target(file_name)
     filter1, filter2 = info.get_filters(file_name)
     image_time = info.get_image_time(file_name)
-    out_file = "{dirname}{product_id}_{target}_{filter1}_{image_date}".format(dirname=dirname,
+    spacecraft = info.get_spacecraft_name(file_name)
+
+    sc = "Vg1" if spacecraft == "VOYAGER_1" else "Vg2"
+
+    out_file = "{dirname}{product_id}_{spacecraft}_{target}_{filter1}_{image_date}".format(dirname=dirname,
                                                                                         product_id=product_id,
+                                                                                        spacecraft=sc,
                                                                                         target=target,
                                                                                         filter1=filter1,
                                                                                         image_date=image_time.strftime('%Y-%m-%d_%H.%M.%S'))
@@ -68,31 +74,37 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     if is_verbose:
         print s
 
+    if is_verbose:
+        print "Finding Reseaus..."
+    else:
+        printProgress(1, 11, prefix="%s: "%from_file_name)
+    s = geometry.findrx("%s/__%s_raw.cub"%(work_dir, product_id))
+    if is_verbose:
+        print s
+
+    if is_verbose:
+        print "Removing Reseaus..."
+    else:
+        printProgress(2, 11, prefix="%s: "%from_file_name)
+    s = geometry.remrx("%s/__%s_raw.cub"%(work_dir, product_id),
+                       "%s/__%s_remrx.cub" % (work_dir, product_id),
+                       action="BILINEAR")
+    if is_verbose:
+        print s
 
     try:
         if is_verbose:
             print "Initializing Spice..."
         else:
-            printProgress(1, 11, prefix="%s: "%from_file_name)
-        s = cameras.spiceinit("%s/__%s_raw.cub"%(work_dir, product_id), is_ringplane)
+            printProgress(3, 11, prefix="%s: "%from_file_name)
+        s = cameras.spiceinit("%s/__%s_remrx.cub" % (work_dir, product_id), is_ringplane)
         if is_verbose:
             print s
-
-        """
-        if is_verbose:
-            print "Processing Camera Info..."
-        else:
-            printProgress(1, 12, prefix="%s: "%from_file_name)
-        s = cameras.caminfo("%s/__%s_raw.cub"%(work_dir, product_id),
-                            "%s/__%s_raw.pvl" % (work_dir, product_id))
-        if is_verbose:
-            print s
-        """
 
         if is_verbose:
             print "Calibrating cube..."
         else:
-            printProgress(2, 11, prefix="%s: "%from_file_name)
+            printProgress(4, 11, prefix="%s: "%from_file_name)
         s = voyager.voycal("%s/__%s_raw.cub"%(work_dir, product_id),
                                 "%s/__%s_cal.cub"%(work_dir, product_id))
         if is_verbose:
@@ -102,30 +114,24 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     except:
         if is_verbose:
             traceback.print_exc(file=sys.stdout)
-        last_cube = "%s/__%s_raw.cub"%(work_dir, product_id)
+        last_cube = "%s/__%s_remrx.cub" % (work_dir, product_id)
+
 
     if is_verbose:
-        print "Finding Reseaus..."
+        print "Stretch Fix..."
     else:
-        printProgress(3, 11, prefix="%s: "%from_file_name)
-    s = geometry.findrx(last_cube)
+        printProgress(5, 11, prefix="%s: "%from_file_name)
+    s = utility.stretch(last_cube,
+                       "%s/__%s_stretch.cub" % (work_dir, product_id))
     if is_verbose:
         print s
 
-    if is_verbose:
-        print "Removing Reseaus..."
-    else:
-        printProgress(4, 11, prefix="%s: "%from_file_name)
-    s = geometry.remrx(last_cube,
-                       "%s/__%s_remrx.cub" % (work_dir, product_id))
-    if is_verbose:
-        print s
 
     if is_verbose:
         print "Filling in Gaps..."
     else:
         printProgress(5, 11, prefix="%s: "%from_file_name)
-    s = mathandstats.fillgap("%s/__%s_remrx.cub"%(work_dir, product_id),
+    s = mathandstats.fillgap("%s/__%s_stretch.cub" % (work_dir, product_id),
                        "%s/__%s_fill.cub" % (work_dir, product_id))
     if is_verbose:
         print s

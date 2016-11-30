@@ -2,18 +2,25 @@
 
 import sys
 import unittest
+from isis3 import _core
 from isis3 import utils
 from isis3 import info
 from isis3.voyager_iss import processing
+import traceback
 
-
-__OUTPUT_FILE_NAME__ = "tests/data/1739S2-001_ENCELADU_CLEAR_1981-08-26_02.35.11"
+__OUTPUT_FILE_NAME__ = "tests/data/1739S2-001_Vg2_ENCELADU_CLEAR_1981-08-26_02.35.11"
 
 class TestIsis3Voyager(unittest.TestCase):
 
     LBL_FILE = "tests/data/N1489034146_2.LBL"
     IMQ_FILE = "tests/data/c4400436.imq"
     CUB_FILE = "tests/data/c4400436.cub"
+
+    def test_spacecraft_name_imq(self):
+        assert info.get_spacecraft_name(TestIsis3Voyager.IMQ_FILE) == "VOYAGER_2"
+
+    def test_spacecraft_name_imq(self):
+        assert info.get_spacecraft_name(TestIsis3Voyager.CUB_FILE) == "VOYAGER_2"
 
     def test_output_file_name_imq(self):
         assert processing.output_filename(TestIsis3Voyager.IMQ_FILE) == __OUTPUT_FILE_NAME__
@@ -84,9 +91,10 @@ class TestIsis3Voyager(unittest.TestCase):
 if __name__ == "__main__":
 
     try:
-        utils.is_isis3_initialized()
+        _core.is_isis3_initialized()
     except:
         print "ISIS3 has not been initialized. Please do so before running tests"
+        traceback.print_exc(file=sys.stdout)
         sys.exit(1)
 
     unittest.main()

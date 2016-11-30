@@ -6,6 +6,7 @@ from isis3.metadata import load_pvl
 
 __UNSUPPORTED_UNRECOGNIZED__ = "Unrecognized/Unsupported file"
 
+
 def has_keyword(file_name, keyword, objname=None, grpname=None):
     try:
         v = get_field_value(file_name, keyword, objname, grpname)
@@ -22,6 +23,16 @@ def time_string_matches_format(s, format):
         return False
 
 
+def get_spacecraft_name(file_name):
+    p = load_pvl(file_name)
+    if file_name[-3:].upper() in ("LBL", "IMQ"):
+        return p["SPACECRAFT_NAME"]
+    elif file_name[-3:].upper() in ("CUB",):
+        return p["IsisCube"]["Instrument"]["SpacecraftName"]
+    else:
+        raise Exception(__UNSUPPORTED_UNRECOGNIZED__)
+
+
 def get_product_id(file_name):
     p = load_pvl(file_name)
     pid = None
@@ -36,16 +47,14 @@ def get_product_id(file_name):
     else:
         raise Exception(__UNSUPPORTED_UNRECOGNIZED__)
 
-    if type(pid) == str:
+    if type(pid) == str or type(pid) == unicode:
         pid = pid.replace("+", "_")
 
     return pid
 
 
-
 def get_target(file_name):
-    p = load_pvl(file_name
-                 )
+    p = load_pvl(file_name, verbose=False)
     if file_name[-3:].upper() in ("LBL", "IMQ"):
         return p["TARGET_NAME"].replace(" ", "_")
     elif file_name[-3:].upper() in ("CUB", ):
