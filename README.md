@@ -79,6 +79,16 @@ Convert an entire directory, limiting to Enceladus images taken in RED, GRN, and
 process.py -d *.LBL -t ENCELADUS -f RED GRN BL
 ```
 
+**Note:** The Voyager process includes automatically addressing Reseaus using the ISIS3 findrx and remrx commands. These are imperfect, but still improve the image. 
+
+Without reseau removal: 
+
+<img src="https://raw.githubusercontent.com/kmgill/cassini_processing/master/docs/images/c4411057.jpg" width="400">
+
+With reseau removal:
+
+<img src="https://raw.githubusercontent.com/kmgill/cassini_processing/master/docs/images/c4411057-nullrx.jpg" width="400">
+
 
 ### match.py
 Computes min/max values for a group of cube files and exports them to tiff file with a matching stretch. This is used to ensure a correct luminance across filters. 
