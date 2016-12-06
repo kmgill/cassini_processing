@@ -48,7 +48,7 @@ def is_supported_file(file_name):
 
 
 
-def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False):
+def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, **args):
     product_id = info.get_product_id(from_file_name)
 
     out_file_tiff = "%s.tif" % output_filename(from_file_name)
@@ -159,7 +159,11 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     else:
         printProgress(8, 11, prefix="%s: "%from_file_name)
     s = trimandmask.trim("%s/__%s_fill0.cub"%(work_dir, product_id),
-                        "%s"%(out_file_cub))
+                        "%s"%(out_file_cub),
+                         top=2,
+                         right=2,
+                         bottom=2,
+                         left=2)
     if is_verbose:
         print s
 

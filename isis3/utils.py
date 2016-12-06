@@ -54,7 +54,7 @@ def guess_from_filename_prefix(filename):
         return "%s_2.LBL"%filename
 
 
-def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False):
+def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, **args):
     if cassproc.is_supported_file(lbl_file_name):
         return cassproc.process_pds_data_file(lbl_file_name, is_ringplane, is_verbose, skip_if_cub_exists)
     elif voyproc.is_supported_file(lbl_file_name):

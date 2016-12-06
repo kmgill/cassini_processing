@@ -37,7 +37,7 @@ def is_supported_file(file_name):
     else:
         return False
 
-def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False):
+def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, **args):
     product_id = info.get_product_id(from_file_name)
 
     out_file_tiff = "%s.tif" % output_filename(from_file_name)
