@@ -16,7 +16,7 @@ def print_if_verbose(s, is_verbose=True):
     if is_verbose:
         print s
 
-def process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, metadata_only, is_verbose):
+def process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, metadata_only, is_verbose, skip_existing):
     source = utils.guess_from_filename_prefix(lbl_file_name)
     source_dirname = os.path.dirname(source)
     if source_dirname == "":
@@ -112,7 +112,7 @@ if __name__ == "__main__":
             print "Not a PDS label file. Skipping '%s'"%lbl_file_name
         else:
             try:
-                process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, metadata_only, is_verbose)
+                process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, metadata_only, is_verbose, skip_existing)
             except Exception as ex:
                 print "Error processing '%s'"%lbl_file_name
                 if is_verbose:

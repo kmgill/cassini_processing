@@ -30,6 +30,7 @@ def cam2map(from_cube, to_cube, projection="equirectangular", map=None, resoluti
     s = isis_command("cam2map", params)
     return s
 
+
 def caminfo(from_cube, to_pvl, isislabel=True, originallabel=True):
     cmd = "caminfo"
     params = {
@@ -39,4 +40,15 @@ def caminfo(from_cube, to_pvl, isislabel=True, originallabel=True):
         "originallabel": ("yes" if originallabel is True else "no")
     }
     s = isis_command(cmd, params)
+    return s
+
+
+def cam2cam(from_cube, to_cube, match_cube, interp="CUBICCONVOLUTION"):
+    params = {
+        "from": from_cube,
+        "to": to_cube,
+        "match": match_cube,
+        "interp": interp
+    }
+    s = isis_command("cam2cam", params)
     return s

@@ -116,23 +116,21 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
             traceback.print_exc(file=sys.stdout)
         last_cube = "%s/__%s_remrx.cub" % (work_dir, product_id)
 
+    if is_verbose:
+        print "Filling in Gaps..."
+    else:
+        printProgress(5, 11, prefix="%s: "%from_file_name)
+    s = mathandstats.fillgap(last_cube,
+                       "%s/__%s_fill.cub" % (work_dir, product_id))
+    if is_verbose:
+        print s
 
     if is_verbose:
         print "Stretch Fix..."
     else:
         printProgress(5, 11, prefix="%s: "%from_file_name)
-    s = utility.stretch(last_cube,
+    s = utility.stretch("%s/__%s_fill.cub" % (work_dir, product_id),
                        "%s/__%s_stretch.cub" % (work_dir, product_id))
-    if is_verbose:
-        print s
-
-
-    if is_verbose:
-        print "Filling in Gaps..."
-    else:
-        printProgress(5, 11, prefix="%s: "%from_file_name)
-    s = mathandstats.fillgap("%s/__%s_stretch.cub" % (work_dir, product_id),
-                       "%s/__%s_fill.cub" % (work_dir, product_id))
     if is_verbose:
         print s
 
@@ -140,7 +138,7 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
         print "Running Noise Filter..."
     else:
         printProgress(6, 11, prefix="%s: "%from_file_name)
-    s = filters.noisefilter("%s/__%s_fill.cub"%(work_dir, product_id),
+    s = filters.noisefilter("%s/__%s_stretch.cub"%(work_dir, product_id),
                             "%s/__%s_stdz.cub"%(work_dir, product_id))
     if is_verbose:
         print s
