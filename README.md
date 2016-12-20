@@ -290,3 +290,24 @@ mv 1173J2-002_Vg2_CALLISTO_CLEAR_1979-07-08_14.06.23_equirectangular.cub map.cub
 mkdir remapped
 matchmap.py -d *CALLISTO*cub -m map.cub -o remapped
 ```
+
+### matchcam.py
+Convert the camera geometry of an input cube(s) to match a specific master.
+```
+usage: matchmap.py [-h] -d DATA [DATA ...] [-m MAP] -o OUTPUT
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d DATA [DATA ...], --data DATA [DATA ...]
+                        Source cube file
+  -m MAP, --map MAP     Input map
+  -o OUTPUT, --output OUTPUT
+                        Output Directory
+```
+
+#### Examples:
+Process a directory full of cubes to match a single camera geometry.
+```
+mkdir recammed
+matchmap.py -d *cub -m 1173J2-002_Vg2_CALLISTO_CLEAR_1979-07-08_14.06.23.cub -o recammed
+```
