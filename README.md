@@ -244,3 +244,49 @@ optional arguments:
   -d DATA [DATA ...], --data DATA [DATA ...]
                         Source cube file
 ```
+
+### project.py
+Converts an input cube from the original camera geometry to a map projected format.
+```
+usage: project.py [-h] -d DATA [DATA ...] [-p PROJECTION] [-m MAP]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d DATA [DATA ...], --data DATA [DATA ...]
+                        Source cube file
+  -p PROJECTION, --projection PROJECTION
+                        Desired map projection
+  -m MAP, --map MAP     Input map
+```
+
+#### Examples:
+Project an input cube to equirectangular, preserving the cube's resolution.
+```
+project.py -d 1173J2-002_Vg2_CALLISTO_CLEAR_1979-07-08_14.06.23.cub -p equirectangular
+```
+Project an input cube to match the projection and resolution of another cube.
+```
+project.py -d 1173J2-002_Vg2_CALLISTO_CLEAR_1979-07-08_14.06.23.cub -m map.cub
+```
+
+### matchmap.py
+Batch processes input cubes to match the projection and resolution of another map projected input cube.
+```
+usage: matchmap.py [-h] -d DATA [DATA ...] [-m MAP] -o OUTPUT
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d DATA [DATA ...], --data DATA [DATA ...]
+                        Source cube file
+  -m MAP, --map MAP     Input map
+  -o OUTPUT, --output OUTPUT
+                        Output Directory
+```
+#### Examples:
+Project a cube to equirectangular, then process all the cubes to match.
+```
+project.py -d 1173J2-002_Vg2_CALLISTO_CLEAR_1979-07-08_14.06.23.cub -p equirectangular
+mv 1173J2-002_Vg2_CALLISTO_CLEAR_1979-07-08_14.06.23_equirectangular.cub map.cub
+mkdir remapped
+matchmap.py -d *CALLISTO*cub -m map.cub -o remapped
+```
