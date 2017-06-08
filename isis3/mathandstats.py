@@ -17,7 +17,7 @@ def get_data_min_max(from_cube):
     min = 0
     max = 0
 
-    pattern = re.compile(r"^ *(?P<key>[a-zA-Z0-9]*)[ =]+(?P<value>[\-A-Z0-9.]*)")
+    pattern = re.compile(r"^ *(?P<key>[a-zA-Z0-9]*)[ =]+(?P<value>[\-A-Z0-9.e]*)")
     for line in out.split("\n"):
         match = pattern.match(line)
         if match is not None:

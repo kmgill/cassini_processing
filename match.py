@@ -39,8 +39,17 @@ if __name__ == "__main__":
         if f[-3:].upper() != "CUB":
             print "File %s is not supported, skipping"%f
             continue
-        target = info.get_target(f)
-        filter1, filter2 = info.get_filters(f)
+        target = None
+        try:
+            target = info.get_target(f)
+        except:
+            pass
+
+        filter1, filter2 = None, None
+        try:
+            filter1, filter2 = info.get_filters(f)
+        except:
+            pass
         if len(targets) > 0 and  target.upper() not in targets:
             continue
         elif len(filters) > 0 and (filter1.upper() not in filters and filter2.upper() not in filters):
@@ -59,6 +68,7 @@ if __name__ == "__main__":
     minimum = np.min(values)
     maximum = np.max(values)
 
+    print "Minimun:", minimum, "Maximum:", maximum
     #maximum -= ((maximum - minimum) * 0.45)
     #minimum += ((maximum - minimum) * 0.35)
 

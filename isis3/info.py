@@ -106,6 +106,9 @@ def get_image_time(file_name):
     else:
         raise Exception(__UNSUPPORTED_UNRECOGNIZED__)
 
+    if type(image_time) != datetime.datetime:
+        image_time = datetime.datetime.strptime(image_time, '%Y-%jT%H:%M:%S.%fZ')  # 2017-138T20:28:12.342Z -- Cassini
+
     return image_time
 
 

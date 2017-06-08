@@ -10,6 +10,8 @@ from isis3 import mathandstats
 from isis3 import trimandmask
 from isis3 import importexport
 
+from datetime import datetime
+
 def output_filename(file_name):
     dirname = os.path.dirname(file_name)
     if len(dirname) > 0:
@@ -18,6 +20,7 @@ def output_filename(file_name):
     target = info.get_target(file_name)
     filter1, filter2 = info.get_filters(file_name)
     image_time = info.get_image_time(file_name)
+
     out_file = "{dirname}{product_id}_{target}_{filter1}_{filter2}_{image_date}".format(dirname=dirname,
                                                                                         product_id=product_id[2:-4],
                                                                                         target=target,
@@ -77,7 +80,6 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
         print s
 
 
-
     if is_verbose:
         print "Initializing Spice..."
     else:
@@ -92,7 +94,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
     else:
         printProgress(3, 9, prefix="%s: "%lbl_file_name)
     s = cassini.cisscal("%s/__%s_fill0.cub"%(work_dir, product_id),
-                            "%s/__%s_cal.cub"%(work_dir, product_id))
+                            "%s/__%s_cal.cub"%(work_dir, product_id), units="I/F")
     if is_verbose:
         print s
 
