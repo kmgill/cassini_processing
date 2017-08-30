@@ -16,7 +16,7 @@ def print_if_verbose(s, is_verbose=True):
     if is_verbose:
         print s
 
-def process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, metadata_only, is_verbose, skip_existing):
+def process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, require_width, require_height, metadata_only, is_verbose, skip_existing, init_spice):
     source = utils.guess_from_filename_prefix(lbl_file_name)
     source_dirname = os.path.dirname(source)
     if source_dirname == "":
@@ -38,6 +38,9 @@ def process_data_file(lbl_file_name, is_ringplane, require_target, require_filte
     filter1, filter2 = info.get_filters(source)
     print_if_verbose("Filter #1: %s"%filter1, is_verbose)
     print_if_verbose("Filter #2: %s"%filter2, is_verbose)
+
+    width = info.get_num_line_samples(source)
+    height = info.get_num_lines(source)
 
     lines = info.get_num_lines(source)
     print_if_verbose("Lines: %s"%lines, is_verbose)
@@ -74,7 +77,13 @@ def process_data_file(lbl_file_name, is_ringplane, require_target, require_filte
         print "Filter mismatch, exiting."
         return
 
-    utils.process_pds_data_file(source, is_ringplane=is_ringplane, is_verbose=is_verbose)
+    if require_height is not None and not (str(height) in require_height):
+        print "Height filter mismatch, exiting"
+
+    if require_width is not None and not (str(width) in require_width):
+        print "Width filter mismatch, exiting"
+
+    utils.process_pds_data_file(source, is_ringplane=is_ringplane, is_verbose=is_verbose, init_spice=init_spice)
 
 
 if __name__ == "__main__":
@@ -93,6 +102,9 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--target", help="Require target or exit", required=False, type=str)
     parser.add_argument("-s", "--skipexisting", help="Skip processing if output already exists", action="store_true")
     parser.add_argument("-v", "--verbose", help="Verbose output (includes ISIS3 command output)", action="store_true")
+    parser.add_argument("-w", "--width", help="Require width or exit", required=False, type=str, nargs='+')
+    parser.add_argument("-H", "--height", help="Require height or exit", required=False, type=str, nargs='+')
+    parser.add_argument("-S", "--skipspice", help="Skip spice initialization", required=False, action="store_true")
     args = parser.parse_args()
 
     source = args.data
@@ -102,17 +114,19 @@ if __name__ == "__main__":
 
     require_filters = args.filter
     require_target = args.target
+    require_height = args.height
+    require_width = args.width
 
     skip_existing = args.skipexisting
-
+    skip_spice = args.skipspice
     is_verbose = args.verbose
 
     for lbl_file_name in source:
-        if lbl_file_name[-3:].upper() not in ("LBL", "IMQ"):
+        if lbl_file_name[-3:].upper() not in ("LBL", "BEL", "IMQ"):  # Note: 'BEL' is for .LBL_label via atlas wget script
             print "Not a PDS label file. Skipping '%s'"%lbl_file_name
         else:
             try:
-                process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, metadata_only, is_verbose, skip_existing)
+                process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, require_width, require_height, metadata_only, is_verbose, skip_existing, not skip_spice)
             except Exception as ex:
                 print "Error processing '%s'"%lbl_file_name
                 if is_verbose:

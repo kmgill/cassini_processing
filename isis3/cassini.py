@@ -7,5 +7,11 @@ def ciss2isis(from_file, to_file):
     return s
 
 def cisscal(from_file, to_file, units="intensity"):
-    s = isis_command("cisscal", {"from": from_file, "to": to_file, "units": units})
+    params = {
+        "from": from_file,
+        "to": to_file
+    }
+    if units is not None:
+        params["units"] = units
+    s = isis_command("cisscal", params)
     return s

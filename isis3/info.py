@@ -6,6 +6,7 @@ from isis3.metadata import load_pvl
 
 __UNSUPPORTED_UNRECOGNIZED__ = "Unrecognized/Unsupported file"
 
+LABEL_FILE_EXTENSIONS = ("LBL", "IMQ", "BEL") # Note: 'BEL' is for .LBL_label via atlas wget script
 
 def has_keyword(file_name, keyword, objname=None, grpname=None):
     try:
@@ -25,7 +26,7 @@ def time_string_matches_format(s, format):
 
 def get_spacecraft_name(file_name):
     p = load_pvl(file_name)
-    if file_name[-3:].upper() in ("LBL", "IMQ"):
+    if file_name[-3:].upper() in LABEL_FILE_EXTENSIONS:
         return p["SPACECRAFT_NAME"]
     elif file_name[-3:].upper() in ("CUB",):
         return p["IsisCube"]["Instrument"]["SpacecraftName"]
@@ -37,7 +38,7 @@ def get_product_id(file_name):
     p = load_pvl(file_name)
     pid = None
 
-    if file_name[-3:].upper() in ("LBL", "IMQ"):
+    if file_name[-3:].upper() in LABEL_FILE_EXTENSIONS:
         if "PRODUCT_ID" in p:
             pid = p["PRODUCT_ID"]
         elif "IMAGE_ID" in p:
@@ -55,7 +56,7 @@ def get_product_id(file_name):
 
 def get_target(file_name):
     p = load_pvl(file_name, verbose=False)
-    if file_name[-3:].upper() in ("LBL", "IMQ"):
+    if file_name[-3:].upper() in LABEL_FILE_EXTENSIONS:
         return p["TARGET_NAME"].replace(" ", "_")
     elif file_name[-3:].upper() in ("CUB", ):
         return p["IsisCube"]["Instrument"]["TargetName"].upper()
@@ -66,7 +67,7 @@ def get_target(file_name):
 def get_filters(file_name):
     p = load_pvl(file_name)
 
-    if file_name[-3:].upper() in ("LBL", "IMQ"):
+    if file_name[-3:].upper() in LABEL_FILE_EXTENSIONS:
         filters = p["FILTER_NAME"]
         pattern = re.compile(r"^(?P<f1>[A-Z0-9]*)\, (?P<f2>[A-Z0-9]*)")
     elif file_name[-3:].upper() in ("CUB", ):
@@ -90,7 +91,7 @@ def get_filters(file_name):
 def get_image_time(file_name):
     p = load_pvl(file_name)
 
-    if file_name[-3:].upper() in ("LBL", "IMQ"):
+    if file_name[-3:].upper() in LABEL_FILE_EXTENSIONS:
         if "IMAGE_TIME" in p:
             image_time = p["IMAGE_TIME"]
         elif "START_TIME" in p:
@@ -114,7 +115,7 @@ def get_image_time(file_name):
 
 def get_num_lines(file_name):
     p = load_pvl(file_name)
-    if file_name[-3:].upper() in ("LBL", "IMQ"):
+    if file_name[-3:].upper() in LABEL_FILE_EXTENSIONS:
         return p["IMAGE"]["LINES"]
     elif file_name[-3:].upper() in ("CUB", ):
         return p["IsisCube"]["Core"]["Dimensions"]["Lines"]
@@ -125,7 +126,7 @@ def get_num_lines(file_name):
 def get_num_line_samples(file_name):
     p = load_pvl(file_name)
 
-    if file_name[-3:].upper() in ("LBL", "IMQ"):
+    if file_name[-3:].upper() in LABEL_FILE_EXTENSIONS:
         return p["IMAGE"]["LINE_SAMPLES"]
     elif file_name[-3:].upper() in ("CUB",):
         return p["IsisCube"]["Core"]["Dimensions"]["Samples"]
@@ -136,7 +137,7 @@ def get_num_line_samples(file_name):
 def get_sample_bits(file_name):
     p = load_pvl(file_name)
 
-    if file_name[-3:].upper() in ("LBL", "IMQ"):
+    if file_name[-3:].upper() in LABEL_FILE_EXTENSIONS:
         return p["IMAGE"]["SAMPLE_BITS"]
     elif file_name[-3:].upper() in ("CUB", ):
         return 32  # Note: Don't assume this, Kevin. Use the byte type field
@@ -147,7 +148,7 @@ def get_sample_bits(file_name):
 def get_instrument_id(file_name):
     p = load_pvl(file_name)
 
-    if file_name[-3:].upper() in ("LBL", "IMQ"):
+    if file_name[-3:].upper() in LABEL_FILE_EXTENSIONS:
         if "INSTRUMENT_ID" in p:
             return p["INSTRUMENT_ID"]
         elif "INSTRUMENT_NAME" in p:

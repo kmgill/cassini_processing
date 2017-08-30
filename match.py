@@ -25,10 +25,15 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--data", help="Source PDS dataset(s)", required=True, type=str, nargs='+')
     parser.add_argument("-f", "--filters", help="Require filter(s) or exit", required=False, type=str, nargs='+')
     parser.add_argument("-t", "--targets", help="Require target(s) or exit", required=False, type=str, nargs='+')
+    parser.add_argument("-w", "--width", help="Require width or exit", required=False, type=str, nargs='+')
+    parser.add_argument("-H", "--height", help="Require height or exit", required=False, type=str, nargs='+')
     args = parser.parse_args()
 
     filters = args.filters if args.filters is not None else []
     targets = args.targets if args.targets is not None else []
+
+    require_height = args.height if args.height is not None else []
+    require_width = args.width if args.width is not None else []
 
     filters = [f.upper() for f in filters]
     targets = [t.upper() for t in targets]
@@ -50,9 +55,19 @@ if __name__ == "__main__":
             filter1, filter2 = info.get_filters(f)
         except:
             pass
+
+        width = info.get_num_line_samples(f)
+        height = info.get_num_lines(f)
+
+
+
         if len(targets) > 0 and  target.upper() not in targets:
             continue
         elif len(filters) > 0 and (filter1.upper() not in filters and filter2.upper() not in filters):
+            continue
+        elif len(require_width) > 0 and str(width) not in require_width:
+            continue
+        elif len(require_height) > 0 and str(height) not in require_height:
             continue
         else:
             matching_files.append(f)

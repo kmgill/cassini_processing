@@ -37,7 +37,7 @@ def is_supported_file(file_name):
     else:
         return False
 
-def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, **args):
+def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, init_spice=True, **args):
     product_id = info.get_product_id(from_file_name)
 
     out_file_tiff = "%s.tif" % output_filename(from_file_name)
@@ -63,14 +63,14 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     if is_verbose:
         print s
 
-
-    if is_verbose:
-        print "Initializing Spice..."
-    else:
-        printProgress(1, 9, prefix="%s: " % from_file_name)
-    s = cameras.spiceinit("%s/__%s_raw.cub" % (work_dir, product_id), is_ringplane)
-    if is_verbose:
-        print s
+    if init_spice is True:
+        if is_verbose:
+            print "Initializing Spice..."
+        else:
+            printProgress(1, 9, prefix="%s: " % from_file_name)
+        s = cameras.spiceinit("%s/__%s_raw.cub" % (work_dir, product_id), is_ringplane)
+        if is_verbose:
+            print s
 
     if is_verbose:
         print "Calibrating cube..."

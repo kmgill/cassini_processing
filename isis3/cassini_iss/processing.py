@@ -32,7 +32,7 @@ def output_filename(file_name):
 
 def is_supported_file(file_name):
 
-    if file_name[-3:].upper() == "LBL":
+    if file_name[-3:].upper() in ("LBL", "BEL"):
         value = info.get_field_value(file_name,  "INSTRUMENT_HOST_NAME")
         return value == "CASSINI ORBITER"
     elif file_name[-3:].upper() == "CUB":
@@ -42,7 +42,7 @@ def is_supported_file(file_name):
         return False
 
 
-def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, **args):
+def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, init_spice=True, **args):
     product_id = info.get_product_id(lbl_file_name)
 
     out_file_tiff = "%s.tif"%output_filename(lbl_file_name)
@@ -80,13 +80,14 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
         print s
 
 
-    if is_verbose:
-        print "Initializing Spice..."
-    else:
-        printProgress(2, 9, prefix="%s: "%lbl_file_name)
-    s = cameras.spiceinit("%s/__%s_fill0.cub"%(work_dir, product_id), is_ringplane)
-    if is_verbose:
-        print s
+    if init_spice is True:
+        if is_verbose:
+            print "Initializing Spice..."
+        else:
+            printProgress(2, 9, prefix="%s: "%lbl_file_name)
+        s = cameras.spiceinit("%s/__%s_fill0.cub"%(work_dir, product_id), is_ringplane)
+        if is_verbose:
+            print s
 
 
     if is_verbose:
@@ -94,7 +95,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
     else:
         printProgress(3, 9, prefix="%s: "%lbl_file_name)
     s = cassini.cisscal("%s/__%s_fill0.cub"%(work_dir, product_id),
-                            "%s/__%s_cal.cub"%(work_dir, product_id), units="I/F")
+                            "%s/__%s_cal.cub"%(work_dir, product_id))
     if is_verbose:
         print s
 
@@ -103,7 +104,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
         print "Running Noise Filter..."
     else:
         printProgress(4, 9, prefix="%s: "%lbl_file_name)
-    s = filters.noisefilter("%s/__%s_cal.cub"%(work_dir, product_id),
+    s = filters.noisefilter("%s/__%s_fill0.cub"%(work_dir, product_id),
                             "%s/__%s_stdz.cub"%(work_dir, product_id))
     if is_verbose:
         print s
@@ -122,7 +123,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
         print "Removing Frame-Edge Noise..."
     else:
         printProgress(6, 9, prefix="%s: "%lbl_file_name)
-    s = trimandmask.trim("%s/__%s_fill.cub"%(work_dir, product_id),
+    s = trimandmask.trim("%s/__%s_raw.cub"%(work_dir, product_id),
                         "%s"%(out_file_cub))
     if is_verbose:
         print s
