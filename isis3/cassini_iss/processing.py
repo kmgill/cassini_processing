@@ -104,7 +104,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
         print "Running Noise Filter..."
     else:
         printProgress(4, 9, prefix="%s: "%lbl_file_name)
-    s = filters.noisefilter("%s/__%s_fill0.cub"%(work_dir, product_id),
+    s = filters.noisefilter("%s/__%s_cal.cub"%(work_dir, product_id),
                             "%s/__%s_stdz.cub"%(work_dir, product_id))
     if is_verbose:
         print s
@@ -123,7 +123,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
         print "Removing Frame-Edge Noise..."
     else:
         printProgress(6, 9, prefix="%s: "%lbl_file_name)
-    s = trimandmask.trim("%s/__%s_raw.cub"%(work_dir, product_id),
+    s = trimandmask.trim("%s/__%s_fill.cub"%(work_dir, product_id),
                         "%s"%(out_file_cub))
     if is_verbose:
         print s
