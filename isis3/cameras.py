@@ -30,6 +30,22 @@ def cam2map(from_cube, to_cube, projection="equirectangular", map=None, resoluti
     s = isis_command("cam2map", params)
     return s
 
+def ringscam2map(from_cube, to_cube, projection="ringscylindrical", map=None, resolution="CAMERA"):
+
+    if map is None:
+        map = "%s/../data/base/templates/maps/%s.map"%(os.environ["ISISROOT"], projection)
+
+    params = {
+        "from": from_cube,
+        "to": to_cube,
+        "map": map
+    }
+
+    if resolution == "MAP":
+        params["pixres"] = "map"
+
+    s = isis_command("ringscam2map", params)
+    return s
 
 def caminfo(from_cube, to_pvl, isislabel=True, originallabel=True):
     cmd = "caminfo"
