@@ -38,7 +38,10 @@ if __name__ == "__main__":
             if skip_existing and os.path.exists(out_file) :
                 print "Output exists, skipping."
             else:
-                if not rings:
-                    cameras.cam2map(file_name, out_file, map=map, resolution="MAP")
-                else:
-                    cameras.ringscam2map(file_name, out_file, map=map, resolution="MAP")
+                try:
+                    if not rings:
+                        cameras.cam2map(file_name, out_file, map=map, resolution="MAP")
+                    else:
+                        cameras.ringscam2map(file_name, out_file, map=map, resolution="MAP")
+                except:
+                    print "Processing", file_name, "failed"

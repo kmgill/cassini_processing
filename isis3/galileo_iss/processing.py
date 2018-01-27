@@ -1,5 +1,6 @@
 
 import os
+import sys
 import glob
 from isis3 import info
 from isis3 import galileo
@@ -20,7 +21,10 @@ def output_filename(file_name):
     target = info.get_target(file_name)
     filter1, filter2 = info.get_filters(file_name)
     image_time = info.get_image_time(file_name)
-    out_file = "{dirname}{product_id}_{target}_{filter1}_{image_date}".format(dirname=dirname,
+    image_id = file_name[:file_name.index(".")]
+
+    out_file = "{dirname}{image_id}_{product_id}_{target}_{filter1}_{image_date}".format(dirname=dirname,
+                                                                                        image_id=image_id,
                                                                                         product_id=product_id,
                                                                                         target=target,
                                                                                         filter1=filter1,

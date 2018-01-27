@@ -15,6 +15,12 @@ def has_keyword(file_name, keyword, objname=None, grpname=None):
     except:
         return False
 
+def get_property(file_name, prop):
+    p = load_pvl(file_name)
+    if file_name[-3:].upper() in LABEL_FILE_EXTENSIONS:
+        return p[prop]
+    else:
+        raise Exception(__UNSUPPORTED_UNRECOGNIZED__)
 
 def time_string_matches_format(s, format):
     try:
