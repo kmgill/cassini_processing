@@ -28,10 +28,12 @@ def output_filename(file_name):
     filter1, filter2 = info.get_filters(file_name)
     image_time = info.get_image_time(file_name)
     spacecraft = info.get_spacecraft_name(file_name)
+    image_id = file_name[:file_name.index(".")]
 
     sc = "Vg1" if spacecraft == "VOYAGER_1" else "Vg2"
 
-    out_file = "{dirname}{product_id}_{spacecraft}_{target}_{filter1}_{image_date}".format(dirname=dirname,
+    out_file = "{dirname}{image_id}_{product_id}_{spacecraft}_{target}_{filter1}_{image_date}".format(dirname=dirname,
+                                                                                        image_id=image_id,
                                                                                         product_id=product_id,
                                                                                         spacecraft=sc,
                                                                                         target=target,
@@ -111,7 +113,17 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
         if is_verbose:
             print s
 
-        last_cube = "%s/__%s_cal.cub"%(work_dir, product_id)
+        if is_verbose:
+            print "Plasma torus irradiation correction..."
+        else:
+            printProgress(4, 11, prefix="%s: "%from_file_name)
+        s = voyager.voycal("%s/__%s_cal.cub"%(work_dir, product_id),
+                                "%s/__%s_ramp.cub"%(work_dir, product_id))
+
+        if is_verbose:
+            print s
+
+        last_cube = "%s/__%s_ramp.cub"%(work_dir, product_id)
     except:
         if is_verbose:
             traceback.print_exc(file=sys.stdout)
@@ -158,13 +170,25 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     else:
         printProgress(8, 11, prefix="%s: "%from_file_name)
     s = trimandmask.trim("%s/__%s_fill0.cub"%(work_dir, product_id),
-                        "%s"%(out_file_cub),
+                         "%s/__%s_noise.cub"%(work_dir, product_id),
                          top=2,
                          right=2,
                          bottom=2,
                          left=2)
     if is_verbose:
         print s
+
+
+    if is_verbose:
+        print "Trimming Corners..."
+    else:
+        printProgress(9, 11, prefix="%s: "%from_file_name)
+    s = trimandmask.circle("%s/__%s_noise.cub" % (work_dir, product_id),
+                        out_file_cub,
+                        rad=500)
+    if is_verbose:
+        print s
+
 
     if is_verbose:
         print "Exporting TIFF..."
@@ -175,11 +199,19 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     if is_verbose:
         print s
 
+
     if is_verbose:
         print "Cleaning up..."
     else:
         printProgress(10, 11, prefix="%s: "%from_file_name)
     map(os.unlink, glob.glob('%s/__%s*.cub'%(work_dir, product_id)))
+
+    dirname = os.path.dirname(out_file_tiff)
+    if len(dirname) > 0:
+        dirname += "/"
+    if os.path.exists("%sprint.prt"%dirname):
+        os.unlink("%sprint.prt"%dirname)
+
 
     if not is_verbose:
         printProgress(11, 11, prefix="%s: "%from_file_name)

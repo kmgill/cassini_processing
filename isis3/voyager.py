@@ -13,3 +13,7 @@ def voycal(from_file, to_file):
 def vdcomp(from_file, to_file):
     s = subprocess.check_output(["vdcomp", from_file, to_file])
     return s
+
+def voyramp(from_file, to_file):
+    s = subprocess.check_output(["voyramp", from_file, to_file])
+    return s
