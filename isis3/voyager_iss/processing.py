@@ -23,19 +23,24 @@ def output_filename(file_name):
     dirname = os.path.dirname(file_name)
     if len(dirname) > 0:
         dirname += "/"
-    product_id = info.get_product_id(file_name)
     target = info.get_target(file_name)
     filter1, filter2 = info.get_filters(file_name)
     image_time = info.get_image_time(file_name)
     spacecraft = info.get_spacecraft_name(file_name)
     image_id = file_name[:file_name.index(".")]
+    camera = info.get_instrument_id(file_name)
+
+    if camera is not None and len(camera) > 0:
+        camera = "NAC" if camera == "NARROW_ANGLE_CAMERA" else "WAC"
+    else:
+        camera = "UNK"
 
     sc = "Vg1" if spacecraft == "VOYAGER_1" else "Vg2"
 
-    out_file = "{dirname}{image_id}_{product_id}_{spacecraft}_{target}_{filter1}_{image_date}".format(dirname=dirname,
+    out_file = "{dirname}{image_id}_{spacecraft}_{camera}_{target}_{filter1}_{image_date}".format(dirname=dirname,
                                                                                         image_id=image_id,
-                                                                                        product_id=product_id,
                                                                                         spacecraft=sc,
+                                                                                        camera=camera,
                                                                                         target=target,
                                                                                         filter1=filter1,
                                                                                         image_date=image_time.strftime('%Y-%m-%d_%H.%M.%S'))
@@ -113,17 +118,17 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
         if is_verbose:
             print s
 
-        if is_verbose:
-            print "Plasma torus irradiation correction..."
-        else:
-            printProgress(4, 11, prefix="%s: "%from_file_name)
-        s = voyager.voycal("%s/__%s_cal.cub"%(work_dir, product_id),
-                                "%s/__%s_ramp.cub"%(work_dir, product_id))
+        #if is_verbose:
+        #    print "Plasma torus irradiation correction..."
+        #else:
+        #    printProgress(4, 11, prefix="%s: "%from_file_name)
+        #s = voyager.voycal("%s/__%s_cal.cub"%(work_dir, product_id),
+        #                        "%s/__%s_ramp.cub"%(work_dir, product_id))
 
-        if is_verbose:
-            print s
+        #if is_verbose:
+        #    print s
 
-        last_cube = "%s/__%s_ramp.cub"%(work_dir, product_id)
+        last_cube = "%s/__%s_cal.cub"%(work_dir, product_id)
     except:
         if is_verbose:
             traceback.print_exc(file=sys.stdout)
