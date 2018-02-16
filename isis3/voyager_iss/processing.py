@@ -118,6 +118,7 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
         if is_verbose:
             print s
 
+        # TODO: Determine when to run this (on Io approach) and do so
         #if is_verbose:
         #    print "Plasma torus irradiation correction..."
         #else:

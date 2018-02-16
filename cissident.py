@@ -21,7 +21,16 @@ def printInfo(lbl_file_name):
     num_lines = info.get_num_lines(lbl_file_name)
     num_line_samples = info.get_num_line_samples(lbl_file_name)
     sample_bits = info.get_sample_bits(lbl_file_name)
-    camera = "Narrow" if info.get_instrument_id(lbl_file_name) == "ISSNA" else "Wide"
+
+    instrument = info.get_instrument_id(lbl_file_name)
+    if instrument in ("ISSNA", "NARROW_ANGLE_CAMERA"):
+        camera = "Narrow"
+    elif instrument in ("ISSWA", "WIDE_ANGLE_CAMERA"):
+        camera = "Wide"
+    else:
+        camera = "NA"
+
+
     print "%25s|%10s|%10s|%22s|%5s|%5s|%4s|%8s| %s"%(target,
                                                 filter1,
                                                 filter2,
