@@ -10,7 +10,7 @@ from isis3 import utility
 
 
 
-def match_cam(from_cube, match_cube, output_dir, pad=2000):
+def match_cam(from_cube, match_cube, output_dir, pad=2000, frommap=False):
     source_dirname = os.path.dirname(from_cube)
     if source_dirname == "":
         source_dirname = "."
@@ -26,7 +26,10 @@ def match_cam(from_cube, match_cube, output_dir, pad=2000):
     utility.pad(from_cube, padded_file, top=pad, right=pad, bottom=pad, left=pad)
     utility.pad(match_cube, padded_match_file, top=pad, right=pad, bottom=pad, left=pad)
 
-    cameras.cam2cam(padded_file, out_file, padded_match_file)
+    if frommap:
+        cameras.map2cam(padded_file, out_file, padded_match_file)
+    else:
+        cameras.cam2cam(padded_file, out_file, padded_match_file)
 
     os.unlink(padded_file)
     os.unlink(padded_match_file)
@@ -45,15 +48,18 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--match", help="Input cube to match", required=False, type=str)
     parser.add_argument("-o", "--output", help="Output Directory", required=True, type=str)
     parser.add_argument("-p", "--padding", help="Cube padding (pixels)", required=False, type=int, default=2000)
+    parser.add_argument("-f", "--frommap", help="Input cubes are map projected", required=False, type=str)
+
     args = parser.parse_args()
 
     source = args.data
     match = args.match
     output = args.output
     padding = args.padding
+    frommap = args.frommap
 
     for file_name in source:
         if file_name[-3:].upper() != "CUB":
             print "Not a ISIS cube file file. Skipping '%s'"%file_name
         else:
-            match_cam(file_name, match, output, padding)
+            match_cam(file_name, match, output, padding, frommap)

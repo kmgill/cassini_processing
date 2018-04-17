@@ -12,7 +12,7 @@ from isis3 import geometry
 from isis3 import importexport
 from isis3 import mosaicking
 from isis3._core import printProgress
-
+from isis3 import utility
 
 
 def output_filename(file_name):
@@ -52,8 +52,8 @@ def assemble_mosaic(color, source_dirname, product_id, is_verbose=False):
 
 
 def export(out_file_cub, is_verbose=False):
-    out_file_tiff = "%s.tif"%out_file_cub[:-3]
-    s = importexport.isis2std_grayscale("%s+1" % (out_file_cub),
+    out_file_tiff = "%s.tif"%out_file_cub[:-4]
+    s = importexport.isis2std_grayscale("%s" % (out_file_cub),
                                         "%s" % (out_file_tiff))
     if is_verbose:
         print s
@@ -68,6 +68,8 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     #out_file = output_filename(from_file_name)
     #out_file_tiff = "%s.tif" % out_file
     #out_file_cub = "%s.cub" % out_file
+
+    num_steps = 12
 
     # Ensure we weren't served a None
     projection = "equirectangular" if projection is None else projection
@@ -89,7 +91,7 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     if is_verbose:
         print "Importing to cube..."
     else:
-        printProgress(0, 9, prefix="%s: "%from_file_name)
+        printProgress(0, num_steps, prefix="%s: "%from_file_name)
 
     try: # Noticing a weird exception in junocam2isis. Eating the exception for now.
         s = juno.junocam2isis(from_file_name, "%s/__%s_raw.cub"%(work_dir, product_id))
@@ -102,7 +104,7 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
         if is_verbose:
             print "Initializing Spice..."
         else:
-            printProgress(1, 9, prefix="%s: "%from_file_name)
+            printProgress(1, num_steps, prefix="%s: "%from_file_name)
         cub_files = glob.glob('%s/__%s_raw_*.cub'%(work_dir, product_id))
 
         for cub_file in cub_files:
@@ -118,7 +120,7 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     if is_verbose:
         print "Starting Map..."
     else:
-        printProgress(2, 9, prefix="%s: " % from_file_name)
+        printProgress(2, num_steps, prefix="%s: " % from_file_name)
 
     s = cameras.cam2map(mid_file, map_file, projection=projection)
     if is_verbose:
@@ -128,7 +130,7 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     if is_verbose:
         print "Map Projecting Stripes..."
     else:
-        printProgress(3, 9, prefix="%s: " % from_file_name)
+        printProgress(3, num_steps, prefix="%s: " % from_file_name)
 
     cub_files = glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))
     for cub_file in cub_files:
@@ -142,11 +144,10 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
             pass # Probably shouldn't eat the exception here.
 
 
-
     if is_verbose:
         print "Assembling Red Mosaic..."
     else:
-        printProgress(4, 9, prefix="%s: " % from_file_name)
+        printProgress(4, num_steps, prefix="%s: " % from_file_name)
 
     out_file_red = assemble_mosaic("RED", source_dirname, product_id, is_verbose)
 
@@ -154,22 +155,22 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     if is_verbose:
         print "Assembling Green Mosaic..."
     else:
-        printProgress(5, 9, prefix="%s: " % from_file_name)
+        printProgress(5, num_steps, prefix="%s: " % from_file_name)
 
     out_file_green = assemble_mosaic("GREEN", source_dirname, product_id, is_verbose)
 
     if is_verbose:
         print "Assembling Blue Mosaic..."
     else:
-        printProgress(6, 9, prefix="%s: " % from_file_name)
+        printProgress(6, num_steps, prefix="%s: " % from_file_name)
 
     out_file_blue = assemble_mosaic("BLUE", source_dirname, product_id, is_verbose)
 
 
     if is_verbose:
-        print "Exporting Tiffs..."
+        print "Exporting Map Projected Tiffs..."
     else:
-        printProgress(7, 9, prefix="%s: " % from_file_name)
+        printProgress(7, num_steps, prefix="%s: " % from_file_name)
 
     export(out_file_red, is_verbose)
     export(out_file_green, is_verbose)
@@ -178,9 +179,50 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
 
 
     if is_verbose:
+        print "Camera Projecting Mosaics..."
+    else:
+        printProgress(8, num_steps, prefix="%s: " % from_file_name)
+
+    pad_file = "%s/__%s_raw_GREEN_00%d_padded.cub"%(work_dir, product_id, mid_num)
+
+    utility.pad(mid_file, pad_file, top=2300, right=0, bottom=2300, left=0)
+
+    out_file_red_cam = "%s/%s_%s_Recammed.cub" % (source_dirname, product_id, "RED")
+    cameras.map2cam(out_file_red, out_file_red_cam, pad_file)
+
+    out_file_green_cam = "%s/%s_%s_Recammed.cub" % (source_dirname, product_id, "GREEN")
+    cameras.map2cam(out_file_green, out_file_green_cam, pad_file)
+
+    out_file_blue_cam = "%s/%s_%s_Recammed.cub" % (source_dirname, product_id, "BLUE")
+    cameras.map2cam(out_file_blue, out_file_blue_cam, pad_file)
+
+
+
+    if is_verbose:
+        print "Exporting Camera Projected Tiffs..."
+    else:
+        printProgress(9, num_steps, prefix="%s: " % from_file_name)
+
+    export(out_file_red_cam, is_verbose)
+    export(out_file_green_cam, is_verbose)
+    export(out_file_blue_cam, is_verbose)
+
+
+    if is_verbose:
+        print "Exporting Color Camera Projected Tiff..."
+    else:
+        printProgress(10, num_steps, prefix="%s: " % from_file_name)
+
+    out_file_cam_rgb_tiff = "%s/%s_RGB.tif" % (source_dirname, product_id)
+    s = importexport.isis2std_rgb(from_cube_red=out_file_red_cam, from_cube_green=out_file_green_cam, from_cube_blue=out_file_blue_cam, to_tiff=out_file_cam_rgb_tiff)
+    if is_verbose:
+        print s
+
+    """
+    if is_verbose:
         print "Cleaning up..."
     else:
-        printProgress(8, 9, prefix="%s: " % from_file_name)
+        printProgress(11, num_steps, prefix="%s: " % from_file_name)
 
     clean_dir(work_dir, product_id)
     clean_dir(mapped_dir, product_id)
@@ -191,5 +233,6 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     if os.path.exists("%sprint.prt"%dirname):
         os.unlink("%sprint.prt"%dirname)
 
+    """
     if not is_verbose:
-        printProgress(9, 9, prefix="%s: "%from_file_name)
+        printProgress(12, num_steps, prefix="%s: "%from_file_name)
