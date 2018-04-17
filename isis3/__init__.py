@@ -4,6 +4,7 @@ import utils
 import cassini
 import galileo
 import voyager
+import juno
 import scripting
 import cameras
 import filters
@@ -16,3 +17,4 @@ import utility
 import cassini_iss
 import galileo_iss
 import voyager_iss
+import junocam

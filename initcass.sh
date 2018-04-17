@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ulimit -n 2048
+
 # NOTE: Edit this with the correct paths!
 
 export PATH=$PATH:/absolute-path-to-cassini_processing-repo/cassini_processing

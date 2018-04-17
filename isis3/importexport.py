@@ -1,6 +1,11 @@
 from isis3._core import isis_command
 import os
 
+
+def pds2isis(from_file, to_file):
+    s = isis_command("pds2isis", {"from": from_file, "to": to_file})
+    return s
+
 def isis2std_grayscale(from_cube, to_tiff, format="tiff", bittype="u16bit", minimum=None, maximum=None, maxpercent=99.999, cleanup_print_file=True):
     cmd = "isis2std"
     params = {

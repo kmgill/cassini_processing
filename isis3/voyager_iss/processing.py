@@ -176,7 +176,7 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     else:
         printProgress(8, 11, prefix="%s: "%from_file_name)
     s = trimandmask.trim("%s/__%s_fill0.cub"%(work_dir, product_id),
-                         "%s/__%s_noise.cub"%(work_dir, product_id),
+                         out_file_cub,
                          top=2,
                          right=2,
                          bottom=2,
@@ -184,7 +184,7 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     if is_verbose:
         print s
 
-
+    """
     if is_verbose:
         print "Trimming Corners..."
     else:
@@ -194,7 +194,7 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
                         rad=500)
     if is_verbose:
         print s
-
+    """
 
     if is_verbose:
         print "Exporting TIFF..."

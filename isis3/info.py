@@ -122,7 +122,10 @@ def get_image_time(file_name):
 def get_num_lines(file_name):
     p = load_pvl(file_name)
     if file_name[-3:].upper() in LABEL_FILE_EXTENSIONS:
-        return p["IMAGE"]["LINES"]
+        if "NL" in p:
+            return p["NL"]
+        else:
+            return p["IMAGE"]["LINE_SAMPLES"]
     elif file_name[-3:].upper() in ("CUB", ):
         return p["IsisCube"]["Core"]["Dimensions"]["Lines"]
     else:
@@ -133,7 +136,10 @@ def get_num_line_samples(file_name):
     p = load_pvl(file_name)
 
     if file_name[-3:].upper() in LABEL_FILE_EXTENSIONS:
-        return p["IMAGE"]["LINE_SAMPLES"]
+        if "NS" in p:
+            return p["NS"]
+        else:
+            return p["IMAGE"]["LINE_SAMPLES"]
     elif file_name[-3:].upper() in ("CUB",):
         return p["IsisCube"]["Core"]["Dimensions"]["Samples"]
     else:

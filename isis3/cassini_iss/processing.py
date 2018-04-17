@@ -9,6 +9,7 @@ from isis3 import filters
 from isis3 import mathandstats
 from isis3 import trimandmask
 from isis3 import importexport
+from isis3.metadata import load_pvl
 
 from datetime import datetime
 
@@ -33,8 +34,9 @@ def output_filename(file_name):
 def is_supported_file(file_name):
 
     if file_name[-3:].upper() in ("LBL", "BEL"):
-        value = info.get_field_value(file_name,  "INSTRUMENT_HOST_NAME")
-        return value == "CASSINI ORBITER"
+        p = load_pvl(file_name)
+        instument_host_name = p["INSTRUMENT_HOST_NAME"]
+        return instument_host_name == "CASSINI ORBITER"
     elif file_name[-3:].upper() == "CUB":
         value = info.get_field_value(file_name, "SpacecraftName", grpname="Instrument")
         return value == "Cassini-Huygens"

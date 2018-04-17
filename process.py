@@ -35,7 +35,10 @@ def process_data_file(lbl_file_name, is_ringplane, require_target, require_filte
 
     print_if_verbose("Ringplace Shape: %s"%("Yes" if is_ringplane else "No"), is_verbose)
 
-    filter1, filter2 = info.get_filters(source)
+    try:
+        filter1, filter2 = info.get_filters(source)
+    except:
+        filter1, filter2 = (None, None)
     print_if_verbose("Filter #1: %s"%filter1, is_verbose)
     print_if_verbose("Filter #2: %s"%filter2, is_verbose)
 
@@ -47,9 +50,6 @@ def process_data_file(lbl_file_name, is_ringplane, require_target, require_filte
 
     line_samples = info.get_num_line_samples(source)
     print_if_verbose("Samples per line: %s"%line_samples, is_verbose)
-
-    sample_bits = info.get_sample_bits(source)
-    print_if_verbose("Bits per sample: %s"%sample_bits, is_verbose)
 
     image_date = info.get_image_time(source)
     print_if_verbose("Image Date: %s"%image_date, is_verbose)

@@ -14,6 +14,7 @@ import isis3.importexport as importexport
 import isis3.cassini_iss.processing as cassproc
 import isis3.voyager_iss.processing as voyproc
 import isis3.galileo_iss.processing as galproc
+import isis3.junocam.processing as jnoproc
 
 
 
@@ -61,5 +62,8 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
         return voyproc.process_pds_data_file(lbl_file_name, is_ringplane, is_verbose, skip_if_cub_exists, init_spice)
     elif galproc.is_supported_file(lbl_file_name):
         return galproc.process_pds_data_file(lbl_file_name, is_ringplane, is_verbose, skip_if_cub_exists, init_spice)
+    elif jnoproc.is_supported_file(lbl_file_name):
+        return jnoproc.process_pds_data_file(lbl_file_name, is_ringplane, is_verbose, skip_if_cub_exists, init_spice)
     else:
         raise Exception("Unsupported file type")
+
