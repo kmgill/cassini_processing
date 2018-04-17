@@ -1,5 +1,5 @@
 # Cassini, Voyager, & Galileo Image Processing
-Scripts and utilities for processing Cassini, Voyager, & Galileo imagery from NASA PDS archived data. 
+Scripts and utilities for processing Juno, Cassini, Voyager, & Galileo imagery from NASA PDS archived data. 
 
 ## Overview
 
@@ -24,7 +24,8 @@ Performs the nessessary steps for converting a PDS IMG file into a calibrated Ti
 
 ```
 usage: process.py [-h] -d DATA [DATA ...] [-r] [-m] [-f FILTER [FILTER ...]]
-                  [-t TARGET] [-s] [-v]
+                  [-t TARGET] [-s] [-v] [-w WIDTH [WIDTH ...]]
+                  [-H HEIGHT [HEIGHT ...]] [-S] [-p PROJECTION]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -38,7 +39,13 @@ optional arguments:
                         Require target or exit
   -s, --skipexisting    Skip processing if output already exists
   -v, --verbose         Verbose output (includes ISIS3 command output)
-
+  -w WIDTH [WIDTH ...], --width WIDTH [WIDTH ...]
+                        Require width or exit
+  -H HEIGHT [HEIGHT ...], --height HEIGHT [HEIGHT ...]
+                        Require height or exit
+  -S, --skipspice       Skip spice initialization
+  -p PROJECTION, --projection PROJECTION
+                        Map projection (Juno)
 ```
 
 
