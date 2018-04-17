@@ -9,7 +9,7 @@ def pds2isis(from_file, to_file):
 def isis2std_grayscale(from_cube, to_tiff, format="tiff", bittype="u16bit", minimum=None, maximum=None, maxpercent=99.999, cleanup_print_file=True):
     cmd = "isis2std"
     params = {
-        "from": from_cube,
+        "from": "%s+1"%from_cube,
         "to": to_tiff,
         "format": format,
         "bittype": bittype

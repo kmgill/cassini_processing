@@ -16,7 +16,7 @@ def print_if_verbose(s, is_verbose=True):
     if is_verbose:
         print s
 
-def process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, require_width, require_height, metadata_only, is_verbose, skip_existing, init_spice):
+def process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, require_width, require_height, metadata_only, is_verbose, skip_existing, init_spice, projection):
     source = utils.guess_from_filename_prefix(lbl_file_name)
     source_dirname = os.path.dirname(source)
     if source_dirname == "":
@@ -83,7 +83,7 @@ def process_data_file(lbl_file_name, is_ringplane, require_target, require_filte
     if require_width is not None and not (str(width) in require_width):
         print "Width filter mismatch, exiting"
 
-    utils.process_pds_data_file(source, is_ringplane=is_ringplane, is_verbose=is_verbose, init_spice=init_spice)
+    utils.process_pds_data_file(source, is_ringplane=is_ringplane, is_verbose=is_verbose, init_spice=init_spice, projection=projection)
 
 
 if __name__ == "__main__":
@@ -105,6 +105,7 @@ if __name__ == "__main__":
     parser.add_argument("-w", "--width", help="Require width or exit", required=False, type=str, nargs='+')
     parser.add_argument("-H", "--height", help="Require height or exit", required=False, type=str, nargs='+')
     parser.add_argument("-S", "--skipspice", help="Skip spice initialization", required=False, action="store_true")
+    parser.add_argument("-p", "--projection", help="Map projection (Juno)", required=False, type=str)
     args = parser.parse_args()
 
     source = args.data
@@ -121,12 +122,14 @@ if __name__ == "__main__":
     skip_spice = args.skipspice
     is_verbose = args.verbose
 
+    projection = args.projection
+
     for lbl_file_name in source:
         if lbl_file_name[-3:].upper() not in ("LBL", "BEL", "IMQ"):  # Note: 'BEL' is for .LBL_label via atlas wget script
             print "Not a PDS label file. Skipping '%s'"%lbl_file_name
         else:
             try:
-                process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, require_width, require_height, metadata_only, is_verbose, skip_existing, not skip_spice)
+                process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, require_width, require_height, metadata_only, is_verbose, skip_existing, not skip_spice, projection=projection)
             except Exception as ex:
                 print "Error processing '%s'"%lbl_file_name
                 if is_verbose:

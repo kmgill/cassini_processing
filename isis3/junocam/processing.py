@@ -64,10 +64,13 @@ def clean_dir(dir, product_id):
     for file in files:
         os.unlink(file)
 
-def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, init_spice=True, **args):
+def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, init_spice=True, projection="equirectangular", **args):
     #out_file = output_filename(from_file_name)
     #out_file_tiff = "%s.tif" % out_file
     #out_file_cub = "%s.cub" % out_file
+
+    # Ensure we weren't served a None
+    projection = "equirectangular" if projection is None else projection
 
     source_dirname = os.path.dirname(from_file_name)
     if source_dirname == "":
@@ -107,10 +110,9 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
             if is_verbose:
                 print s
 
+    mid_num = int(round(len(glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))) / 3.0 / 2.0))
 
-
-
-    mid_file = "%s/__%s_raw_GREEN_0030.cub"%(work_dir, product_id)
+    mid_file = "%s/__%s_raw_GREEN_00%d.cub"%(work_dir, product_id, mid_num)
     map_file = "%s/__%s_map.cub"%(work_dir, product_id)
 
     if is_verbose:
@@ -118,7 +120,7 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     else:
         printProgress(2, 9, prefix="%s: " % from_file_name)
 
-    s = cameras.cam2map(mid_file, map_file, projection="equirectangular")
+    s = cameras.cam2map(mid_file, map_file, projection=projection)
     if is_verbose:
         print s
 

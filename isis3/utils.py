@@ -55,7 +55,7 @@ def guess_from_filename_prefix(filename):
         return "%s_2.LBL"%filename
 
 
-def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, init_spice=True, **args):
+def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, init_spice=True, projection=None, **args):
     if cassproc.is_supported_file(lbl_file_name):
         return cassproc.process_pds_data_file(lbl_file_name, is_ringplane, is_verbose, skip_if_cub_exists, init_spice)
     elif voyproc.is_supported_file(lbl_file_name):
@@ -63,7 +63,7 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
     elif galproc.is_supported_file(lbl_file_name):
         return galproc.process_pds_data_file(lbl_file_name, is_ringplane, is_verbose, skip_if_cub_exists, init_spice)
     elif jnoproc.is_supported_file(lbl_file_name):
-        return jnoproc.process_pds_data_file(lbl_file_name, is_ringplane, is_verbose, skip_if_cub_exists, init_spice)
+        return jnoproc.process_pds_data_file(lbl_file_name, is_ringplane, is_verbose, skip_if_cub_exists, init_spice, projection)
     else:
         raise Exception("Unsupported file type")
 

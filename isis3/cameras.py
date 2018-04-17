@@ -77,10 +77,15 @@ def map2cam(from_cube, to_cube, cam):
         "match": cam
     }
     s = isis_command("map2cam", params)
+    return s
 
-    """
-    map2cam
-        from=1785J1_000_Vg1_CALLISTO_GREEN_1979-03-06_11.51.47.cub
-        match=/Volumes/ExternalData/Voyager/data/vg1_vg2-j-iss-2-edr-v3.0/vg_0019/callisto/c1641xxx/mosaic/1727J1_000_Vg1_CALLISTO_BLUE_1979-03-06_11.05.23.cub
-        to=recammed/1785J1_000_Vg1_CALLISTO_GREEN_1979-03-06_11.51.47.cub
-    """
+
+def map2map(from_cube, to_cube, map):
+    params = {
+        "from": from_cube,
+        "to": to_cube,
+        "map": map,
+        "pixres": "map"
+    }
+    s = isis_command("map2map", params)
+    return s
