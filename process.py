@@ -106,7 +106,7 @@ if __name__ == "__main__":
     parser.add_argument("-H", "--height", help="Require height or exit", required=False, type=str, nargs='+')
     parser.add_argument("-S", "--skipspice", help="Skip spice initialization", required=False, action="store_true")
     parser.add_argument("-p", "--projection", help="Map projection (Juno)", required=False, type=str)
-    parser.add_argument("-n", "--nocleanup", help="Don't clean up, leave temp files", required=False, type=str)
+    parser.add_argument("-n", "--nocleanup", help="Don't clean up, leave temp files", action="store_true")
     args = parser.parse_args()
 
     source = args.data

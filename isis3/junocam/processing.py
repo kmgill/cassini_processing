@@ -64,6 +64,20 @@ def clean_dir(dir, product_id):
     for file in files:
         os.unlink(file)
 
+
+def trim_vertical(cub_file, trim_pixels=2):
+    trim_file = "%s_trim.cub"%cub_file[:-4]
+    trimandmask.trim(cub_file, trim_file, top=trim_pixels, bottom=trim_pixels, left=0, right=0)
+    os.unlink(cub_file)
+    os.rename(trim_file, cub_file)
+
+
+def trim_cubes(work_dir, product_id, trim_pixels=2):
+    cub_files = glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))
+    for cub_file in cub_files:
+        trim_vertical(cub_file, trim_pixels)
+
+
 def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, init_spice=True, projection="equirectangular", nocleanup=False, **args):
     #out_file = output_filename(from_file_name)
     #out_file_tiff = "%s.tif" % out_file
@@ -99,6 +113,15 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
             print s
     except:
         pass
+
+
+    if is_verbose:
+        print "Trimming Framelets..."
+    else:
+        printProgress(0, num_steps, prefix="%s: "%from_file_name)
+
+    trim_cubes(work_dir, product_id, trim_pixels=2)
+
 
     if init_spice is True:
         if is_verbose:

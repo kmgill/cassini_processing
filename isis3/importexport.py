@@ -6,6 +6,40 @@ def pds2isis(from_file, to_file):
     s = isis_command("pds2isis", {"from": from_file, "to": to_file})
     return s
 
+
+class ColorMode:
+    AUTO="auto"
+    GRAYSCALE="grayscale"
+    RGB="rgb"
+    RGBA="rgba"
+
+def std2isis(from_file, to_file, mode=ColorMode.AUTO):
+    params = {
+        "from": from_file,
+        "to": to_file,
+    }
+
+    if mode != ColorMode.AUTO:
+        params["mode"] = mode
+
+    s = isis_command("std2isis", params)
+    return s
+
+
+
+def isis2pds(from_file, to_file, labtype="fixed", bittype="32bit", pdsversion="pds3"):
+    params = {
+        "from": from_file,
+        "to": to_file,
+        "labtype": labtype,
+        "bittype": bittype,
+        "pdsversion": pdsversion
+    }
+
+    s = isis_command("isis2pds", params)
+    return s
+
+
 def isis2std_grayscale(from_cube, to_tiff, format="tiff", bittype="u16bit", minimum=None, maximum=None, maxpercent=99.999, cleanup_print_file=True):
     cmd = "isis2std"
     params = {
