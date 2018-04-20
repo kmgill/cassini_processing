@@ -64,7 +64,7 @@ def clean_dir(dir, product_id):
     for file in files:
         os.unlink(file)
 
-def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, init_spice=True, projection="equirectangular", **args):
+def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, init_spice=True, projection="equirectangular", nocleanup=False, **args):
     #out_file = output_filename(from_file_name)
     #out_file_tiff = "%s.tif" % out_file
     #out_file_cub = "%s.cub" % out_file
@@ -108,7 +108,7 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
         cub_files = glob.glob('%s/__%s_raw_*.cub'%(work_dir, product_id))
 
         for cub_file in cub_files:
-            s = cameras.spiceinit(cub_file, is_ringplane=is_ringplane)
+            s = cameras.spiceinit(cub_file, is_ringplane=is_ringplane, spkpredict=True, ckpredicted=True, cknadir=True)
             if is_verbose:
                 print s
 
@@ -218,21 +218,25 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     if is_verbose:
         print s
 
-    """
-    if is_verbose:
-        print "Cleaning up..."
+    if nocleanup is False:
+        if is_verbose:
+            print "Cleaning up..."
+        else:
+            printProgress(11, num_steps, prefix="%s: " % from_file_name)
+
+        clean_dir(work_dir, product_id)
+        clean_dir(mapped_dir, product_id)
+
+        dirname = os.path.dirname(out_file_red)
+        if len(dirname) > 0:
+            dirname += "/"
+        if os.path.exists("%sprint.prt"%dirname):
+            os.unlink("%sprint.prt"%dirname)
     else:
-        printProgress(11, num_steps, prefix="%s: " % from_file_name)
+        if is_verbose:
+            print "Skipping clean up..."
+        else:
+            printProgress(11, num_steps, prefix="%s: " % from_file_name)
 
-    clean_dir(work_dir, product_id)
-    clean_dir(mapped_dir, product_id)
-
-    dirname = os.path.dirname(out_file_red)
-    if len(dirname) > 0:
-        dirname += "/"
-    if os.path.exists("%sprint.prt"%dirname):
-        os.unlink("%sprint.prt"%dirname)
-
-    """
     if not is_verbose:
         printProgress(12, num_steps, prefix="%s: "%from_file_name)

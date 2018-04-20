@@ -1,11 +1,24 @@
 from isis3._core import isis_command
 import os
 
-def spiceinit(from_cube, is_ringplane=False):
+
+def spiceinit(from_cube, is_ringplane=False, spkpredict=False, ckpredicted=False, cknadir=False, web=False):
     params = {
         "from": from_cube
     }
-    # web=yes ckpredicted=true cknadir=true spkpredicted=true
+
+    if web is True:
+        params["web"] = "yes"
+
+    if spkpredict is True:
+        params["spkpredict"] = "yes"
+
+    if ckpredicted is True:
+        params["ckpredicted"] = "yes"
+
+    if cknadir is True:
+        params["cknadir"] = "yes"
+
     if is_ringplane is True:
         params["shape"] = "ringplane"
 
