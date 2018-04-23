@@ -7,7 +7,7 @@ import datetime
 import glob
 import argparse
 import traceback
-
+import types
 from isis3 import utils
 from isis3 import info
 from isis3 import _core
@@ -127,13 +127,15 @@ if __name__ == "__main__":
     projection = args.projection
 
     additional_options = {}
-    for option in args.option:
-        if re.match("^[0-9a-zA-Z]+=[0-9a-zA-Z]+$", option) is not None:
-            parts = option.split("=")
-            additional_options[parts[0]] = parts[1]
-        else:
-            print "Invalid option format:", option
-            sys.exit(1)
+
+    if isinstance(args.option, types.ListType):
+        for option in args.option:
+            if re.match("^[0-9a-zA-Z]+=[0-9a-zA-Z]+$", option) is not None:
+                parts = option.split("=")
+                additional_options[parts[0]] = parts[1]
+            else:
+                print "Invalid option format:", option
+                sys.exit(1)
 
 
     for lbl_file_name in source:
