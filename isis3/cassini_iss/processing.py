@@ -44,7 +44,7 @@ def is_supported_file(file_name):
         return False
 
 
-def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, init_spice=True, **args):
+def process_pds_data_file(lbl_file_name, is_verbose=False, skip_if_cub_exists=False, init_spice=True, nocleanup=False, additional_options={}):
     product_id = info.get_product_id(lbl_file_name)
 
     out_file_tiff = "%s.tif"%output_filename(lbl_file_name)
@@ -53,6 +53,11 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
     if skip_if_cub_exists and os.path.exists(out_file_cub):
         print "File %s exists, skipping processing"%out_file_cub
         return
+
+    if "ringplane" in additional_options:
+        is_ringplane = additional_options["ringplane"].upper() in ("TRUE", "YES")
+    else:
+        is_ringplane = False
 
     source_dirname = os.path.dirname(lbl_file_name)
     if source_dirname == "":
@@ -140,12 +145,18 @@ def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, s
     if is_verbose:
         print s
 
-
-    if is_verbose:
-        print "Cleaning up..."
+    if nocleanup is False:
+        if is_verbose:
+            print "Cleaning up..."
+        else:
+            printProgress(8, 9, prefix="%s: "%lbl_file_name)
+        map(os.unlink, glob.glob('%s/__%s*.cub'%(work_dir, product_id)))
     else:
-        printProgress(8, 9, prefix="%s: "%lbl_file_name)
-    map(os.unlink, glob.glob('%s/__%s*.cub'%(work_dir, product_id)))
+        if is_verbose:
+            print "Skipping clean up..."
+        else:
+            printProgress(8, 9, prefix="%s: "%lbl_file_name)
+
 
     if not is_verbose:
         printProgress(9, 9, prefix="%s: "%lbl_file_name)

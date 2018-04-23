@@ -55,15 +55,15 @@ def guess_from_filename_prefix(filename):
         return "%s_2.LBL"%filename
 
 
-def process_pds_data_file(lbl_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, init_spice=True, projection=None, nocleanup=False, **args):
+def process_pds_data_file(lbl_file_name,  is_verbose=False, skip_if_cub_exists=False, init_spice=True, nocleanup=False, additional_options={}):
     if cassproc.is_supported_file(lbl_file_name):
-        return cassproc.process_pds_data_file(lbl_file_name, is_ringplane, is_verbose, skip_if_cub_exists, init_spice)
+        return cassproc.process_pds_data_file(lbl_file_name, is_verbose, skip_if_cub_exists, init_spice, nocleanup, additional_options)
     elif voyproc.is_supported_file(lbl_file_name):
-        return voyproc.process_pds_data_file(lbl_file_name, is_ringplane, is_verbose, skip_if_cub_exists, init_spice)
+        return voyproc.process_pds_data_file(lbl_file_name, is_verbose, skip_if_cub_exists, init_spice, nocleanup, additional_options)
     elif galproc.is_supported_file(lbl_file_name):
-        return galproc.process_pds_data_file(lbl_file_name, is_ringplane, is_verbose, skip_if_cub_exists, init_spice)
+        return galproc.process_pds_data_file(lbl_file_name, is_verbose, skip_if_cub_exists, init_spice, nocleanup, additional_options)
     elif jnoproc.is_supported_file(lbl_file_name):
-        return jnoproc.process_pds_data_file(lbl_file_name, is_ringplane, is_verbose, skip_if_cub_exists, init_spice, projection, nocleanup)
+        return jnoproc.process_pds_data_file(lbl_file_name, is_verbose, skip_if_cub_exists, init_spice, nocleanup, additional_options)
     else:
         raise Exception("Unsupported file type")
 

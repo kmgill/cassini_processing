@@ -71,22 +71,36 @@ def trim_vertical(cub_file, trim_pixels=2):
     os.unlink(cub_file)
     os.rename(trim_file, cub_file)
 
-
 def trim_cubes(work_dir, product_id, trim_pixels=2):
     cub_files = glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))
     for cub_file in cub_files:
         trim_vertical(cub_file, trim_pixels)
 
 
-def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, skip_if_cub_exists=False, init_spice=True, projection="equirectangular", nocleanup=False, **args):
+def histeq_cube(cub_file, work_dir, product_id):
+    hist_file = "%s/__%s_hist.cub" % (work_dir, product_id)
+    mathandstats.histeq("%s+1"%cub_file, hist_file)
+    os.unlink(cub_file)
+    os.rename(hist_file, cub_file)
+
+
+"""
+    JunoCam additional options:
+    projection=<projection>
+    vt=<number>
+    histeq=true|false
+"""
+def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=False, init_spice=True, nocleanup=False, additional_options={}):
     #out_file = output_filename(from_file_name)
     #out_file_tiff = "%s.tif" % out_file
     #out_file_cub = "%s.cub" % out_file
 
-    num_steps = 12
+    num_steps = 14
 
-    # Ensure we weren't served a None
-    projection = "equirectangular" if projection is None else projection
+    if "projection" in additional_options:
+        projection = additional_options["projection"]
+    else:
+        projection = "equirectangular"
 
     source_dirname = os.path.dirname(from_file_name)
     if source_dirname == "":
@@ -101,26 +115,27 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     if not os.path.exists(mapped_dir):
         os.mkdir(mapped_dir)
 
-
     if is_verbose:
         print "Importing to cube..."
     else:
         printProgress(0, num_steps, prefix="%s: "%from_file_name)
 
-    try: # Noticing a weird exception in junocam2isis. Eating the exception for now.
-        s = juno.junocam2isis(from_file_name, "%s/__%s_raw.cub"%(work_dir, product_id))
-        if is_verbose:
-            print s
-    except:
-        pass
 
-
+    s = juno.junocam2isis(from_file_name, "%s/__%s_raw.cub"%(work_dir, product_id))
     if is_verbose:
-        print "Trimming Framelets..."
-    else:
-        printProgress(0, num_steps, prefix="%s: "%from_file_name)
+        print s
 
-    trim_cubes(work_dir, product_id, trim_pixels=2)
+
+
+    if "vt" in additional_options:
+        trim_pixels = int(additional_options["vt"])
+        if is_verbose:
+            print "Trimming Framelets..."
+            print "Vertical trimming: %d pixels"%trim_pixels
+        else:
+            printProgress(0, num_steps, prefix="%s: "%from_file_name)
+
+        trim_cubes(work_dir, product_id, trim_pixels=trim_pixels)
 
 
     if init_spice is True:
@@ -131,7 +146,7 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
         cub_files = glob.glob('%s/__%s_raw_*.cub'%(work_dir, product_id))
 
         for cub_file in cub_files:
-            s = cameras.spiceinit(cub_file, is_ringplane=is_ringplane, spkpredict=True, ckpredicted=True, cknadir=True)
+            s = cameras.spiceinit(cub_file, is_ringplane=False, spkpredict=True, ckpredicted=True, cknadir=True)
             if is_verbose:
                 print s
 
@@ -189,11 +204,19 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
 
     out_file_blue = assemble_mosaic("BLUE", source_dirname, product_id, is_verbose)
 
+    if "histeq" in additional_options and additional_options["histeq"].upper() in ("TRUE", "YES"):
+        if is_verbose:
+            print "Running histogram equalization on map projected cubes..."
+        else:
+            printProgress(7, num_steps, prefix="%s: " % from_file_name)
+        histeq_cube(out_file_red, work_dir, product_id)
+        histeq_cube(out_file_green, work_dir, product_id)
+        histeq_cube(out_file_blue, work_dir, product_id)
 
     if is_verbose:
         print "Exporting Map Projected Tiffs..."
     else:
-        printProgress(7, num_steps, prefix="%s: " % from_file_name)
+        printProgress(8, num_steps, prefix="%s: " % from_file_name)
 
     export(out_file_red, is_verbose)
     export(out_file_green, is_verbose)
@@ -204,7 +227,7 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     if is_verbose:
         print "Camera Projecting Mosaics..."
     else:
-        printProgress(8, num_steps, prefix="%s: " % from_file_name)
+        printProgress(9, num_steps, prefix="%s: " % from_file_name)
 
     pad_file = "%s/__%s_raw_GREEN_00%d_padded.cub"%(work_dir, product_id, mid_num)
 
@@ -220,11 +243,20 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     cameras.map2cam(out_file_blue, out_file_blue_cam, pad_file)
 
 
+    if "histeq" in additional_options and additional_options["histeq"].upper() in ("TRUE", "YES"):
+        if is_verbose:
+            print "Running histogram equalization on camera projected cubes..."
+        else:
+            printProgress(10, num_steps, prefix="%s: " % from_file_name)
+        histeq_cube(out_file_red_cam, work_dir, product_id)
+        histeq_cube(out_file_green_cam, work_dir, product_id)
+        histeq_cube(out_file_blue_cam, work_dir, product_id)
+
 
     if is_verbose:
         print "Exporting Camera Projected Tiffs..."
     else:
-        printProgress(9, num_steps, prefix="%s: " % from_file_name)
+        printProgress(11, num_steps, prefix="%s: " % from_file_name)
 
     export(out_file_red_cam, is_verbose)
     export(out_file_green_cam, is_verbose)
@@ -234,7 +266,7 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
     if is_verbose:
         print "Exporting Color Camera Projected Tiff..."
     else:
-        printProgress(10, num_steps, prefix="%s: " % from_file_name)
+        printProgress(12, num_steps, prefix="%s: " % from_file_name)
 
     out_file_cam_rgb_tiff = "%s/%s_RGB.tif" % (source_dirname, product_id)
     s = importexport.isis2std_rgb(from_cube_red=out_file_red_cam, from_cube_green=out_file_green_cam, from_cube_blue=out_file_blue_cam, to_tiff=out_file_cam_rgb_tiff)
@@ -245,7 +277,7 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
         if is_verbose:
             print "Cleaning up..."
         else:
-            printProgress(11, num_steps, prefix="%s: " % from_file_name)
+            printProgress(13, num_steps, prefix="%s: " % from_file_name)
 
         clean_dir(work_dir, product_id)
         clean_dir(mapped_dir, product_id)
@@ -259,7 +291,7 @@ def process_pds_data_file(from_file_name, is_ringplane=False, is_verbose=False, 
         if is_verbose:
             print "Skipping clean up..."
         else:
-            printProgress(11, num_steps, prefix="%s: " % from_file_name)
+            printProgress(13, num_steps, prefix="%s: " % from_file_name)
 
     if not is_verbose:
-        printProgress(12, num_steps, prefix="%s: "%from_file_name)
+        printProgress(14, num_steps, prefix="%s: "%from_file_name)

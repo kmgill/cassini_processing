@@ -11,6 +11,14 @@ def fillgap(from_cube, to_cube, interp="cubic", direction="sample"):
     return s
 
 
+def histeq(from_cube, to_cube):
+    s = isis_command("histeq", {
+        "from": from_cube,
+        "to": to_cube
+    })
+    return s
+
+
 def get_data_min_max(from_cube):
     out = isis_command("stats", {"from": from_cube})
 

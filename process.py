@@ -16,7 +16,7 @@ def print_if_verbose(s, is_verbose=True):
     if is_verbose:
         print s
 
-def process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, require_width, require_height, metadata_only, is_verbose, skip_existing, init_spice, projection, nocleanup):
+def process_data_file(lbl_file_name, require_target, require_filters, require_width, require_height, metadata_only, is_verbose, skip_existing, init_spice, nocleanup, additional_options):
     source = utils.guess_from_filename_prefix(lbl_file_name)
     source_dirname = os.path.dirname(source)
     if source_dirname == "":
@@ -33,7 +33,6 @@ def process_data_file(lbl_file_name, is_ringplane, require_target, require_filte
     product_id = info.get_product_id(source)
     print_if_verbose("Product ID: %s"%product_id, is_verbose)
 
-    print_if_verbose("Ringplace Shape: %s"%("Yes" if is_ringplane else "No"), is_verbose)
 
     try:
         filter1, filter2 = info.get_filters(source)
@@ -83,7 +82,7 @@ def process_data_file(lbl_file_name, is_ringplane, require_target, require_filte
     if require_width is not None and not (str(width) in require_width):
         print "Width filter mismatch, exiting"
 
-    utils.process_pds_data_file(source, is_ringplane=is_ringplane, is_verbose=is_verbose, init_spice=init_spice, projection=projection, nocleanup=nocleanup)
+    utils.process_pds_data_file(source, is_verbose=is_verbose, init_spice=init_spice, nocleanup=nocleanup, additional_options=additional_options)
 
 
 if __name__ == "__main__":
@@ -96,7 +95,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--data", help="Source PDS dataset", required=True, type=str, nargs='+')
-    parser.add_argument("-r", "--ringplane", help="Input data is of a ring plane", action="store_true")
     parser.add_argument("-m", "--metadata", help="Print metadata and exit", action="store_true")
     parser.add_argument("-f", "--filter", help="Require filter or exit", required=False, type=str, nargs='+')
     parser.add_argument("-t", "--target", help="Require target or exit", required=False, type=str)
@@ -107,11 +105,13 @@ if __name__ == "__main__":
     parser.add_argument("-S", "--skipspice", help="Skip spice initialization", required=False, action="store_true")
     parser.add_argument("-p", "--projection", help="Map projection (Juno)", required=False, type=str)
     parser.add_argument("-n", "--nocleanup", help="Don't clean up, leave temp files", action="store_true")
+
+    parser.add_argument("-o", "--option", help="Mission-specific option(s)", required=False, type=str, nargs='+')
+
     args = parser.parse_args()
 
     source = args.data
 
-    is_ringplane = args.ringplane
     metadata_only = args.metadata
 
     require_filters = args.filter
@@ -126,12 +126,22 @@ if __name__ == "__main__":
 
     projection = args.projection
 
+    additional_options = {}
+    for option in args.option:
+        if re.match("^[0-9a-zA-Z]+=[0-9a-zA-Z]+$", option) is not None:
+            parts = option.split("=")
+            additional_options[parts[0]] = parts[1]
+        else:
+            print "Invalid option format:", option
+            sys.exit(1)
+
+
     for lbl_file_name in source:
         if lbl_file_name[-3:].upper() not in ("LBL", "BEL", "IMQ"):  # Note: 'BEL' is for .LBL_label via atlas wget script
             print "Not a PDS label file. Skipping '%s'"%lbl_file_name
         else:
             try:
-                process_data_file(lbl_file_name, is_ringplane, require_target, require_filters, require_width, require_height, metadata_only, is_verbose, skip_existing, not skip_spice, projection=projection, nocleanup=nocleanup)
+                process_data_file(lbl_file_name, require_target, require_filters, require_width, require_height, metadata_only, is_verbose, skip_existing, not skip_spice, nocleanup=nocleanup, additional_options=additional_options)
             except Exception as ex:
                 print "Error processing '%s'"%lbl_file_name
                 if is_verbose:
