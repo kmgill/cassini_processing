@@ -23,15 +23,15 @@ To Use, 'script' it:
 Performs the nessessary steps for converting a PDS IMG file into a calibrated Tiff file. Tiff files are created as unsigned 16 bit grayscale. Files are output in a [PRODUCT_ID]\_[TARGET]\_[FILTER 1]\_[FILTER 2]\_[IMAGE DATE/TIME].(cub|tif) format (i.e. "N1674923569_SATURN_HAL_CL2_2011-01-28_15.45.16.tif").
 
 ```
-usage: process.py [-h] -d DATA [DATA ...] [-r] [-m] [-f FILTER [FILTER ...]]
+usage: process.py [-h] -d DATA [DATA ...] [-m] [-f FILTER [FILTER ...]]
                   [-t TARGET] [-s] [-v] [-w WIDTH [WIDTH ...]]
-                  [-H HEIGHT [HEIGHT ...]] [-S] [-p PROJECTION]
+                  [-H HEIGHT [HEIGHT ...]] [-S] [-p PROJECTION] [-n]
+                  [-o OPTION [OPTION ...]]
 
 optional arguments:
   -h, --help            show this help message and exit
   -d DATA [DATA ...], --data DATA [DATA ...]
                         Source PDS dataset
-  -r, --ringplane       Input data is of a ring plane
   -m, --metadata        Print metadata and exit
   -f FILTER [FILTER ...], --filter FILTER [FILTER ...]
                         Require filter or exit
@@ -46,8 +46,20 @@ optional arguments:
   -S, --skipspice       Skip spice initialization
   -p PROJECTION, --projection PROJECTION
                         Map projection (Juno)
+  -n, --nocleanup       Don't clean up, leave temp files
+  -o OPTION [OPTION ...], --option OPTION [OPTION ...]
+                        Mission-specific option(s)
 ```
 
+#### Mission-Specific Options:
+* Cassini:
+
+   `ringplane=true|false` - Optionally treats an image using ring-plane geometry
+   
+* Juno:
+
+   `vt=n` - Apply vertical (top & bottom) trimming on each framelet where `n` is the number of pixels trimmed.
+   `histeq=true|false` - Optionally run histogram equalization on the output images
 
 #### Examples:
 
