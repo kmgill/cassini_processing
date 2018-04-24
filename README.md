@@ -7,6 +7,10 @@ This is a collection of Python and shell scripts for processing Cassini and Voya
 
 These alone do not produce the lovely full-color images you see as the finished products. Images output by these scripts would likely require additional work in Photoshop (or your favorite photo editing software). A working knowledge of ISIS3 also comes in handy.
 
+## Mission-Specific Documentation
+
+ * [JunoCam Processing](https://github.com/kmgill/cassini_processing/blob/master/doc/JunoCamProcessing.md)
+
 ## Scripts
 
 ### initcass.sh
