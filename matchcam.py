@@ -3,10 +3,9 @@ import sys
 import os
 import argparse
 
-from isis3 import utils
-from isis3 import cameras
-from isis3 import _core
-from isis3 import utility
+from sciimg.isis3 import cameras
+from sciimg.isis3 import _core
+from sciimg.isis3 import utility
 
 
 

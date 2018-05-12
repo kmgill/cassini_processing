@@ -1,4 +1,4 @@
-from isis3._core import isis_command
+from sciimg.isis3._core import isis_command
 
 
 def trim(from_cube, to_cube, top=2, bottom=2, left=2, right=2):

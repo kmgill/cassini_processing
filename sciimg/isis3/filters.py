@@ -1,4 +1,4 @@
-from isis3._core import isis_command
+from sciimg.isis3._core import isis_command
 
 
 def noisefilter(from_cube, to_cube, toldef="stddev", tolmin=2.5, tolmax=2.5, replace="null", samples=5, lines=5):

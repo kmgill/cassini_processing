@@ -1,18 +1,14 @@
 import os
-import sys
 import glob
-import shutil
-from isis3 import info
-from isis3 import juno
-from isis3 import cameras
-from isis3 import filters
-from isis3 import mathandstats
-from isis3 import trimandmask
-from isis3 import geometry
-from isis3 import importexport
-from isis3 import mosaicking
-from isis3._core import printProgress
-from isis3 import utility
+from sciimg.isis3 import info
+from sciimg.isis3 import juno
+from sciimg.isis3 import cameras
+from sciimg.isis3 import mathandstats
+from sciimg.isis3 import trimandmask
+from sciimg.isis3 import importexport
+from sciimg.isis3 import mosaicking
+from sciimg.isis3._core import printProgress
+from sciimg.isis3 import utility
 
 
 def output_filename(file_name):
@@ -146,7 +142,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         cub_files = glob.glob('%s/__%s_raw_*.cub'%(work_dir, product_id))
 
         for cub_file in cub_files:
-            s = cameras.spiceinit(cub_file, is_ringplane=False, spkpredict=True, ckpredicted=True, cknadir=True)
+            s = cameras.spiceinit(cub_file)
             if is_verbose:
                 print s
 

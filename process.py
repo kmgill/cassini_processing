@@ -2,15 +2,13 @@
 import os
 import sys
 import re
-import subprocess
-import datetime
-import glob
 import argparse
 import traceback
 import types
-from isis3 import utils
-from isis3 import info
-from isis3 import _core
+
+from sciimg.isis3 import utils
+from sciimg.isis3 import info
+from sciimg.isis3 import _core
 
 def print_if_verbose(s, is_verbose=True):
     if is_verbose:

@@ -1,4 +1,4 @@
-from isis3._core import isis_command
+from sciimg.isis3._core import isis_command
 
 
 def junocam2isis(from_file, to_file, fullccd=False):

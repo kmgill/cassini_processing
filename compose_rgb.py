@@ -1,18 +1,14 @@
 #!/usr/bin/env python
 import os
 import sys
-import re
-import subprocess
-import datetime
-import glob
 import argparse
 import numpy as np
 
-from isis3 import utils
-from isis3 import info
-from isis3 import _core
-import isis3.importexport as importexport
-import isis3.mathandstats as mathandstats
+from sciimg.isis3 import utils
+from sciimg.isis3 import info
+from sciimg.isis3 import _core
+import sciimg.isis3.importexport as importexport
+import sciimg.isis3.mathandstats as mathandstats
 
 def get_target_filename_portion(red_lbl_file, green_lbl_file, blue_lbl_file):
     target_red = info.get_target(red_lbl_file)

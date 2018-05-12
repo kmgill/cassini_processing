@@ -1,18 +1,12 @@
 #!/usr/bin/env python
 import os
 import sys
-import re
-import subprocess
-import datetime
-import glob
 import argparse
-import numpy as np
 import traceback
 import signal
 
-from isis3 import utils
-from isis3 import info
-from isis3 import _core
+from sciimg.isis3 import info
+from sciimg.isis3 import _core
 
 def printInfo(lbl_file_name):
     target = info.get_target(lbl_file_name)

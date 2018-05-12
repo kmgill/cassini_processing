@@ -3,18 +3,10 @@ import os
 import sys
 import glob
 
-import isis3.info as info
-import isis3.cassini as cissisis
-import isis3.cameras as cameras
-import isis3.filters as filters
-import isis3.trimandmask as trimandmask
-import isis3.mathandstats as mathandstats
-import isis3.importexport as importexport
-
-import isis3.cassini_iss.processing as cassproc
-import isis3.voyager_iss.processing as voyproc
-import isis3.galileo_iss.processing as galproc
-import isis3.junocam.processing as jnoproc
+import sciimg.isis3.cassini_iss.processing as cassproc
+import sciimg.isis3.voyager_iss.processing as voyproc
+import sciimg.isis3.galileo_iss.processing as galproc
+import sciimg.isis3.junocam.processing as jnoproc
 
 
 

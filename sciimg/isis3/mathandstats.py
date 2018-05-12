@@ -1,4 +1,4 @@
-from isis3._core import isis_command
+from sciimg.isis3._core import isis_command
 import re
 
 def fillgap(from_cube, to_cube, interp="cubic", direction="sample"):

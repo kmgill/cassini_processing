@@ -7,12 +7,10 @@ There's probably a much better way to do this. But it works so I'm using it for 
 
 
 import os
-import sys
 import argparse
-import traceback
-from isis3 import importexport
 
-from isis3.junocam.utils import json_to_lbl
+from sciimg.isis3 import importexport
+from sciimg.isis3.junocam.utils import json_to_lbl
 
 
 

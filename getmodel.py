@@ -4,9 +4,9 @@ import sys
 import argparse
 import requests
 
-from isis3 import utils
-from isis3 import info
-from isis3 import _core
+from sciimg.isis3 import utils
+from sciimg.isis3 import info
+from sciimg.isis3 import _core
 
 JPL_SIM_URL = "http://space.jpl.nasa.gov/cgi-bin/wspace"
 

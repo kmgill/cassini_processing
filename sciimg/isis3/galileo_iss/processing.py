@@ -1,16 +1,13 @@
 
 import os
-import sys
 import glob
-from isis3 import info
-from isis3 import galileo
-from isis3 import cameras
-from isis3 import filters
-from isis3 import mathandstats
-from isis3 import trimandmask
-from isis3 import geometry
-from isis3 import importexport
-from isis3._core import printProgress
+from sciimg.isis3 import info
+from sciimg.isis3 import galileo
+from sciimg.isis3 import cameras
+from sciimg.isis3 import filters
+from sciimg.isis3 import trimandmask
+from sciimg.isis3 import importexport
+from sciimg.isis3._core import printProgress
 
 
 def output_filename(file_name):

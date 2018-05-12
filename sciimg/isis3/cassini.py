@@ -1,5 +1,5 @@
 
-from isis3._core import isis_command
+from sciimg.isis3._core import isis_command
 
 
 def ciss2isis(from_file, to_file):

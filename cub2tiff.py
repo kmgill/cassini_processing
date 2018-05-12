@@ -3,9 +3,8 @@
 import sys
 import argparse
 
-from isis3 import utils
-from isis3 import _core
-import isis3.importexport as importexport
+from sciimg.isis3 import _core
+import sciimg.isis3.importexport as importexport
 
 if __name__ == "__main__":
 

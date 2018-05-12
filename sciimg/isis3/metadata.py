@@ -1,11 +1,11 @@
 import os
 import sys
 import pvl
-from isis3.scripting import getkey
+from sciimg.isis3.scripting import getkey
 import tempfile
 import traceback
 import utility
-from isis3 import voyager
+from sciimg.isis3 import voyager
 
 __METADATA_CACHE__ = {}
 

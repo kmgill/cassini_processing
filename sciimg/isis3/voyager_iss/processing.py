@@ -3,17 +3,16 @@ import glob
 import os
 import traceback
 import sys
-from isis3 import info
-from isis3 import voyager
-from isis3 import cameras
-from isis3 import filters
-from isis3 import mathandstats
-from isis3 import trimandmask
-from isis3 import scripting
-from isis3 import utility
-from isis3 import geometry
-from isis3 import importexport
-from isis3._core import printProgress
+from sciimg.isis3 import info
+from sciimg.isis3 import voyager
+from sciimg.isis3 import cameras
+from sciimg.isis3 import filters
+from sciimg.isis3 import mathandstats
+from sciimg.isis3 import trimandmask
+from sciimg.isis3 import utility
+from sciimg.isis3 import geometry
+from sciimg.isis3 import importexport
+from sciimg.isis3._core import printProgress
 
 __VOYAGER_1__ = "VOYAGER_1"
 __VOYAGER_2__ = "VOYAGER_2"

@@ -1,8 +1,8 @@
 import re
 import datetime
-from isis3._core import isis_command
-from isis3.scripting import getkey as get_field_value
-from isis3.metadata import load_pvl
+from sciimg.isis3._core import isis_command
+from sciimg.isis3.scripting import getkey as get_field_value
+from sciimg.isis3.metadata import load_pvl
 
 __UNSUPPORTED_UNRECOGNIZED__ = "Unrecognized/Unsupported file"
 

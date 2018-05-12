@@ -1,15 +1,15 @@
 
 import os
 import glob
-from isis3 import info
-from isis3 import cassini
-from isis3._core import printProgress
-from isis3 import cameras
-from isis3 import filters
-from isis3 import mathandstats
-from isis3 import trimandmask
-from isis3 import importexport
-from isis3.metadata import load_pvl
+from sciimg.isis3 import info
+from sciimg.isis3 import cassini
+from sciimg.isis3._core import printProgress
+from sciimg.isis3 import cameras
+from sciimg.isis3 import filters
+from sciimg.isis3 import mathandstats
+from sciimg.isis3 import trimandmask
+from sciimg.isis3 import importexport
+from sciimg.isis3.metadata import load_pvl
 
 from datetime import datetime
 
