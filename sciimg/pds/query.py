@@ -1,12 +1,17 @@
 import os
 import sys
 import requests
+import json
+
+
+PDS_ARCHIVES_SOLR_SELECT_URL = "https://pds-imaging.jpl.nasa.gov/solr/pds_archives/select"
+PDS_ATLAS_SOLR_SELECT_URL = "https://pds-imaging.jpl.nasa.gov/solr/atlas_forms/select"
 
 
 class QueryFields:
-    mission = "ATLAS_MISSION_NAME"
-    instrument = "ATLAS_INSTRUMENT_NAME"
-    target = "TARGET"
+    MISSION = "ATLAS_MISSION_NAME"
+    INSTRUMENT = "ATLAS_INSTRUMENT_NAME"
+    TARGET = "TARGET"
 
 
 class Missions:
@@ -64,6 +69,56 @@ class Spacecraft:
     VOYAGER_2 = "voyager 2"
 
 
+def __query_solr(url, params):
+
+
+    r = requests.get(url, params=params)
+    data = json.loads(r.text)
+
+    return data
+
+
+def __query_fields():
+    params = {
+        "q": "*:*",
+        "rows": 9999,
+        "fl": "pds_keyword, min_value, max_value, earliest_date, latest_date",
+        "wt": "json"
+    }
+
+    data = __query_solr(PDS_ATLAS_SOLR_SELECT_URL, params=params)
+    return data["response"]["docs"]
+
+
+
+def __query_files(search_params={}, max_rows=10):
+
+    params = {
+        "q": "*:*",
+        "facet": "true",
+        "facet.method": "enum",
+        "df": "_text_",
+        "rows": max_rows,
+        "sort": "START_TIME desc",
+        "facet.date": "START_TIME",
+        "facet.date.start": "1976-07-20T00%3A00%3A00.000Z%2FDAY",
+        "facet.date.end": "2020-10-20T00%3A00%3A00.000Z%2FDAY%2B1DAY",
+        "facet.date.gap": "%2B5YEAR",
+        "facet.limit":-1,
+        "facet.mincount": 1,
+        "facet.field": "RELEVANT_DOC_FIELDS",
+        "facet.field": "NO_SORT_DOC_FIELDS",
+        "wt": "json",
+        "fq":[]
+    }
+
+    for key in search_params:
+        value = search_params[key]
+        params["fq"].append("%s:%s"%(key, value))
+
+    data = __query_solr(PDS_ARCHIVES_SOLR_SELECT_URL, params=params)
+    return data["response"]["docs"]
+
 
 
 def find(**kwargs):
@@ -72,3 +127,15 @@ def find(**kwargs):
 
 def fetch(**kwargs):
     pass
+
+
+
+if __name__ == "__main__":
+
+
+    r = __query_files(search_params = {
+        QueryFields.MISSION: Missions.CASSINI,
+        QueryFields.INSTRUMENT: "iss",
+        QueryFields.TARGET: "earth"
+    }, max_rows=9999)
+    print len(r)
