@@ -1,7 +1,5 @@
 #!/usr/bin/python
 import os
-import sys
-import glob
 
 import sciimg.isis3.cassini_iss.processing as cassproc
 import sciimg.isis3.voyager_iss.processing as voyproc

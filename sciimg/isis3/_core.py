@@ -1,7 +1,6 @@
 import subprocess
 import sys
 import os
-import pvl
 
 """
 Note: Probably need a better check than just looking at two environment variables
