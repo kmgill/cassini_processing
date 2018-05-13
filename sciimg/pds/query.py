@@ -2,6 +2,7 @@ import os
 import sys
 import requests
 import json
+import types
 
 
 PDS_ARCHIVES_SOLR_SELECT_URL = "https://pds-imaging.jpl.nasa.gov/solr/pds_archives/select"
@@ -12,6 +13,10 @@ class QueryFields:
     MISSION = "ATLAS_MISSION_NAME"
     INSTRUMENT = "ATLAS_INSTRUMENT_NAME"
     TARGET = "TARGET"
+    FILE_NAME = "FILE_NAME"
+    PRODUCT_ID = "PRODUCT_ID"
+    OBSERVATION_ID = "OBSERVATION_ID"
+    FILTER_NAME = "FILTER_NAME"
 
 
 class Missions:
@@ -69,6 +74,62 @@ class Spacecraft:
     VOYAGER_2 = "voyager 2"
 
 
+
+
+class PDSFile:
+
+    def __init__(self, pds_solr_doc):
+        self.__pds_solr_doc = pds_solr_doc
+
+    def __getitem__(self, item):
+        if item in self.__pds_solr_doc:
+            return self.__pds_solr_doc[item]
+        else:
+            return None
+
+    def file_name(self):
+        return self["FILE_NAME"]
+
+    def __fetch(self, url, dest_filename, verbose=False):
+
+        if verbose:
+            print "Downloading", url
+
+        r = requests.get(url)
+
+        if r.status_code:
+            if verbose:
+                print "Writing to ", dest_filename
+
+            f = open(dest_filename, "w")
+            f.write(r.content)
+            f.close()
+
+            return True
+        else:
+            raise Exception("Failed to fetch PDS file '%s', status code: %d"%(url, r.status_code))
+
+
+    def fetch(self):
+        self.__fetch(self["ATLAS_DATA_URL"], self.file_name())
+
+        if "ATLAS_LABEL_URL" in self.__pds_solr_doc:
+            self.__fetch(self["ATLAS_LABEL_URL"], os.path.basename(self["ATLAS_LABEL_URL"]))
+
+
+class PDSFileList(list):
+
+    def __init__(self, pds_solr_docs):
+        list.__init__(self)
+        for v in pds_solr_docs:
+            self.append(v)
+
+
+    def fetch_all(self):
+        for f in self:
+            f.fetch()
+
+
 def __query_solr(url, params):
 
 
@@ -78,7 +139,7 @@ def __query_solr(url, params):
     return data
 
 
-def __query_fields():
+def query_fields():
     params = {
         "q": "*:*",
         "rows": 9999,
@@ -91,7 +152,7 @@ def __query_fields():
 
 
 
-def __query_files(search_params={}, max_rows=10):
+def query_files(search_params={}, max_rows=10):
 
     params = {
         "q": "*:*",
@@ -114,28 +175,33 @@ def __query_files(search_params={}, max_rows=10):
 
     for key in search_params:
         value = search_params[key]
+        if isinstance(value, types.ListType) or isinstance(value, types.TupleType):
+            value = map(str, value)
+            value = "( %s )"%" OR ".join(value)
+
         params["fq"].append("%s:%s"%(key, value))
 
     data = __query_solr(PDS_ARCHIVES_SOLR_SELECT_URL, params=params)
-    return data["response"]["docs"]
+    docs = data["response"]["docs"]
 
+    pds_files = []
+    for doc in docs:
+        pds_files.append(PDSFile(doc))
 
-
-def find(**kwargs):
-    pass
-
-
-def fetch(**kwargs):
-    pass
+    return PDSFileList(pds_files)
 
 
 
 if __name__ == "__main__":
 
-
-    r = __query_files(search_params = {
+    r = query_files(search_params = {
         QueryFields.MISSION: Missions.CASSINI,
         QueryFields.INSTRUMENT: "iss",
-        QueryFields.TARGET: "earth"
+        QueryFields.OBSERVATION_ID: "ISS_131IA_IAPETUS132_PRIME",
+        QueryFields.FILE_NAME: ("N1652396275_1.IMG", "N1652396378_1.IMG", "N1652396451_1.IMG")
+        #QueryFields.FILTER_NAME:("IR3", "GRN", "UV3")
     }, max_rows=9999)
     print len(r)
+
+    r.fetch_all()
+    #r[0].fetch()

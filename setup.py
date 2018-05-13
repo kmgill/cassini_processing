@@ -22,7 +22,10 @@ setup(
               'sciimg.isis3.cassini_iss',
               'sciimg.isis3.galileo_iss',
               'sciimg.isis3.voyager_iss',
-              'sciimg.isis3.junocam'
+              'sciimg.isis3.mex_hrsc',
+              'sciimg.isis3.junocam',
+              'sciimg.pds',
+              'sciimg.processes'
               ],
     package_data={},
     data_files=[],

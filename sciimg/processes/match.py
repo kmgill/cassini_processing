@@ -1,9 +1,7 @@
 import sys
 import numpy as np
-import argparse
 
 from sciimg.isis3 import info
-from sciimg.isis3 import _core
 import sciimg.isis3.importexport as importexport
 import sciimg.isis3.mathandstats as mathandstats
 
