@@ -198,10 +198,7 @@ if __name__ == "__main__":
         QueryFields.MISSION: Missions.CASSINI,
         QueryFields.INSTRUMENT: "iss",
         QueryFields.OBSERVATION_ID: "ISS_131IA_IAPETUS132_PRIME",
-        QueryFields.FILE_NAME: ("N1652396275_1.IMG", "N1652396378_1.IMG", "N1652396451_1.IMG")
-        #QueryFields.FILTER_NAME:("IR3", "GRN", "UV3")
+        QueryFields.FILTER_NAME:("IR3", "GRN", "UV3")
     }, max_rows=9999)
-    print len(r)
 
     r.fetch_all()
-    #r[0].fetch()
