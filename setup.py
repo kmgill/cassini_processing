@@ -25,7 +25,8 @@ setup(
               'sciimg.isis3.mex_hrsc',
               'sciimg.isis3.junocam',
               'sciimg.pds',
-              'sciimg.processes'
+              'sciimg.processes',
+              'sciimg.util'
               ],
     package_data={},
     data_files=[],
