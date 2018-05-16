@@ -16,7 +16,7 @@ def get_files_min_max_values(file_names, is_verbose=False):
     data_limits = []
 
     for file_name in file_names:
-        cub_file, min_value, max_value = get_file_min_max_values(file_name, is_verbose=is_verbose)
+        min_value, max_value = get_file_min_max_values(file_name, is_verbose=is_verbose)
         data_limits += [min_value, max_value]
 
     files_min = float(np.array(data_limits).min())
