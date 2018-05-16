@@ -10,7 +10,7 @@ def print_if_verbose(s, is_verbose=True):
     if is_verbose:
         print s
 
-def process_data_file(lbl_file_name, require_target, require_filters, require_width, require_height, metadata_only, is_verbose, skip_existing, init_spice, nocleanup, additional_options):
+def process_data_file(lbl_file_name, require_target=None, require_filters=None, require_width=None, require_height=None, metadata_only=False, is_verbose=False, skip_existing=False, init_spice=True, nocleanup=False, additional_options={}):
 
     if isinstance(lbl_file_name, types.ListType):
         for fn in lbl_file_name:
