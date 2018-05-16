@@ -1,9 +1,37 @@
 import sys
 import numpy as np
-
+import os
 from sciimg.isis3 import info
 import sciimg.isis3.importexport as importexport
 import sciimg.isis3.mathandstats as mathandstats
+from sciimg.isis3 import utils
+
+
+def get_file_min_max_values(input_name, is_verbose=False):
+    cub_file = None
+    if input_name[-3:].upper() == "CUB":
+        if not os.path.exists(input_name):
+            print "File %s does not exist" % input_name
+            raise Exception("File %s does not exist" % input_name)
+        cub_file = input_name
+
+        utils.process_pds_data_file(cub_file, is_ringplane=False, is_verbose=is_verbose, skip_if_cub_exists=True)
+
+    min_value, max_value = mathandstats.get_data_min_max(cub_file)
+    return min_value, max_value
+
+
+def get_files_min_max_values(file_names, is_verbose=False):
+    data_limits = []
+
+    for file_name in file_names:
+        cub_file, min_value, max_value = get_file_min_max_values(file_name, is_verbose=is_verbose)
+        data_limits += [min_value, max_value]
+
+    files_min = float(np.array(data_limits).min())
+    files_max = float(np.array(data_limits).max())
+
+    return files_min, files_max
 
 
 
@@ -58,3 +86,25 @@ def match(files, targets, filters, require_width, require_height):
         totiff = f[:-4] + ".tif"
         print totiff
         importexport.isis2std_grayscale(f, totiff, minimum=minimum, maximum=maximum)
+
+
+
+def compose_rgb(cub_file_red, cub_file_green, cub_file_blue, output_tiff_file, match_stretch=False, is_verbose=False):
+    files = [cub_file_red, cub_file_green, cub_file_blue]
+
+    min, max = get_files_min_max_values(files, is_verbose=is_verbose)
+
+    if is_verbose:
+        print "Max:", max
+        print "Min:", min
+
+    s = importexport.isis2std_rgb(cub_file_red,
+                                  cub_file_green,
+                                  cub_file_blue,
+                                  output_tiff_file,
+                                  minimum=min,
+                                  maximum=max,
+                                  match_stretch=match_stretch)
+
+    if is_verbose:
+        print s
