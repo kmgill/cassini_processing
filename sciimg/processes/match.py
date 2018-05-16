@@ -7,16 +7,7 @@ import sciimg.isis3.mathandstats as mathandstats
 from sciimg.isis3 import utils
 
 
-def get_file_min_max_values(input_name, is_verbose=False):
-    cub_file = None
-    if input_name[-3:].upper() == "CUB":
-        if not os.path.exists(input_name):
-            print "File %s does not exist" % input_name
-            raise Exception("File %s does not exist" % input_name)
-        cub_file = input_name
-
-        utils.process_pds_data_file(cub_file, is_ringplane=False, is_verbose=is_verbose, skip_if_cub_exists=True)
-
+def get_file_min_max_values(cub_file, is_verbose=False):
     min_value, max_value = mathandstats.get_data_min_max(cub_file)
     return min_value, max_value
 
