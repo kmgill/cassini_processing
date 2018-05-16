@@ -157,6 +157,7 @@ def process_pds_data_file(lbl_file_name, is_verbose=False, skip_if_cub_exists=Fa
         else:
             printProgress(8, 9, prefix="%s: "%lbl_file_name)
 
-
     if not is_verbose:
         printProgress(9, 9, prefix="%s: "%lbl_file_name)
+
+    return out_file_cub

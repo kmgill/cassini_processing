@@ -91,5 +91,5 @@ def process_data_file(lbl_file_name, require_target, require_filters, require_wi
     if require_width is not None and not (str(width) in require_width):
         print "Width filter mismatch, exiting"
 
-    utils.process_pds_data_file(source, is_verbose=is_verbose, init_spice=init_spice, nocleanup=nocleanup, additional_options=additional_options)
+    return utils.process_pds_data_file(source, is_verbose=is_verbose, init_spice=init_spice, nocleanup=nocleanup, additional_options=additional_options)
 

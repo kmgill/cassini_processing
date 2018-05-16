@@ -27,6 +27,7 @@ def fetch(url, to=None):
         f = open(to, "w")
         f.write(r.content)
         f.close()
+        return to
     else:
         raise Exception("Error downloading file. HTTP status code %s"%r.status_code)
 

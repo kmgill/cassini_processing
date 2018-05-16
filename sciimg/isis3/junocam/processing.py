@@ -291,3 +291,5 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
 
     if not is_verbose:
         printProgress(14, num_steps, prefix="%s: "%from_file_name)
+
+    return out_file_cam_rgb_tiff
