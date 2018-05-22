@@ -62,10 +62,10 @@ class DestImage:
                 else:
                     self.data[start_y + y][x] = value
 
-    def save(self, path, format="TIFF"):
+    def save(self, path):
         data_matrix = self.data.astype(np.uint16)
         tiff = TIFFimage(data_matrix, description='')
-        tiff.write_file(path, compression='none')
+        tiff.write_file(path, compression='none', verbose=False)
 
     def calc_minmax(self):
         mn = np.nanmin(self.data)
@@ -145,7 +145,7 @@ def save_band(band, band_num, filter_num):
     tiff = TIFFimage(data_matrix, description='')
     if not os.path.exists("bands"):
         os.mkdir("bands")
-    tiff.write_file("bands/band_%d_%d.tif"%(filter_num, band_num), compression='none')
+    tiff.write_file("bands/band_%d_%d.tif"%(filter_num, band_num), compression='none', verbose=False)
 
 
 def process_band(source, filter_num, band_height=BAND_HEIGHT, band_overlap=10, save_bands=False, fill_dead_pixels=False):
