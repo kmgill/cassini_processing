@@ -225,6 +225,12 @@ def process(input_file,
         b1.normalize_within_minmax(np.min(limits), np.max(limits))
         b2.normalize_within_minmax(np.min(limits), np.max(limits))
 
-    b0.save("image_%s.tif" % 0, "TIFF")
-    b1.save("image_%s.tif" % 1, "TIFF")
-    b2.save("image_%s.tif" % 2, "TIFF")
+    red_file_name = "%s-red.tif"%input_file[:input_file.rindex(".")]
+    green_file_name = "%s-green.tif" % input_file[:input_file.rindex(".")]
+    blue_file_name = "%s-blue.tif" % input_file[:input_file.rindex(".")]
+
+    b0.save(blue_file_name, "TIFF")
+    b1.save(green_file_name, "TIFF")
+    b2.save(red_file_name, "TIFF")
+
+    return red_file_name, green_file_name, blue_file_name
