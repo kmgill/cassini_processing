@@ -229,8 +229,8 @@ def process(input_file,
     green_file_name = "%s-green.tif" % input_file[:input_file.rindex(".")]
     blue_file_name = "%s-blue.tif" % input_file[:input_file.rindex(".")]
 
-    b0.save(blue_file_name, "TIFF")
-    b1.save(green_file_name, "TIFF")
-    b2.save(red_file_name, "TIFF")
+    b0.save(blue_file_name)
+    b1.save(green_file_name)
+    b2.save(red_file_name)
 
     return red_file_name, green_file_name, blue_file_name
