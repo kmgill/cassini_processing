@@ -9,6 +9,7 @@ from sciimg.isis3 import importexport
 from sciimg.isis3 import mosaicking
 from sciimg.isis3._core import printProgress
 from sciimg.isis3 import utility
+from sciimg.isis3 import mapprojection
 
 
 def output_filename(file_name):
@@ -39,11 +40,15 @@ def assemble_mosaic(color, source_dirname, product_id, is_verbose=False):
         f.write("\n")
     f.close()
 
-    mosaic_out = "%s/%s_%s_Mosaic.cub" % (source_dirname, product_id, color.upper())
+    mosaic_out = "%s/%s_%s_MosaicUntrimmed.cub" % (source_dirname, product_id, color.upper())
     s = mosaicking.automos(list_file, mosaic_out, priority=mosaicking.Priority.AVERAGE)
     if is_verbose:
         print s
 
+    trimmed_mosaic_out = "%s/%s_%s_Mosaic.cub" % (source_dirname, product_id, color.upper())
+    s = mapprojection.maptrim(mosaic_out, trimmed_mosaic_out, mode="crop", minlat=-90, maxlat=90, minlon=-180, maxlon=180)
+    if is_verbose:
+        print s
     return mosaic_out
 
 
@@ -199,6 +204,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         printProgress(6, num_steps, prefix="%s: " % from_file_name)
 
     out_file_blue = assemble_mosaic("BLUE", source_dirname, product_id, is_verbose)
+
 
     if "histeq" in additional_options and additional_options["histeq"].upper() in ("TRUE", "YES"):
         if is_verbose:
