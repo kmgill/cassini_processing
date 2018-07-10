@@ -40,15 +40,11 @@ def assemble_mosaic(color, source_dirname, product_id, is_verbose=False):
         f.write("\n")
     f.close()
 
-    mosaic_out = "%s/%s_%s_MosaicUntrimmed.cub" % (source_dirname, product_id, color.upper())
+    mosaic_out = "%s/%s_%s_Mosaic.cub" % (source_dirname, product_id, color.upper())
     s = mosaicking.automos(list_file, mosaic_out, priority=mosaicking.Priority.AVERAGE)
     if is_verbose:
         print s
 
-    trimmed_mosaic_out = "%s/%s_%s_Mosaic.cub" % (source_dirname, product_id, color.upper())
-    s = mapprojection.maptrim(mosaic_out, trimmed_mosaic_out, mode="crop", minlat=-90, maxlat=90, minlon=-180, maxlon=180)
-    if is_verbose:
-        print s
     return mosaic_out
 
 
@@ -80,7 +76,7 @@ def trim_cubes(work_dir, product_id, trim_pixels=2):
 
 def histeq_cube(cub_file, work_dir, product_id):
     hist_file = "%s/__%s_hist.cub" % (work_dir, product_id)
-    mathandstats.histeq("%s+1"%cub_file, hist_file)
+    mathandstats.histeq("%s+1"%cub_file, hist_file, minper=0.0, maxper=100.0)
     os.unlink(cub_file)
     os.rename(hist_file, cub_file)
 
@@ -153,7 +149,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
 
     mid_num = int(round(len(glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))) / 3.0 / 2.0))
 
-    mid_file = "%s/__%s_raw_GREEN_00%d.cub"%(work_dir, product_id, mid_num)
+    mid_file = "%s/__%s_raw_GREEN_%04d.cub"%(work_dir, product_id, mid_num)
     map_file = "%s/__%s_map.cub"%(work_dir, product_id)
 
     if is_verbose:

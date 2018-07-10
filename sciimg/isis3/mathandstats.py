@@ -11,10 +11,12 @@ def fillgap(from_cube, to_cube, interp="cubic", direction="sample"):
     return s
 
 
-def histeq(from_cube, to_cube):
+def histeq(from_cube, to_cube, minper=0.5, maxper=99.5):
     s = isis_command("histeq", {
         "from": from_cube,
-        "to": to_cube
+        "to": to_cube,
+        "minper": minper,
+        "maxper": maxper
     })
     return s
 
