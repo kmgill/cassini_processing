@@ -16,13 +16,6 @@ def linear_interpolate(v0, v1, f):
 def open_image(img_path):
     img = Image.open(img_path)
     data = np.copy(np.asarray(img))
-    #data = np.copy(np.asarray(img, dtype=np.uint16))
-
-    #if data.max() > 255:  # BAD ASSUMPTION! BAD!
-    #    byte_depth = 16
-    #else:
-    #    byte_depth = 8
-
     img.close()
 
     return data
@@ -57,13 +50,8 @@ def fill_dead_pixel(data, band_num, band_id, band_height=BAND_HEIGHT):
                 data[cy + y][cx + x] = v
 
 
-def process_image(img_path, save_file_path=None, verbose=False):
-
-    if verbose:
-        print "Filling dead pixels in", img_path
-
-    data = open_image(img_path)
-    img_height = data.shape[0]
+def fillpixels(img_data, verbose=False):
+    img_height = img_data.shape[0]
 
     if verbose:
         print "Image height:", img_height
@@ -76,12 +64,23 @@ def process_image(img_path, save_file_path=None, verbose=False):
     for band in range(0, bands_per_image):
         if verbose:
             print "Filling pixels for RGB band triplet #", band
-        fill_dead_pixel(data, band*3+0, 0, band_height=BAND_HEIGHT)
-        fill_dead_pixel(data, band*3+1, 1, band_height=BAND_HEIGHT)
-        fill_dead_pixel(data, band*3+2, 2, band_height=BAND_HEIGHT)
+        fill_dead_pixel(img_data, band * 3 + 0, 0, band_height=BAND_HEIGHT)
+        fill_dead_pixel(img_data, band * 3 + 1, 1, band_height=BAND_HEIGHT)
+        fill_dead_pixel(img_data, band * 3 + 2, 2, band_height=BAND_HEIGHT)
+
+
+
+def process_image(img_path, save_file_path=None, verbose=False):
+
+    if verbose:
+        print "Filling dead pixels in", img_path
+
+    data = open_image(img_path)
+
+    fillpixels(data, verbose=verbose)
 
     if save_file_path is None:
-        save_file_path = "%s-filled.tif"%(img_path[0:-4])
+        save_file_path = "%s-filled.tif" % (img_path[0:-4])
 
     if verbose:
         print "Saving processed data to", save_file_path

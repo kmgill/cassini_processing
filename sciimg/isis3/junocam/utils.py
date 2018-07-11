@@ -14,7 +14,7 @@ def is_number(value):
 
 
 
-def json_to_lbl(input_json_path):
+def json_to_lbl(input_json_path, img_file):
     fp = open(input_json_path, "r")
     data = fp.read()
     fp.close()
@@ -25,7 +25,7 @@ def json_to_lbl(input_json_path):
 
     s += "PDS_VERSION_ID                = PDS3\n"
     s += "\n"
-    s += "^IMAGE                        = \"%s.IMG\"\n" % (label_data["FILE_NAME"][:-4])
+    s += "^IMAGE                        = \"%s\"\n" % (img_file)
     s += "\n"
 
     for key in label_data:
