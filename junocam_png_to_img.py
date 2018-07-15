@@ -63,9 +63,9 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
     parser.add_argument("-d", "--decompand", help="Decompand pixel values", action="store_true")
 
-    parser.add_argument("-r", "--redweight", help="Apply a weight for the red band", type=float, default=1.0) # 0.510
+    parser.add_argument("-r", "--redweight", help="Apply a weight for the red band", type=float, default=0.82) # 0.510
     parser.add_argument("-g", "--greenweight", help="Apply a weight for the green band", type=float, default=1.0) # 0.630
-    parser.add_argument("-b", "--blueweight", help="Apply a weight for the blue band", type=float, default=1.0) # 1.0
+    parser.add_argument("-b", "--blueweight", help="Apply a weight for the blue band", type=float, default=2.17) # 1.0
 
     args = parser.parse_args()
 
