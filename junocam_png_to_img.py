@@ -10,9 +10,11 @@ from PIL import Image
 import numpy as np
 from sciimg.isis3.junocam.fillpixels import fillpixels
 from sciimg.isis3.junocam.decompanding import decompand
+from sciimg.isis3.junocam.flatfield import apply_flat
 from sciimg.processes.junocam_conversions import create_label
 from sciimg.processes.junocam_conversions import create_pds
 from libtiff import TIFFimage
+import sys
 
 BAND_HEIGHT = 128
 
@@ -62,6 +64,7 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--fill", help="Fill dead pixels", action="store_true")
     parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
     parser.add_argument("-d", "--decompand", help="Decompand pixel values", action="store_true")
+    parser.add_argument("-F", "--flat", help="Apply flat fields (Don't use)", action="store_true")
 
     parser.add_argument("-r", "--redweight", help="Apply a weight for the red band", type=float, default=0.82) # 0.510
     parser.add_argument("-g", "--greenweight", help="Apply a weight for the green band", type=float, default=1.0) # 0.630
@@ -74,6 +77,7 @@ if __name__ == "__main__":
     fill_dead_pixels = args.fill
     verbose = args.verbose
     do_decompand = args.decompand
+    do_flat_fields = args.flat
 
     use_red_weight = args.redweight
     use_green_weight = args.greenweight
@@ -82,11 +86,15 @@ if __name__ == "__main__":
     image_data = open_image(img_file)
 
 
-
     if fill_dead_pixels:
         if verbose:
             print "User requested to fill dead pixels. So that's what I'll do..."
         fillpixels(image_data, verbose=verbose)
+
+    if do_flat_fields:
+        if verbose:
+            print "Applying flat fields for RGB bands..."
+        apply_flat(image_data, apply_filling=fill_dead_pixels, verbose=verbose)
 
     if do_decompand:
         if verbose:

@@ -22,6 +22,9 @@ def open_image(img_path):
 
 def fill_dead_pixel(data, band_num, band_id, band_height=BAND_HEIGHT):
 
+    width = data.shape[0]
+    height = data.shape[1]
+
     dead_pixels = DEAD_PIXEL_MAP[band_id]
 
     top = band_num * band_height
@@ -34,6 +37,10 @@ def fill_dead_pixel(data, band_num, band_id, band_height=BAND_HEIGHT):
 
         for y in range(-radius, radius):
             for x in range(-radius, radius):
+
+                if cy + y > len(data) or cx + radius > len(data[cy + y]):
+                    continue
+
                 x0 = data[cy + y][cx - radius]
                 x1 = data[cy + y][cx + radius]
                 y0 = data[cy - radius][cx + x]
