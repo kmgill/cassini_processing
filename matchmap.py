@@ -21,7 +21,8 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--rings", help="Data is of ring plane", action="store_true")
     parser.add_argument("-s", "--skipexisting", help="Skip processing if output already exists", action="store_true")
     parser.add_argument("-p", "--reproject", help="Input files are already map projected", action="store_true")
-
+    parser.add_argument("-b", "--bbox", help="bounding box as nn,nn,nn,nn (tl lon, lat; br lon, lat)", required=False, default=None)
+    parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
     args = parser.parse_args()
 
     source = args.data
@@ -30,6 +31,14 @@ if __name__ == "__main__":
     rings = args.rings
     skip_existing = args.skipexisting
     reprojecting = args.reproject
+    bbox = args.bbox
+    verbose = args.verbose
+
+    if bbox is not None:
+        bbox = bbox.split(",")
+        # TODO: Seriously, start adding some error checking. And comment your damn code. For fuck's sake, Kevin!
+    else:
+        bbox = (None, None, None, None)
 
     for file_name in source:
         if file_name[-3:].upper() != "CUB":
@@ -41,14 +50,19 @@ if __name__ == "__main__":
             else:
                 if reprojecting:
                     try:
-                        cameras.map2map(file_name, out_file, map=map)
+                        s = cameras.map2map(file_name, out_file, map=map, minlat=bbox[3], maxlat=bbox[1], minlon=bbox[0], maxlon=bbox[2])
+                        if verbose:
+                            print s
                     except:
                         print "Reprojecting", file_name, "failed"
                 else:
                     try:
                         if not rings:
-                            cameras.cam2map(file_name, out_file, map=map, resolution="MAP")
+                            s = cameras.cam2map(file_name, out_file, map=map, resolution="MAP", minlat=bbox[3], maxlat=bbox[1], minlon=bbox[0], maxlon=bbox[2])
                         else:
-                            cameras.ringscam2map(file_name, out_file, map=map, resolution="MAP")
+                            s = cameras.ringscam2map(file_name, out_file, map=map, resolution="MAP")
+
+                        if verbose:
+                            print s
                     except:
                         print "Processing", file_name, "failed"

@@ -26,7 +26,7 @@ def spiceinit(from_cube, is_ringplane=False, spkpredict=False, ckpredicted=False
     return s
 
 
-def cam2map(from_cube, to_cube, projection="equirectangular", map=None, resolution="CAMERA"):
+def cam2map(from_cube, to_cube, projection="equirectangular", map=None, resolution="CAMERA", minlat=None, maxlat=None, minlon=None, maxlon=None):
 
     if map is None:
         map = "%s/../data/base/templates/maps/%s.map"%(os.environ["ISISROOT"], projection)
@@ -36,6 +36,15 @@ def cam2map(from_cube, to_cube, projection="equirectangular", map=None, resoluti
         "to": to_cube,
         "map": map
     }
+
+    if minlat is not None:
+        params["minlat"] = minlat
+    if maxlat is not None:
+        params["maxlat"] = maxlat
+    if minlon is not None:
+        params["minlon"] = minlon
+    if maxlon is not None:
+        params["maxlon"] = maxlon
 
     if resolution == "MAP":
         params["pixres"] = "map"
@@ -93,12 +102,22 @@ def map2cam(from_cube, to_cube, cam):
     return s
 
 
-def map2map(from_cube, to_cube, map):
+def map2map(from_cube, to_cube, map, minlat=None, maxlat=None, minlon=None, maxlon=None):
     params = {
         "from": from_cube,
         "to": to_cube,
         "map": map,
         "pixres": "map"
     }
+
+    if minlat is not None:
+        params["minlat"] = minlat
+    if maxlat is not None:
+        params["maxlat"] = maxlat
+    if minlon is not None:
+        params["minlon"] = minlon
+    if maxlon is not None:
+        params["maxlon"] = maxlon
     s = isis_command("map2map", params)
+
     return s
