@@ -31,7 +31,7 @@ def get_screen_dimensions(default=(1024,1024)):
     except:
         return default
 
-WINDOW_SIZE = get_screen_dimensions()
+WINDOW_SIZE = (1024, 1024)#get_screen_dimensions()
 
 
 PROGRAMS = {}
@@ -45,6 +45,21 @@ cube_file_red = None
 cube_file_green = None
 cube_file_blue = None
 
+ROTATE_Y = 0
+ROTATE_X = 0
+ROTATE_Z = 0
+
+PROGRAM_RED = None
+PROGRAM_GREEN = None
+PROGRAM_BLUE = None
+
+PROCESS_FINAL_AND_EXIT = False
+
+BLUE = 0
+GREEN = 1
+RED = 2
+CONFIGURED_FOR = -1
+
 IMAGE_PROPERTIES = {
     "data": None,
     "image_time": None,
@@ -54,7 +69,10 @@ IMAGE_PROPERTIES = {
     "min_lon": None,
     "max_lon": None,
     "output": None,
-    "scale": 1.0
+    "scale": 1.0,
+    "tex_id_red": None,
+    "tex_id_green": None,
+    "tex_id_blue": None
 }
 
 
@@ -76,6 +94,8 @@ def convert_16bitgrayscale_to_8bitRGB(im):
     return im
 
 def load_texture(name, from16bitTiff=False):
+    print "Loading texture '", name, "...",
+
     # global texture
     image = Image.open(name)
 
@@ -102,6 +122,7 @@ def load_texture(name, from16bitTiff=False):
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
 
+    print "Done"
     return id
 
 def create_dummy_image(width, height):
@@ -112,14 +133,14 @@ def create_dummy_image(width, height):
 
 
 
-def render(junocam_texture_id):
+def render(junocam_texture_id, program_id):
     spacecraftOrientation, jupiterState, spacecraftState, jupiterRotation, instrumentCubeOrientation, instrumentOrientation = calculate_orientations(
         frame_number=IMAGE_PROPERTIES["frame_number"])
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_MODELVIEW)
-    glLoadIdentity();
+    glLoadIdentity()
 
     lighting = False
 
@@ -133,100 +154,113 @@ def render(junocam_texture_id):
     else:
         glDisable(GL_LIGHTING)
 
-    glPushMatrix()
+    glRotatef(ROTATE_X, 1, 0, 0)
+    glRotatef(ROTATE_Y, 0, 1, 0)
+    glRotatef(ROTATE_Z, 0, 0, 1)
 
-    glRotatef(jupiterRotation[0], 1, 0, 0)
-    glRotatef(jupiterRotation[1], 0, 1, 0)
-    glRotatef(jupiterRotation[2], 0, 0, 1)
+    glMultMatrixf(instrumentOrientation)
+    glMultMatrixf(instrumentCubeOrientation)
+    glMultMatrixf(spacecraftOrientation)
 
-    glRotatef(-spacecraftOrientation[0], 1, 0, 0)
-    glRotatef(-spacecraftOrientation[1], 0, 1, 0)
-    glRotatef(-spacecraftOrientation[2], 0, 0, 1)
-
-    glRotatef(-instrumentCubeOrientation[0], 1, 0, 0)
-    glRotatef(-instrumentCubeOrientation[1], 0, 1, 0)
-    glRotatef(-instrumentCubeOrientation[2], 0, 0, 1)
-
-    glRotatef(-instrumentOrientation[0], 1, 0, 0)
-    glRotatef(-instrumentOrientation[1], 0, 1, 0)
-    glRotatef(-instrumentOrientation[2], 0, 0, 1)
-
-    spacecraftState *= IMAGE_PROPERTIES["scale"]
     glTranslatef(-spacecraftState[0], -spacecraftState[1], -spacecraftState[2])
 
-    # draw_image_spherical(JUPITER_TEXTURE_ID, -90, 90, -180, 180)
+    glPushMatrix()
 
-    draw_image_spherical(junocam_texture_id,
+    #draw_image_spherical(JUPITER_TEXTURE_ID, -90, 90, -180, 180)
+    program_id = draw_image_spherical(junocam_texture_id,
                          IMAGE_PROPERTIES["min_lat"],
                          IMAGE_PROPERTIES["max_lat"],
                          IMAGE_PROPERTIES["min_lon"],
-                         IMAGE_PROPERTIES["max_lon"])
-
+                         IMAGE_PROPERTIES["max_lon"],
+                         program_id)
     glPopMatrix()
+
+    glFlush()
+    glutSwapBuffers()
+
+    return program_id
 
 
 def export_fb():
-    pixels = glReadPixels(0, 0, WINDOW_SIZE[0], WINDOW_SIZE[1], GL_RGBA, GL_UNSIGNED_BYTE)
+    pixels = glReadPixels(0, 0, output_width, output_height, GL_RGBA, GL_UNSIGNED_BYTE)
 
     dt = np.dtype(np.uint8)
     dt = dt.newbyteorder('>')
     pixels = np.frombuffer(pixels, dtype=dt)
-    pixels = np.flip(np.reshape(pixels, (-1, WINDOW_SIZE[0], 4)), 0)
+    pixels = np.flip(np.reshape(pixels, (-1, output_width, 4)), 0)
     save_image(IMAGE_PROPERTIES["output"], pixels)
 
     return pixels
 
+
 def display():
-    print "Drawing..."
-    global FRAME_NUMBER, DISTANCE
+    print "Preparing display..."
+    global FRAME_NUMBER, DISTANCE, PROGRAM_RED, PROGRAM_GREEN, PROGRAM_BLUE, CONFIGURED_FOR
 
-    fbId = glGenTextures(1)
-    glBindTexture(GL_TEXTURE_2D, fbId)
-    dummy_image = create_dummy_image(WINDOW_SIZE[0], WINDOW_SIZE[1])
-    frameBufferName = glGenFramebuffers(1)
-    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName)
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, WINDOW_SIZE[0], WINDOW_SIZE[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, dummy_image)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, frameBufferName, 0)
-    glDrawBuffers(1, GL_COLOR_ATTACHMENT0)
-    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName)
+    if PROCESS_FINAL_AND_EXIT is True:
+        fbId = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, fbId)
+        dummy_image = create_dummy_image(output_width, output_height)
+        frameBufferName = glGenFramebuffers(1)
+        glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName)
+        glTexImage2D(GL_TEXTURE_2D, 0, 3, output_width, output_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dummy_image)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, frameBufferName, 0)
+        glDrawBuffers(1, GL_COLOR_ATTACHMENT0)
+        glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName)
 
-    configure_for_projected_cube(cube_file_red)
-    junocam_texture_id = load_texture(IMAGE_PROPERTIES["data"], True)
-    render(junocam_texture_id)
-    red_pixels = export_fb()
+        reshape(output_width, output_height)
 
-    configure_for_projected_cube(cube_file_green)
-    junocam_texture_id = load_texture(IMAGE_PROPERTIES["data"], True)
-    render(junocam_texture_id)
-    green_pixels = export_fb()
+        PROGRAM_RED = None
+        IMAGE_PROPERTIES["tex_id_red"] = None
 
-    configure_for_projected_cube(cube_file_blue)
-    junocam_texture_id = load_texture(IMAGE_PROPERTIES["data"], True)
-    render(junocam_texture_id)
-    blue_pixels = export_fb()
 
-    rgba_buffer = np.zeros(red_pixels.shape, dtype=np.uint8)
+    print "Rendering Red..."
+    if not CONFIGURED_FOR == RED:
+        configure_for_projected_cube(cube_file_red, configuring_for=RED)
 
-    for y in range(0, red_pixels.shape[0]):
-        for x in range(0, red_pixels.shape[1]):
-            r = red_pixels[y][x][0]
-            g = green_pixels[y][x][0]
-            b = blue_pixels[y][x][0]
-            rgba_buffer[y][x][0] = r
-            rgba_buffer[y][x][1] = g
-            rgba_buffer[y][x][2] = b
-            rgba_buffer[y][x][3] = 255
+    if IMAGE_PROPERTIES["tex_id_red"] is None:
+        load_textures(cube_file_red=cube_file_red, cube_file_green=None, cube_file_blue=None)
+    PROGRAM_RED = render(IMAGE_PROPERTIES["tex_id_red"], PROGRAM_RED)
 
-    save_image(IMAGE_PROPERTIES["combined_output"], rgba_buffer)
+    if PROCESS_FINAL_AND_EXIT is True:
+        glDeleteTextures(1, (IMAGE_PROPERTIES["tex_id_red"],))
+        red_pixels = export_fb()
 
-    window_mode = False
-    if window_mode is True:
-        glFlush()
-        glutSwapBuffers()
-    else:
+        print "Rendering Green..."
+        if not CONFIGURED_FOR == GREEN:
+            configure_for_projected_cube(cube_file_green, configuring_for=GREEN)
+        load_textures(cube_file_red=None, cube_file_green=cube_file_green, cube_file_blue=None)
+        PROGRAM_GREEN = render(IMAGE_PROPERTIES["tex_id_green"], PROGRAM_GREEN)
+        glDeleteTextures(1, (IMAGE_PROPERTIES["tex_id_green"],))
+        green_pixels = export_fb()
+
+        print "Rendering Blue"
+        if not CONFIGURED_FOR == BLUE:
+            configure_for_projected_cube(cube_file_blue, configuring_for=BLUE)
+        load_textures(cube_file_red=None, cube_file_green=None, cube_file_blue=cube_file_blue)
+        PROGRAM_BLUE = render(IMAGE_PROPERTIES["tex_id_blue"], PROGRAM_BLUE)
+        glDeleteTextures(1, (IMAGE_PROPERTIES["tex_id_blue"],))
+        blue_pixels = export_fb()
+
+        print "Building RGB Composite..."
+        rgba_buffer = np.zeros(red_pixels.shape, dtype=np.uint8)
+
+        for y in range(0, red_pixels.shape[0]):
+            for x in range(0, red_pixels.shape[1]):
+                r = red_pixels[y][x][0]
+                g = green_pixels[y][x][0]
+                b = blue_pixels[y][x][0]
+                rgba_buffer[y][x][0] = r
+                rgba_buffer[y][x][1] = g
+                rgba_buffer[y][x][2] = b
+                rgba_buffer[y][x][3] = 255
+
+        save_image(IMAGE_PROPERTIES["combined_output"], rgba_buffer)
+
         sys.exit(0)
+
 
 def save_image(path, data):
     im = Image.fromarray(data)
@@ -262,13 +296,11 @@ def calc_surface_normal(v0, v1, v2):
     return N
 
 
-def draw_image_spherical(texture_id, minLat, maxLat, minLon, maxLon, latSlices = 32, lonSlices = 64):
-    global PROGRAMS
+def draw_image_spherical(texture_id, minLat, maxLat, minLon, maxLon, program_id, latSlices = 32, lonSlices = 64):
 
-    if not texture_id in PROGRAMS:
-        PROGRAMS[texture_id] = glGenLists(1)
-        glNewList(PROGRAMS[texture_id], GL_COMPILE)
-
+    if program_id is None:
+        program_id = glGenLists(1)
+        glNewList(program_id, GL_COMPILE)
         latRes = (maxLat - minLat) / float(latSlices)
         lonRes = (maxLon - minLon) / float(lonSlices)
 
@@ -276,6 +308,9 @@ def draw_image_spherical(texture_id, minLat, maxLat, minLon, maxLon, latSlices =
         glBindTexture(GL_TEXTURE_2D, texture_id)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+
+        vector_sum = np.zeros((3,))
+        vector_count = 0
 
         for y in range(0, int(latSlices)):
             glBegin(GL_TRIANGLES)
@@ -291,10 +326,16 @@ def draw_image_spherical(texture_id, minLat, maxLat, minLon, maxLon, latSlices =
                 mx_lon = math.radians(mx_lon)
                 mn_lon = math.radians(mn_lon)
 
-                ulVector = spice.srfrec(599, mn_lon, mx_lat)
-                llVector = spice.srfrec(599, mn_lon, mn_lat)
-                urVector = spice.srfrec(599, mx_lon, mx_lat)
-                lrVector = spice.srfrec(599, mx_lon, mn_lat)
+                ulVector = np.array(spice.srfrec(599, mn_lon, mx_lat))
+                llVector = np.array(spice.srfrec(599, mn_lon, mn_lat))
+                urVector = np.array(spice.srfrec(599, mx_lon, mx_lat))
+                lrVector = np.array(spice.srfrec(599, mx_lon, mn_lat))
+
+                vector_sum += ulVector
+                vector_sum += llVector
+                vector_sum += urVector
+                vector_sum += lrVector
+                vector_count += 4
 
                 ulUV = (x / float(lonSlices), 1.0 - y / float(latSlices))
                 llUV = ( x / float(lonSlices), 1.0 - (y + 1) / float(latSlices))
@@ -326,11 +367,12 @@ def draw_image_spherical(texture_id, minLat, maxLat, minLon, maxLon, latSlices =
                 glVertex3f(lrVector[0], lrVector[1], lrVector[2])
             glEnd()
         glEndList()
-    glCallList(PROGRAMS[texture_id])
-
+    glCallList(program_id)
+    return program_id
+    #return vector_sum / float(vector_count)
 
 def keyboard(c, x, y):
-    global IMAGE_PROPERTIES, DISTANCE, FOV
+    global IMAGE_PROPERTIES, DISTANCE, FOV, ROTATE_X, ROTATE_Y, ROTATE_Z, PROCESS_FINAL_AND_EXIT
     """keyboard callback."""
     if c in ["q", chr(27)]:
         sys.exit(0)
@@ -352,8 +394,28 @@ def keyboard(c, x, y):
         IMAGE_PROPERTIES["scale"] += 0.1
     elif c == 'k':
         FOV -= 1.0
+        reshape(WINDOW_SIZE[0], WINDOW_SIZE[1])
     elif c == 'l':
         FOV += 1.0
+        reshape(WINDOW_SIZE[0], WINDOW_SIZE[1])
+    elif c == 's':
+        ROTATE_X = 0.0
+        ROTATE_Y = 0.0
+        ROTATE_Z = 0.0
+    elif c == 'w':
+        ROTATE_X += 1.0
+    elif c == 'x':
+        ROTATE_X -= 1.0
+    elif c == 'a':
+        ROTATE_Y += 1.0
+    elif c == 'd':
+        ROTATE_Y -= 1.0
+    elif c == 'e':
+        ROTATE_Z += 1.0
+    elif c == 'r':
+        ROTATE_Z -= 1.0
+    elif c == 'p':
+        PROCESS_FINAL_AND_EXIT = True
 
     if DISTANCE < 1.0:
         DISTANCE = 1.0
@@ -385,11 +447,13 @@ def init_opengl():
     glEnable(GL_MULTISAMPLE)
     glEnable(GL_POLYGON_SMOOTH)
     glShadeModel(GL_SMOOTH)
-    JUPITER_TEXTURE_ID = load_texture('/Users/kgill/repos/JunoCamProcessing/jupiter_johnw_texture_8192x4096.png', False)
+    #JUPITER_TEXTURE_ID = load_texture('/Users/kgill/repos/JunoCamProcessing/jupiter_johnw_texture_8192x4096.png', False)
     glEnable(GL_TEXTURE_2D)
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
     glEnable(GL_NORMALIZE)
     glClearColor(0.0, 0.0, 0.0, 1.0)
+
+
 
 
 def rotation_matrix_to_euler_angles(R):
@@ -414,26 +478,51 @@ def radians_xyz_to_degrees_xyz(xyz):
 
 
 def calculate_orientations(frame_number=0):
-    et = spice.str2et(IMAGE_PROPERTIES["image_time"])
+    #et = spice.str2et(IMAGE_PROPERTIES["image_time"])
+    et = IMAGE_PROPERTIES["mid_time"]
     et = et + (frame_number * IMAGE_PROPERTIES["interframe_delay"])
-
     jupiterState, lt = spice.spkpos('JUPITER', et, 'IAU_SUN', 'NONE', 'SUN')
+    jupiterState = np.array(jupiterState)
 
     spacecraftState, lt = spice.spkpos('JUNO_SPACECRAFT', et, 'IAU_JUPITER', 'NONE', 'JUPITER')
+    spacecraftState = np.array(spacecraftState)
 
-    m = spice.pxform("J2000", "IAU_JUPITER", et)
-    jupiterRotation = radians_xyz_to_degrees_xyz(rotation_matrix_to_euler_angles(m))
+    m = spice.pxform("IAU_JUPITER", "J2000", et)
+    jupiterRotation = np.array(
+        ((m[0][0], m[0][1], m[0][2], 0.0),
+         (m[1][0], m[1][1], m[1][2], 0.0),
+         (m[2][0], m[2][1], m[2][2], 0.0),
+         (0.0, 0.0, 0.0, 1.0))
+    )
 
-    m = spice.pxform("IAU_JUPITER", "JUNO_SPACECRAFT", et)
-    spacecraftOrientation = radians_xyz_to_degrees_xyz(rotation_matrix_to_euler_angles(m))
+    m = spice.pxform("JUNO_SPACECRAFT", "IAU_JUPITER", et)
+    spacecraftOrientation = np.array(
+        ((m[0][0], m[0][1], m[0][2], 0.0),
+         (m[1][0], m[1][1], m[1][2], 0.0),
+         (m[2][0], m[2][1], m[2][2], 0.0),
+         (0.0, 0.0, 0.0, 1.0))
+    )
 
-    m = spice.pxform("JUNO_SPACECRAFT", "JUNO_JUNOCAM_CUBE", et)
-    instrumentCubeOrientation = radians_xyz_to_degrees_xyz(rotation_matrix_to_euler_angles(m))
+    m = spice.pxform("JUNO_JUNOCAM_CUBE", "JUNO_SPACECRAFT", et)
+    instrumentCubeOrientation = np.array(
+        ((m[0][0], m[0][1], m[0][2], 0.0),
+         (m[1][0], m[1][1], m[1][2], 0.0),
+         (m[2][0], m[2][1], m[2][2], 0.0),
+         (0.0, 0.0, 0.0, 1.0))
+    )
 
-    m = spice.pxform("JUNO_JUNOCAM_CUBE", "JUNO_JUNOCAM", et)
-    instrumentOrientation = radians_xyz_to_degrees_xyz(rotation_matrix_to_euler_angles(m))
+    m = spice.pxform("JUNO_JUNOCAM", "JUNO_JUNOCAM_CUBE", et)
+    instrumentOrientation = np.array(
+        ((m[0][0], m[0][1], m[0][2], 0.0),
+         (m[1][0], m[1][1], m[1][2], 0.0),
+         (m[2][0], m[2][1], m[2][2], 0.0),
+         (0.0, 0.0, 0.0, 1.0))
+    )
+
 
     return spacecraftOrientation, jupiterState, spacecraftState, jupiterRotation, instrumentCubeOrientation, instrumentOrientation
+
+
 
 
 def main(argv=None):
@@ -447,28 +536,25 @@ def main(argv=None):
 
 def load_kernels(kernelbase):
     kernels = [
-        "base/kernels/lsk/naif0012.tls",
-        "base/kernels/pck/pck00009.tpc",
+        "juno/kernels/pck/pck00010.tpc",
         "juno/kernels/fk/juno_v12.tf",
         "juno/kernels/ik/juno_junocam_v02.ti",
         "juno/kernels/lsk/naif0012.tls",
-        "juno/kernels/sclk/JNO_SCLKSCET.00065.tsc",
+        "juno/kernels/sclk/JNO_SCLKSCET.00074.tsc",
         "juno/kernels/spk/spk_ref_180429_210731_180509.bsp",
         "juno/kernels/spk/spk_ref_160226_180221_160226.bsp",
         "juno/kernels/spk/spk_ref_160829_190912_161027.bsp",
         "juno/kernels/spk/spk_ref_161212_210731_170320.bsp",
-        "juno/kernels/spk/de438s.bsp",
-        "juno/kernels/spk/jup310.bsp",
-        "juno/kernels/spk/juno_struct_v03.bsp"
+        "juno/kernels/tspk/de436s.bsp",
+        "juno/kernels/tspk/jup310.bsp",
+        "juno/kernels/spk/juno_struct_v04.bsp",
+        "juno/kernels/ck/juno_sc_rec_180715_180716_v01.bc",
+        "juno/kernels/ck/juno_sc_rec_180701_180707_v01.bc",
+        "juno/kernels/ck/juno_sc_rec_180624_180630_v01.bc",
+        "juno/kernels/ck/juno_sc_rec_180617_180623_v01.bc",
+        "juno/kernels/ck/juno_sc_rec_180610_180616_v01.bc",
+        "juno/kernels/ck/juno_sc_rec_180603_180609_v01.bc"
     ]
-
-    for file in os.listdir("%s/juno/kernels/ck"%kernelbase):
-        if file[-3:] == ".bc":
-            kernels.append("JUNO/kernels/ck/%s" % file)
-
-    #for file in os.listdir("/Users/kgill/ISIS/data/juno/kernels/spk"):
-    #    if file[-4:] == ".bsp":
-    #        kernels.append("juno/kernels/spk/%s" % file)
 
     for kernel in kernels:
         spice.furnsh("%s/%s" % (kernelbase, kernel))
@@ -476,7 +562,7 @@ def load_kernels(kernelbase):
 
 
 def cube_to_tiff(cube_file):
-
+    print "Converting", cube_file, "to tiff...",
     source_dirname = os.path.dirname(cube_file)
     if source_dirname == "":
         source_dirname = "."
@@ -489,11 +575,12 @@ def cube_to_tiff(cube_file):
 
     output_file = "%s/%s.tif"%(work_dir, bn[:-4])
     importexport.isis2std_grayscale(to_tiff=output_file, from_cube=cube_file)
+    print "done"
     return output_file
 
 
-def configure_for_projected_cube(cube_file=None, label_file=None, combined_output=None, frame_offset=None, verbose=False):
-    global IMAGE_PROPERTIES
+def configure_for_projected_cube(cube_file=None, label_file=None, combined_output=None, frame_offset=None, scale=None, verbose=False, configuring_for=-1):
+    global IMAGE_PROPERTIES, CONFIGURED_FOR
 
     if cube_file is None:
         cube_file = IMAGE_PROPERTIES["cube_file"]
@@ -503,42 +590,69 @@ def configure_for_projected_cube(cube_file=None, label_file=None, combined_outpu
         combined_output = IMAGE_PROPERTIES["combined_output"]
     if frame_offset is None:
         frame_offset = IMAGE_PROPERTIES["frame_offset"]
+    if scale is None:
+        scale = IMAGE_PROPERTIES["scale"]
     output = "%s_rendered.tif"%cube_file[:-4]
 
 
     image_time = info.get_field_value(label_file, "IMAGE_TIME")
-    interframe_delay = info.get_field_value(label_file, "INTERFRAME_DELAY")
+    interframe_delay = float(info.get_field_value(label_file, "INTERFRAME_DELAY"))
+
+    start_time = spice.str2et(info.get_field_value(label_file, "START_TIME"))
+    stop_time = spice.str2et(info.get_field_value(label_file, "STOP_TIME"))
+    mid_time = (start_time + stop_time) / 2.0
 
     num_lines = info.get_field_value(label_file, "LINES")
 
-    frame_number = int(round(float(num_lines) / 128.0 / 3.0 / 2.0)) + frame_offset
+    #frame_number = int(round(float(num_lines) / 128.0 / 3.0 / 2.0)) + frame_offset
 
     min_lat = scripting.getkey(cube_file, "MinimumLatitude", grpname="Mapping")
     max_lat = scripting.getkey(cube_file, "MaximumLatitude", grpname="Mapping")
     min_lon = scripting.getkey(cube_file, "MinimumLongitude", grpname="Mapping")
     max_lon = scripting.getkey(cube_file, "MaximumLongitude", grpname="Mapping")
 
-    tiff_file = cube_to_tiff(cube_file)
+    IMAGE_PROPERTIES["cube_file"] = cube_file
+    IMAGE_PROPERTIES["label_file"] = label_file
+    IMAGE_PROPERTIES["image_time"] = image_time
+    IMAGE_PROPERTIES["mid_time"] = mid_time
+    IMAGE_PROPERTIES["interframe_delay"] = interframe_delay
+    IMAGE_PROPERTIES["min_lat"] = float(min_lat)
+    IMAGE_PROPERTIES["max_lat"] = float(max_lat)
+    IMAGE_PROPERTIES["min_lon"] = float(min_lon)
+    IMAGE_PROPERTIES["max_lon"] = float(max_lon)
+    IMAGE_PROPERTIES["output"] = output
+    IMAGE_PROPERTIES["frame_number"] = frame_offset
+    IMAGE_PROPERTIES["frame_offset"] = frame_offset
+    IMAGE_PROPERTIES["scale"] = scale
+    IMAGE_PROPERTIES["combined_output"] = combined_output
 
-    IMAGE_PROPERTIES = {
-        "cube_file": cube_file,
-        "label_file": label_file,
-        "data": tiff_file,
-        "image_time": image_time,
-        "interframe_delay": float(interframe_delay),
-        "min_lat": float(min_lat),
-        "max_lat": float(max_lat),
-        "min_lon": float(min_lon),
-        "max_lon": float(max_lon),
-        "output": output,
-        "frame_number": frame_number,
-        "frame_offset": frame_offset,
-        "scale": 1.0,
-        "combined_output": combined_output
-    }
 
     if verbose is True:
         print json.dumps(IMAGE_PROPERTIES, indent=4)
+
+    CONFIGURED_FOR = configuring_for
+
+
+def load_textures(cube_file_red=None, cube_file_green=None, cube_file_blue=None):
+
+    if not cube_file_red is None:
+        print "Loading Red Texture..."
+        junocam_texture_id_red = load_texture(cube_to_tiff(cube_file_red), True)
+        IMAGE_PROPERTIES["tex_id_red"] = junocam_texture_id_red
+
+    if not cube_file_green is None:
+        print "Loading Green Texture..."
+        junocam_texture_id_green = load_texture(cube_to_tiff(cube_file_green), True)
+        IMAGE_PROPERTIES["tex_id_green"] = junocam_texture_id_green
+
+    if not cube_file_blue is None:
+        print "Loading Blue Texture..."
+        junocam_texture_id_blue = load_texture(cube_to_tiff(cube_file_blue), True)
+        IMAGE_PROPERTIES["tex_id_blue"] = junocam_texture_id_blue
+
+
+
+
 
 if __name__ == "__main__":
 
@@ -554,6 +668,9 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output", help="Output file path", required=True, type=str, default=None)
     parser.add_argument("-f", "--frameoffset", help="Frame offset", required=False, type=int, default=0)
     parser.add_argument("-F", "--fov", help="Field of view (degrees)", required=False, type=int, default=90)
+    parser.add_argument("-W", "--width", help="Image width in pixels", required=False, type=int, default=2048)
+    parser.add_argument("-H", "--height", help="Image height in pixels", required=False, type=int, default=2048)
+    parser.add_argument("-s", "--scale", help="Image height in pixels", required=False, type=float, default=1.0)
     args = parser.parse_args()
 
     lbl_file = args.label
@@ -564,13 +681,19 @@ if __name__ == "__main__":
     kernelbase = args.kernelbase
     output = args.output
     frame_offset = args.frameoffset
+    output_width = args.width
+    output_height = args.height
+    scale = args.scale
+
+    WINDOW_SIZE = (1024, 1024)
 
 
     FOV = args.fov
-
-    configure_for_projected_cube(cube_file_red, lbl_file, output, frame_offset, verbose)
-
     load_kernels(kernelbase)
+
+    configure_for_projected_cube(cube_file_red, lbl_file, output, frame_offset, scale, verbose)
+
+
 
     #FRAME_NUMBER = 13
     sys.exit(main())
