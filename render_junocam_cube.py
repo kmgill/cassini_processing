@@ -175,8 +175,8 @@ def render(junocam_texture_id, program_id):
                          program_id)
     glPopMatrix()
 
-    glFlush()
-    glutSwapBuffers()
+    #glFlush()
+    #glutSwapBuffers()
 
     return program_id
 
@@ -189,33 +189,12 @@ def export_fb():
     pixels = np.frombuffer(pixels, dtype=dt)
     pixels = np.flip(np.reshape(pixels, (-1, output_width, 4)), 0)
     save_image(IMAGE_PROPERTIES["output"], pixels)
-
     return pixels
 
 
-def display():
-    print "Preparing display..."
-    global FRAME_NUMBER, DISTANCE, PROGRAM_RED, PROGRAM_GREEN, PROGRAM_BLUE, CONFIGURED_FOR
 
-    if PROCESS_FINAL_AND_EXIT is True:
-        fbId = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, fbId)
-        dummy_image = create_dummy_image(output_width, output_height)
-        frameBufferName = glGenFramebuffers(1)
-        glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName)
-        glTexImage2D(GL_TEXTURE_2D, 0, 3, output_width, output_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dummy_image)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, frameBufferName, 0)
-        glDrawBuffers(1, GL_COLOR_ATTACHMENT0)
-        glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName)
-
-        reshape(output_width, output_height)
-
-        PROGRAM_RED = None
-        IMAGE_PROPERTIES["tex_id_red"] = None
-
-
+def display_standard():
+    global PROGRAM_RED
     print "Rendering Red..."
     if not CONFIGURED_FOR == RED:
         configure_for_projected_cube(cube_file_red, configuring_for=RED)
@@ -224,46 +203,76 @@ def display():
         load_textures(cube_file_red=cube_file_red, cube_file_green=None, cube_file_blue=None)
     PROGRAM_RED = render(IMAGE_PROPERTIES["tex_id_red"], PROGRAM_RED)
 
+    glFlush()
+    glutSwapBuffers()
+
+def display_for_export():
+    global FRAME_NUMBER, DISTANCE, PROGRAM_RED, PROGRAM_GREEN, PROGRAM_BLUE, CONFIGURED_FOR
+    fbId = glGenTextures(1)
+    glBindTexture(GL_TEXTURE_2D, fbId)
+    dummy_image = create_dummy_image(output_width, output_height)
+    frameBufferName = glGenFramebuffers(1)
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName)
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, output_width, output_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dummy_image)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, frameBufferName, 0)
+    glDrawBuffers(1, GL_COLOR_ATTACHMENT0)
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName)
+
+    reshape(output_width, output_height)
+
+    configure_for_projected_cube(cube_file_red, configuring_for=RED)
+    junocam_texture_id_red = load_texture(cube_to_tiff(cube_file_red), True)
+    PROGRAM_RED = render(junocam_texture_id_red, None)
+    glDeleteTextures(1, (junocam_texture_id_red,))
+    red_pixels = export_fb()
+
+    print "Rendering Green..."
+    configure_for_projected_cube(cube_file_green, configuring_for=GREEN)
+    junocam_texture_id_green = load_texture(cube_to_tiff(cube_file_green), True)
+    PROGRAM_GREEN = render(junocam_texture_id_green, None)
+    glDeleteTextures(1, (junocam_texture_id_green,))
+    green_pixels = export_fb()
+
+    print "Rendering Blue"
+    configure_for_projected_cube(cube_file_blue, configuring_for=BLUE)
+    junocam_texture_id_blue = load_texture(cube_to_tiff(cube_file_blue), True)
+    PROGRAM_BLUE = render(junocam_texture_id_blue, None)
+    glDeleteTextures(1, (junocam_texture_id_blue,))
+    blue_pixels = export_fb()
+
+    print "Building RGB Composite..."
+
+    rgba_buffer = np.zeros(red_pixels.shape, dtype=np.uint8)
+
+    for y in range(0, red_pixels.shape[0]):
+        for x in range(0, red_pixels.shape[1]):
+            r = red_pixels[y][x][0]
+            g = green_pixels[y][x][0]
+            b = blue_pixels[y][x][0]
+            rgba_buffer[y][x][0] = r
+            rgba_buffer[y][x][1] = g
+            rgba_buffer[y][x][2] = b
+            rgba_buffer[y][x][3] = 255
+
+    save_image(IMAGE_PROPERTIES["combined_output"], rgba_buffer)
+
+    sys.exit(0)
+
+
+def display():
+    global PROCESS_FINAL_AND_EXIT
     if PROCESS_FINAL_AND_EXIT is True:
-        glDeleteTextures(1, (IMAGE_PROPERTIES["tex_id_red"],))
-        red_pixels = export_fb()
-
-        print "Rendering Green..."
-        if not CONFIGURED_FOR == GREEN:
-            configure_for_projected_cube(cube_file_green, configuring_for=GREEN)
-        load_textures(cube_file_red=None, cube_file_green=cube_file_green, cube_file_blue=None)
-        PROGRAM_GREEN = render(IMAGE_PROPERTIES["tex_id_green"], PROGRAM_GREEN)
-        glDeleteTextures(1, (IMAGE_PROPERTIES["tex_id_green"],))
-        green_pixels = export_fb()
-
-        print "Rendering Blue"
-        if not CONFIGURED_FOR == BLUE:
-            configure_for_projected_cube(cube_file_blue, configuring_for=BLUE)
-        load_textures(cube_file_red=None, cube_file_green=None, cube_file_blue=cube_file_blue)
-        PROGRAM_BLUE = render(IMAGE_PROPERTIES["tex_id_blue"], PROGRAM_BLUE)
-        glDeleteTextures(1, (IMAGE_PROPERTIES["tex_id_blue"],))
-        blue_pixels = export_fb()
-
-        print "Building RGB Composite..."
-        rgba_buffer = np.zeros(red_pixels.shape, dtype=np.uint8)
-
-        for y in range(0, red_pixels.shape[0]):
-            for x in range(0, red_pixels.shape[1]):
-                r = red_pixels[y][x][0]
-                g = green_pixels[y][x][0]
-                b = blue_pixels[y][x][0]
-                rgba_buffer[y][x][0] = r
-                rgba_buffer[y][x][1] = g
-                rgba_buffer[y][x][2] = b
-                rgba_buffer[y][x][3] = 255
-
-        save_image(IMAGE_PROPERTIES["combined_output"], rgba_buffer)
-
-        sys.exit(0)
+        display_for_export()
+        PROCESS_FINAL_AND_EXIT = False
+    else:
+        display_standard()
 
 
 def save_image(path, data):
     im = Image.fromarray(data)
+    #im.show()
     im.save(path)
     #data_matrix = data.astype(np.uint16) / 255.0 * 65535.0
     #tiff = TIFFimage(data, description='')
@@ -562,7 +571,7 @@ def load_kernels(kernelbase):
 
 
 def cube_to_tiff(cube_file):
-    print "Converting", cube_file, "to tiff...",
+
     source_dirname = os.path.dirname(cube_file)
     if source_dirname == "":
         source_dirname = "."
@@ -574,6 +583,9 @@ def cube_to_tiff(cube_file):
     bn = os.path.basename(cube_file)
 
     output_file = "%s/%s.tif"%(work_dir, bn[:-4])
+    if os.path.exists(output_file):
+        return output_file
+    print "Converting", cube_file, "to tiff...",
     importexport.isis2std_grayscale(to_tiff=output_file, from_cube=cube_file)
     print "done"
     return output_file
