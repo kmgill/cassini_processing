@@ -6,6 +6,7 @@ import spiceypy as spice
 import math
 import numpy as np
 from PIL import Image
+Image.MAX_IMAGE_PIXELS = 5013249900
 from libtiff import TIFFimage
 import argparse
 import json
@@ -93,9 +94,13 @@ def convert_16bitgrayscale_to_8bitRGB(im):
     im = np.asarray(np.dstack((im, im, im)), dtype=np.uint8)
     return im
 
+
+def get_max_texture_size():
+    print glGetIntegerv(GL_MAX_TEXTURE_SIZE,  0)
+
 def load_texture(name, from16bitTiff=False):
     print "Loading texture '", name, "...",
-
+    get_max_texture_size()
     # global texture
     image = Image.open(name)
 
@@ -305,7 +310,7 @@ def calc_surface_normal(v0, v1, v2):
     return N
 
 
-def draw_image_spherical(texture_id, minLat, maxLat, minLon, maxLon, program_id, latSlices = 32, lonSlices = 64):
+def draw_image_spherical(texture_id, minLat, maxLat, minLon, maxLon, program_id, latSlices = 128, lonSlices = 128):
 
     if program_id is None:
         program_id = glGenLists(1)
