@@ -60,7 +60,7 @@ class Texture:
         self.__tex_id = None
 
     def is_loaded(self):
-        return self.__tex_id is None
+        return self.__tex_id is not None
 
     def load(self):
         if self.is_loaded():
@@ -178,7 +178,11 @@ class Model:
         self.min_lon = float(scripting.getkey(self.__cube_file, "MinimumLongitude", grpname="Mapping"))
         self.max_lon = float(scripting.getkey(self.__cube_file, "MaximumLongitude", grpname="Mapping"))
 
+        self.__model_output = "%s_rendered.tif"%(self.__cube_file[:-4])
         self.__program_id = None
+
+    def get_model_output_filename(self):
+        return self.__model_output
 
     @staticmethod
     def rotation_matrix_to_euler_angles(R):
@@ -369,8 +373,8 @@ class RenderEngine:
 
     def __init__(self, cube_file_red, cube_file_green, cube_file_blue, label_file, output_file, output_width, output_height, frame_offset, window_size=(1024, 1024)):
         self.red_model = Model(cube_file_red, label_file)
-        #self.green_model = Model(cube_file_green, label_file)
-        #self.blue_model = Model(cube_file_blue, label_file)
+        self.green_model = Model(cube_file_green, label_file)
+        self.blue_model = Model(cube_file_blue, label_file)
         self.output_file = output_file
         self.output_width = output_width
         self.output_height = output_height
@@ -474,15 +478,15 @@ class RenderEngine:
 
         print "Rendering Red..."
         self.red_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z)
-        red_pixels = self.export_frame_buffer()
+        red_pixels = self.export_frame_buffer(self.red_model.get_model_output_filename())
 
         print "Rendering Green..."
         self.green_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z)
-        green_pixels = self.export_frame_buffer()
+        green_pixels = self.export_frame_buffer(self.green_model.get_model_output_filename())
 
         print "Rendering Blue"
         self.blue_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z)
-        blue_pixels = self.export_frame_buffer()
+        blue_pixels = self.export_frame_buffer(self.blue_model.get_model_output_filename())
 
         print "Building RGB Composite..."
         rgba_buffer = np.zeros(red_pixels.shape, dtype=np.uint8)
@@ -501,14 +505,17 @@ class RenderEngine:
 
         sys.exit(0)
 
-    def export_frame_buffer(self):
+    def export_frame_buffer(self, save_copy_to=None):
         pixels = glReadPixels(0, 0, self.output_width, self.output_height, GL_RGBA, GL_UNSIGNED_BYTE)
 
         dt = np.dtype(np.uint8)
         dt = dt.newbyteorder('>')
         pixels = np.frombuffer(pixels, dtype=dt)
         pixels = np.flip(np.reshape(pixels, (-1, output_width, 4)), 0)
-        #self.save_image(self.output_file, pixels)
+
+        if save_copy_to is not None:
+            self.save_image(save_copy_to, pixels)
+
         return pixels
 
     @staticmethod
