@@ -33,23 +33,6 @@ def get_screen_dimensions(default=(1024,1024)):
     except:
         return default
 
-WINDOW_SIZE = (1024, 1024)#get_screen_dimensions()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 class Texture:
@@ -65,7 +48,13 @@ class Texture:
     def load(self):
         if self.is_loaded():
             return
-        self.__tex_id = self.load_texture(self.__tiff_file, from16bitTiff=True)
+        self.load_texture(self.__tiff_file, from16bitTiff=True)
+
+    def unload(self):
+        if not self.is_loaded():
+            return
+        glDeleteTextures(1, (self.__tex_id,))
+        self.__tex_id = None
 
     def bind(self):
         self.load()
@@ -73,6 +62,7 @@ class Texture:
         glBindTexture(GL_TEXTURE_2D, self.__tex_id)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+
 
     def cube_to_tiff(self, cube_file):
 
@@ -139,8 +129,8 @@ class Texture:
         image, ix, iy = self.pillow_to_gl_texture(image, from16bitTiff)
 
         # Create Texture
-        id = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, id)  # 2d texture (x and y size)
+        self.__tex_id = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, self.__tex_id )  # 2d texture (x and y size)
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
         glTexImage2D(GL_TEXTURE_2D, 0, 3, ix, iy, 0, GL_RGBA, GL_UNSIGNED_BYTE, image)
@@ -152,7 +142,7 @@ class Texture:
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
 
         print "Done"
-        return id
+        return self.__tex_id
 
 
 
@@ -180,6 +170,9 @@ class Model:
 
         self.__model_output = "%s_rendered.tif"%(self.__cube_file[:-4])
         self.__program_id = None
+
+    def unload_textures(self):
+        self.__texture.unload()
 
     def get_model_output_filename(self):
         return self.__model_output
@@ -392,7 +385,7 @@ class RenderEngine:
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity()
         aspect = float(width) / float(height)
-        gluPerspective(FOV, aspect, 100, 900000.0)
+        gluPerspective(self.__fov, aspect, 100, 900000.0)
         glutPostRedisplay()
 
     def mouse(self, button, state, x, y):
@@ -468,24 +461,29 @@ class RenderEngine:
         frameBufferName = glGenFramebuffers(1)
         glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName)
         glTexImage2D(GL_TEXTURE_2D, 0, 3, self.output_width, self.output_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dummy_image)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, frameBufferName, 0)
         glDrawBuffers(1, GL_COLOR_ATTACHMENT0)
         glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName)
 
-        self.reshape(output_width, output_height)
+        self.reshape(self.output_width, self.output_height)
 
         print "Rendering Red..."
+        self.red_model.unload_textures()
         self.red_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z)
+        self.red_model.unload_textures()
+        glBindTexture(GL_TEXTURE_2D, fbId)
         red_pixels = self.export_frame_buffer(self.red_model.get_model_output_filename())
 
         print "Rendering Green..."
         self.green_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z)
+        self.green_model.unload_textures()
         green_pixels = self.export_frame_buffer(self.green_model.get_model_output_filename())
 
         print "Rendering Blue"
         self.blue_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z)
+        self.blue_model.unload_textures()
         blue_pixels = self.export_frame_buffer(self.blue_model.get_model_output_filename())
 
         print "Building RGB Composite..."
@@ -536,7 +534,7 @@ class RenderEngine:
     def __init_glut(self):
         glutInit(sys.argv)
         glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE)
-        glutInitWindowSize(*WINDOW_SIZE)
+        glutInitWindowSize(*self.__window_size)
         glutCreateWindow(sys.argv[0])
         glutReshapeFunc(self.reshape)
         glutDisplayFunc(self.display)
@@ -627,16 +625,11 @@ if __name__ == "__main__":
     output_height = args.height
     scale = args.scale
 
-    WINDOW_SIZE = (1024, 1024)
-
+    ratio = min(float(1024) / float(output_width), float(1024) / float(output_height))
+    window_size = (int(output_width * ratio), int(output_height * ratio))
 
     FOV = args.fov
     load_kernels(kernelbase)
 
-    #configure_for_projected_cube(cube_file_red, lbl_file, output, frame_offset, scale, verbose)
-
-
-    engine = RenderEngine(cube_file_red, cube_file_green, cube_file_blue, lbl_file, output, output_width, output_height, frame_offset)
-    engine.main()
-    #FRAME_NUMBER = 13
-    #sys.exit(main())
+    engine = RenderEngine(cube_file_red, cube_file_green, cube_file_blue, lbl_file, output, output_width, output_height, frame_offset, window_size=window_size)
+    sys.exit(engine.main())
