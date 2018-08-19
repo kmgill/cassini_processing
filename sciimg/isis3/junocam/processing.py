@@ -10,6 +10,7 @@ from sciimg.isis3 import mosaicking
 from sciimg.isis3._core import printProgress
 from sciimg.isis3 import utility
 from sciimg.isis3 import mapprojection
+import multiprocessing
 
 
 def output_filename(file_name):
@@ -68,10 +69,17 @@ def trim_vertical(cub_file, trim_pixels=2):
     os.unlink(cub_file)
     os.rename(trim_file, cub_file)
 
+def trim_cube(args):
+    cub_file = args["cub_file"]
+    trim_pixels = args["trim_pixels"]
+    trim_vertical(cub_file, trim_pixels)
+
 def trim_cubes(work_dir, product_id, trim_pixels=2):
     cub_files = glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))
-    for cub_file in cub_files:
-        trim_vertical(cub_file, trim_pixels)
+
+    params = [{"cub_file":cub_file, "trim_pixels": trim_pixels} for cub_file in cub_files]
+    p = multiprocessing.Pool(multiprocessing.cpu_count())
+    xs = p.map(trim_cube, params)
 
 
 def histeq_cube(cub_file, work_dir, product_id):
@@ -80,6 +88,21 @@ def histeq_cube(cub_file, work_dir, product_id):
     os.unlink(cub_file)
     os.rename(hist_file, cub_file)
 
+
+
+def initspice_for_cube(cub_file):
+    s = cameras.spiceinit(cub_file)
+
+
+def map_project_cube(args):
+    cub_file = args["cub_file"]
+    out_file = args["out_file"]
+    map_file = args["map"]
+
+    try:
+        s = cameras.cam2map(cub_file, out_file, map=map_file, resolution="MAP")
+    except:
+        pass #Just eat the exception for now.
 
 """
     JunoCam additional options:
@@ -93,6 +116,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     #out_file_cub = "%s.cub" % out_file
 
     num_steps = 14
+
 
     if "projection" in additional_options:
         projection = additional_options["projection"]
@@ -120,8 +144,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
 
     s = juno.junocam2isis(from_file_name, "%s/__%s_raw.cub"%(work_dir, product_id))
     if is_verbose:
-        print s
-
+        print
 
 
     if "vt" in additional_options:
@@ -141,11 +164,8 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         else:
             printProgress(1, num_steps, prefix="%s: "%from_file_name)
         cub_files = glob.glob('%s/__%s_raw_*.cub'%(work_dir, product_id))
-
-        for cub_file in cub_files:
-            s = cameras.spiceinit(cub_file)
-            if is_verbose:
-                print s
+        p = multiprocessing.Pool(multiprocessing.cpu_count())
+        xs = p.map(initspice_for_cube, cub_files)
 
     mid_num = int(round(len(glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))) / 3.0 / 2.0))
 
@@ -161,22 +181,16 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     if is_verbose:
         print s
 
-
     if is_verbose:
         print "Map Projecting Stripes..."
     else:
         printProgress(3, num_steps, prefix="%s: " % from_file_name)
 
     cub_files = glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))
-    for cub_file in cub_files:
-        try: # Not all of them will work.
-            bn = os.path.basename(cub_file)
-            out_file = "%s/%s"%(mapped_dir, bn)
-            s = cameras.cam2map(cub_file, out_file, map=map_file, resolution="MAP")
-            if is_verbose:
-                print s
-        except:
-            pass # Probably shouldn't eat the exception here.
+
+    params = [{"cub_file": cub_file, "out_file": "%s/%s"%(mapped_dir, os.path.basename(cub_file)), "map": map_file} for cub_file in cub_files]
+    p = multiprocessing.Pool(multiprocessing.cpu_count())
+    xs = p.map(map_project_cube, params)
 
 
     if is_verbose:

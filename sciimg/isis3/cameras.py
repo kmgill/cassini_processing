@@ -102,12 +102,18 @@ def map2cam(from_cube, to_cube, cam):
     return s
 
 
-def map2map(from_cube, to_cube, map, minlat=None, maxlat=None, minlon=None, maxlon=None):
+def map2map(from_cube, to_cube, map=None, projection="equirectangular", minlat=None, maxlat=None, minlon=None, maxlon=None):
+
+    resolution = "MAP"
+    if map is None:
+        map = "%s/../data/base/templates/maps/%s.map"%(os.environ["ISISROOT"], projection)
+        resolution = "FROM"
+
     params = {
         "from": from_cube,
         "to": to_cube,
         "map": map,
-        "pixres": "map"
+        "pixres": resolution
     }
 
     if minlat is not None:
