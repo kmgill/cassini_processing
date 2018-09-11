@@ -2,6 +2,7 @@
 import sys
 import os
 import argparse
+import traceback
 
 from sciimg.isis3 import cameras
 from sciimg.isis3 import _core
@@ -55,6 +56,8 @@ if __name__ == "__main__":
                             print s
                     except:
                         print "Reprojecting", file_name, "failed"
+                        if verbose:
+                            traceback.print_exc(file=sys.stdout)
                 else:
                     try:
                         if not rings:
@@ -66,3 +69,5 @@ if __name__ == "__main__":
                             print s
                     except:
                         print "Processing", file_name, "failed"
+                        if verbose:
+                            traceback.print_exc(file=sys.stdout)

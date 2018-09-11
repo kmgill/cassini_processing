@@ -1,4 +1,5 @@
 import os
+import sys
 import glob
 from sciimg.isis3 import info
 from sciimg.isis3 import juno
@@ -11,7 +12,7 @@ from sciimg.isis3._core import printProgress
 from sciimg.isis3 import utility
 from sciimg.isis3 import mapprojection
 import multiprocessing
-
+import traceback
 
 def output_filename(file_name):
     dirname = os.path.dirname(file_name)
@@ -92,6 +93,7 @@ def histeq_cube(cub_file, work_dir, product_id):
 
 def initspice_for_cube(cub_file):
     s = cameras.spiceinit(cub_file)
+    return s
 
 
 def map_project_cube(args):
