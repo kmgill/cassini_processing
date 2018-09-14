@@ -51,7 +51,12 @@ setup(
     install_requires=[
         'requests',
         'numpy',
-        'pvl'
+        'pvl',
+        'spiceypy',
+        'pyopengl',
+        'libtiff',
+        'scipy',
+        'utm'
     ],
 
     classifiers=[
