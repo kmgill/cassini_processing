@@ -16,7 +16,7 @@ from scipy.misc import imresize
 from sciimg.isis3 import info
 from sciimg.isis3 import scripting
 from sciimg.isis3 import importexport
-
+from sciimg.isis3 import _core
 
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
@@ -32,7 +32,6 @@ def get_screen_dimensions(default=(1024,1024)):
         return (width, height)
     except:
         return default
-
 
 
 class Texture:
@@ -53,6 +52,8 @@ class Texture:
     def unload(self):
         if not self.is_loaded():
             return
+
+        # Delete the textures outright. Be rid of the memory
         glDeleteTextures(1, (self.__tex_id,))
         self.__tex_id = None
 
@@ -122,6 +123,8 @@ class Texture:
         return image, ix, iy
 
     def load_texture(self, name, from16bitTiff=False):
+        if self.__tex_id is not None:
+            return
         print "Loading texture '", name, "...",
 
         # global texture
@@ -145,9 +148,7 @@ class Texture:
         return self.__tex_id
 
 
-
 class Model:
-
 
     def __init__(self, cube_file, label_file):
         self.__cube_file = cube_file
@@ -242,11 +243,15 @@ class Model:
 
         return spacecraftOrientation, jupiterState, spacecraftState, jupiterRotation, instrumentCubeOrientation, instrumentOrientation
 
+
+    def is_framebuffer_ready(self):
+        return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE
+
     def render(self, frame_number, rotate_x, rotate_y, rotate_z):
         spacecraftOrientation, jupiterState, spacecraftState, jupiterRotation, instrumentCubeOrientation, instrumentOrientation = self.calculate_orientations(
             frame_number=frame_number)
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
@@ -442,38 +447,41 @@ class RenderEngine:
         glutPostRedisplay()
 
     def display_standard(self):
-        print "Rendering Red..."
+        print "Rendering Grayscale frame with red channel..."
         self.red_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z)
         glFlush()
         glutSwapBuffers()
 
     @staticmethod
     def create_dummy_image(width, height):
-        im = np.zeros((width, height, 3), dtype=np.uint8)
+        im = np.zeros((width, height, 4), dtype=np.uint8)
         im = Image.fromarray(im)
-        image = im.tobytes("raw", "RGBX", 0, -1)
+        image = im.tobytes("raw", "RGBA", 0, -1)
         return image
 
-    def display_for_export(self):
-        fbId = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, fbId)
-        dummy_image = self.create_dummy_image(self.output_width, self.output_height)
-        frameBufferName = glGenFramebuffers(1)
-        glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName)
-        glTexImage2D(GL_TEXTURE_2D, 0, 3, self.output_width, self.output_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dummy_image)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, frameBufferName, 0)
-        glDrawBuffers(1, GL_COLOR_ATTACHMENT0)
-        glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName)
 
+
+    def display_for_export(self):
         self.reshape(self.output_width, self.output_height)
 
+        dummy_image = self.create_dummy_image(self.output_width, self.output_height)
+
+        fb_name = glGenFramebuffers(1)
+        glBindFramebuffer(GL_FRAMEBUFFER, fb_name)
+
+        fb_tex_id = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, fb_tex_id)
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.output_width, self.output_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dummy_image)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, fb_tex_id, 0)
+        glDrawBuffers(1, GL_COLOR_ATTACHMENT0)
+
         print "Rendering Red..."
-        self.red_model.unload_textures()
         self.red_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z)
         self.red_model.unload_textures()
-        glBindTexture(GL_TEXTURE_2D, fbId)
         red_pixels = self.export_frame_buffer(self.red_model.get_model_output_filename())
 
         print "Rendering Green..."
@@ -488,19 +496,12 @@ class RenderEngine:
 
         print "Building RGB Composite..."
         rgba_buffer = np.zeros(red_pixels.shape, dtype=np.uint8)
-
-        for y in range(0, red_pixels.shape[0]):
-            for x in range(0, red_pixels.shape[1]):
-                r = red_pixels[y][x][0]
-                g = green_pixels[y][x][0]
-                b = blue_pixels[y][x][0]
-                rgba_buffer[y][x][0] = r
-                rgba_buffer[y][x][1] = g
-                rgba_buffer[y][x][2] = b
-                rgba_buffer[y][x][3] = 255
+        rgba_buffer[:, :, 0] = red_pixels[:,:,1]
+        rgba_buffer[:, :, 1] = green_pixels[:, :, 1]
+        rgba_buffer[:, :, 2] = blue_pixels[:, :, 1]
+        rgba_buffer[:, :, 3] = 255
 
         self.save_image(self.output_file, rgba_buffer)
-
         sys.exit(0)
 
     def export_frame_buffer(self, save_copy_to=None):
@@ -519,7 +520,6 @@ class RenderEngine:
     @staticmethod
     def save_image(path, data):
         im = Image.fromarray(data)
-        # im.show()
         im.save(path)
         # data_matrix = data.astype(np.uint16) / 255.0 * 65535.0
         # tiff = TIFFimage(data, description='')
@@ -596,6 +596,12 @@ def load_kernels(kernelbase):
 
 if __name__ == "__main__":
 
+    try:
+        _core.is_isis3_initialized()
+    except:
+        print "ISIS3 has not been initialized. Please do so. Now."
+        sys.exit(1)
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--red", help="Input Projected JunoCam Image for red (cube formatted)", required=True, type=str)
     parser.add_argument("-g", "--green", help="Input Projected JunoCam Image for green (cube formatted)", required=True,
@@ -604,7 +610,7 @@ if __name__ == "__main__":
                         type=str)
     parser.add_argument("-l", "--label", help="Input JunoCam Label File (PVL formatted)", required=True, type=str)
     parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
-    parser.add_argument("-k", "--kernelbase", help="Base directory for spice kernels", required=False, type=str, default="/Users/kgill/ISIS/data")
+    parser.add_argument("-k", "--kernelbase", help="Base directory for spice kernels", required=False, type=str, default=os.environ["ISIS3DATA"])
     parser.add_argument("-o", "--output", help="Output file path", required=True, type=str, default=None)
     parser.add_argument("-f", "--frameoffset", help="Frame offset", required=False, type=int, default=0)
     parser.add_argument("-F", "--fov", help="Field of view (degrees)", required=False, type=int, default=90)
