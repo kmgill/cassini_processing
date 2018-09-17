@@ -38,23 +38,26 @@ def fill_dead_pixel(data, band_num, band_id, band_height=BAND_HEIGHT):
         for y in range(-radius, radius):
             for x in range(-radius, radius):
 
-                if cy + y > len(data) or cx + radius > len(data[cy + y]):
+                if cy + y >= len(data) or cx + radius > len(data[cy + y]):
                     continue
 
-                x0 = data[cy + y][cx - radius]
-                x1 = data[cy + y][cx + radius]
-                y0 = data[cy - radius][cx + x]
-                y1 = data[cy + radius][cx + x]
+                try:
+                    x0 = data[cy + y][cx - radius]
+                    x1 = data[cy + y][cx + radius]
+                    y0 = data[cy - radius][cx + x]
+                    y1 = data[cy + radius][cx + x]
 
-                fx = ((x + radius) / (radius*2.0))
-                fy = ((y + radius) / (radius*2.0))
+                    fx = ((x + radius) / (radius*2.0))
+                    fy = ((y + radius) / (radius*2.0))
 
-                ix = linear_interpolate(x0, x1, fx)
-                iy = linear_interpolate(y0, y1, fy)
+                    ix = linear_interpolate(x0, x1, fx)
+                    iy = linear_interpolate(y0, y1, fy)
 
-                v = np.mean([ix, iy])
+                    v = np.mean([ix, iy])
 
-                data[cy + y][cx + x] = v
+                    data[cy + y][cx + x] = v
+                except:
+                    pass
 
 
 def fillpixels(img_data, verbose=False):

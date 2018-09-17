@@ -52,7 +52,7 @@ def apply_weights(img_data, r, g, b, verbose=False):
 
     for band in range(0, bands_per_image):
         if verbose:
-            print "Filling pixels for RGB band triplet #", band
+            print "Applying weights to RGB band triplet #", band
         apply_weight_to_band(img_data, band * 3 + 0, b, band_height=BAND_HEIGHT)
         apply_weight_to_band(img_data, band * 3 + 1, g, band_height=BAND_HEIGHT)
         apply_weight_to_band(img_data, band * 3 + 2, r, band_height=BAND_HEIGHT)
@@ -66,9 +66,9 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--decompand", help="Decompand pixel values", action="store_true")
     parser.add_argument("-F", "--flat", help="Apply flat fields (Don't use)", action="store_true")
 
-    parser.add_argument("-r", "--redweight", help="Apply a weight for the red band", type=float, default=0.82) # 0.510
+    parser.add_argument("-r", "--redweight", help="Apply a weight for the red band", type=float, default=0.902) # 0.510
     parser.add_argument("-g", "--greenweight", help="Apply a weight for the green band", type=float, default=1.0) # 0.630
-    parser.add_argument("-b", "--blueweight", help="Apply a weight for the blue band", type=float, default=2.17) # 1.0
+    parser.add_argument("-b", "--blueweight", help="Apply a weight for the blue band", type=float, default=1.8879) # 1.0
 
     args = parser.parse_args()
 
@@ -103,14 +103,13 @@ if __name__ == "__main__":
 
     if verbose:
         print "Applying filter weights..."
-    apply_weights(image_data, use_red_weight, use_green_weight, use_blue_weight, verbose=False)
+    apply_weights(image_data, use_red_weight, use_green_weight, use_blue_weight, verbose=verbose)
 
     image_data /= image_data.max()
     image_data *= 65535.0
 
     img_file = "%s-adjusted.tif" % (img_file[0:-4])
     save_image(image_data, img_file)
-
 
     output_base = img_file[:-4]
 
