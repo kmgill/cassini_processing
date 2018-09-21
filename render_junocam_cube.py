@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 
-import os
-import sys
 import spiceypy as spice
 import math
 import numpy as np
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = 5013249900
-from libtiff import TIFFimage
 import argparse
-import json
-import scipy
+import glob
 from scipy.misc import imresize
 
 from sciimg.isis3 import info
@@ -38,7 +34,7 @@ class Texture:
 
     def __init__(self, cube_file=None):
         self.__cube_file = cube_file
-        self.__tiff_file  = self.cube_to_tiff(cube_file)
+        self.__tiff_file = self.cube_to_tiff(cube_file)
         self.__tex_id = None
 
     def is_loaded(self):
@@ -199,18 +195,17 @@ class Model:
     def radians_xyz_to_degrees_xyz(xyz):
         return np.array([math.degrees(xyz[0]), math.degrees(xyz[1]), math.degrees(xyz[2])])
 
-
     def calculate_orientations(self, frame_number=0):
         et = self.mid_time
         et = et + (frame_number * self.interframe_delay)
-        jupiterState, lt = spice.spkpos('JUPITER', et, 'IAU_SUN', 'NONE', 'SUN')
-        jupiterState = np.array(jupiterState)
+        jupiter_state, lt = spice.spkpos('JUPITER', et, 'IAU_SUN', 'NONE', 'SUN')
+        jupiter_state = np.array(jupiter_state)
 
-        spacecraftState, lt = spice.spkpos('JUNO_SPACECRAFT', et, 'IAU_JUPITER', 'NONE', 'JUPITER')
-        spacecraftState = np.array(spacecraftState)
+        spacecraft_state, lt = spice.spkpos('JUNO_SPACECRAFT', et, 'IAU_JUPITER', 'NONE', 'JUPITER')
+        spacecraft_state = np.array(spacecraft_state)
 
         m = spice.pxform("IAU_JUPITER", "J2000", et)
-        jupiterRotation = np.array(
+        jupiter_rotation = np.array(
             ((m[0][0], m[0][1], m[0][2], 0.0),
              (m[1][0], m[1][1], m[1][2], 0.0),
              (m[2][0], m[2][1], m[2][2], 0.0),
@@ -218,7 +213,7 @@ class Model:
         )
 
         m = spice.pxform("JUNO_SPACECRAFT", "IAU_JUPITER", et)
-        spacecraftOrientation = np.array(
+        spacecraft_orientation = np.array(
             ((m[0][0], m[0][1], m[0][2], 0.0),
              (m[1][0], m[1][1], m[1][2], 0.0),
              (m[2][0], m[2][1], m[2][2], 0.0),
@@ -226,7 +221,7 @@ class Model:
         )
 
         m = spice.pxform("JUNO_JUNOCAM_CUBE", "JUNO_SPACECRAFT", et)
-        instrumentCubeOrientation = np.array(
+        instrument_cube_orientation = np.array(
             ((m[0][0], m[0][1], m[0][2], 0.0),
              (m[1][0], m[1][1], m[1][2], 0.0),
              (m[2][0], m[2][1], m[2][2], 0.0),
@@ -234,21 +229,21 @@ class Model:
         )
 
         m = spice.pxform("JUNO_JUNOCAM", "JUNO_JUNOCAM_CUBE", et)
-        instrumentOrientation = np.array(
+        instrument_orientation = np.array(
             ((m[0][0], m[0][1], m[0][2], 0.0),
              (m[1][0], m[1][1], m[1][2], 0.0),
              (m[2][0], m[2][1], m[2][2], 0.0),
              (0.0, 0.0, 0.0, 1.0))
         )
 
-        return spacecraftOrientation, jupiterState, spacecraftState, jupiterRotation, instrumentCubeOrientation, instrumentOrientation
+        return spacecraft_orientation, jupiter_state, spacecraft_state, jupiter_rotation, instrument_cube_orientation, instrument_orientation
 
 
     def is_framebuffer_ready(self):
         return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE
 
     def render(self, frame_number, rotate_x, rotate_y, rotate_z):
-        spacecraftOrientation, jupiterState, spacecraftState, jupiterRotation, instrumentCubeOrientation, instrumentOrientation = self.calculate_orientations(
+        spacecraft_orientation, jupiter_state, spacecraft_state, jupiter_rotation, instrument_cube_orientation, instrument_orientation = self.calculate_orientations(
             frame_number=frame_number)
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -261,8 +256,8 @@ class Model:
         if lighting is True:
             glEnable(GL_LIGHTING)
             glEnable(GL_LIGHT0)
-            lightPosition = (-jupiterState[0], -jupiterState[1], -jupiterState[2])
-            glLightfv(GL_LIGHT0, GL_POSITION, lightPosition, 0);
+            light_position = (-jupiter_state[0], -jupiter_state[1], -jupiter_state[2])
+            glLightfv(GL_LIGHT0, GL_POSITION, light_position, 0);
             glShadeModel(GL_SMOOTH);
             glLightfv(GL_LIGHT0, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0), 0)
         else:
@@ -272,17 +267,24 @@ class Model:
         glRotatef(rotate_y, 0, 1, 0)
         glRotatef(rotate_z, 0, 0, 1)
 
-        glMultMatrixf(instrumentOrientation)
-        glMultMatrixf(instrumentCubeOrientation)
-        glMultMatrixf(spacecraftOrientation)
+        glMultMatrixf(instrument_orientation)
+        glMultMatrixf(instrument_cube_orientation)
+        glMultMatrixf(spacecraft_orientation)
 
-        glTranslatef(-spacecraftState[0], -spacecraftState[1], -spacecraftState[2])
+        glTranslatef(-spacecraft_state[0], -spacecraft_state[1], -spacecraft_state[2])
 
         glPushMatrix()
 
         self.draw_image_spherical()
 
         glPopMatrix()
+
+    @staticmethod
+    def normalize_vector(vec):
+        l = math.sqrt(math.pow(vec[0], 2) + math.pow(vec[1], 2) + math.pow(vec[2], 2))
+        if l == 0.0:
+            l = 1.0
+        return vec[0] / l, vec[1] / l, vec[2] / l
 
     @staticmethod
     def calc_surface_normal(v0, v1, v2):
@@ -293,75 +295,68 @@ class Model:
         U = v1 - v0
         V = v2 - v1
 
-        N = np.cross(U, V)
-        return N
+        c = np.cross(U, V)
+        n = Model.normalize_vector(c)
+        return n
 
-    def draw_image_spherical(self, latSlices=128, lonSlices=128):
+
+    def draw_image_spherical(self, lat_slices=128, lon_slices=128):
 
         if self.__program_id is None:
             self.__program_id = glGenLists(1)
             glNewList(self.__program_id, GL_COMPILE)
-            latRes = (self.max_lat - self.min_lat) / float(latSlices)
-            lonRes = (self.max_lon - self.min_lon) / float(lonSlices)
+            lat_res = (self.max_lat - self.min_lat) / float(lat_slices)
+            lon_res = (self.max_lon - self.min_lon) / float(lon_slices)
 
             self.__texture.bind()
 
-            vector_sum = np.zeros((3,))
-            vector_count = 0
-
-            for y in range(0, int(latSlices)):
+            for y in range(0, int(lat_slices)):
                 glBegin(GL_TRIANGLES)
-                for x in range(0, int(lonSlices)):
-                    mx_lat = self.max_lat - (latRes * y)
-                    mn_lon = self.min_lon + (lonRes * x)
+                for x in range(0, int(lon_slices)):
+                    mx_lat = self.max_lat - (lat_res * y)
+                    mn_lon = self.min_lon + (lon_res * x)
 
-                    mn_lat = mx_lat - latRes
-                    mx_lon = mn_lon + lonRes
+                    mn_lat = mx_lat - lat_res
+                    mx_lon = mn_lon + lon_res
 
                     mx_lat = math.radians(mx_lat)
                     mn_lat = math.radians(mn_lat)
                     mx_lon = math.radians(mx_lon)
                     mn_lon = math.radians(mn_lon)
 
-                    ulVector = np.array(spice.srfrec(599, mn_lon, mx_lat))
-                    llVector = np.array(spice.srfrec(599, mn_lon, mn_lat))
-                    urVector = np.array(spice.srfrec(599, mx_lon, mx_lat))
-                    lrVector = np.array(spice.srfrec(599, mx_lon, mn_lat))
+                    ul_vector = np.array(spice.srfrec(599, mn_lon, mx_lat))
+                    ll_vector = np.array(spice.srfrec(599, mn_lon, mn_lat))
+                    ur_vector = np.array(spice.srfrec(599, mx_lon, mx_lat))
+                    lr_vector = np.array(spice.srfrec(599, mx_lon, mn_lat))
 
-                    vector_sum += ulVector
-                    vector_sum += llVector
-                    vector_sum += urVector
-                    vector_sum += lrVector
-                    vector_count += 4
+                    ul_uv = (x / float(lon_slices), 1.0 - y / float(lat_slices))
+                    ll_uv = (x / float(lon_slices), 1.0 - (y + 1.0) / float(lat_slices))
+                    ur_uv = ((x + 1.0) / float(lon_slices), 1.0 - y / float(lat_slices))
+                    lr_uv = ((x + 1.0) / float(lon_slices), 1.0 - (y + 1.0) / float(lat_slices))
 
-                    ulUV = (x / float(lonSlices), 1.0 - y / float(latSlices))
-                    llUV = (x / float(lonSlices), 1.0 - (y + 1) / float(latSlices))
-                    urUV = ((x + 1) / float(lonSlices), 1.0 - y / float(latSlices))
-                    lrUV = ((x + 1) / float(lonSlices), 1.0 - (y + 1) / float(latSlices))
+                    norm = self.calc_surface_normal(ul_vector, ll_vector, ur_vector)
+                    glNormal3f(norm[0], norm[1], norm[2])
 
-                    N = self.calc_surface_normal(ulVector, llVector, urVector)
-                    glNormal3f(N[0], N[1], N[2])
+                    glTexCoord2f(ul_uv[0], ul_uv[1])
+                    glVertex3f(ul_vector[0], ul_vector[1], ul_vector[2])
 
-                    glTexCoord2f(ulUV[0], ulUV[1])
-                    glVertex3f(ulVector[0], ulVector[1], ulVector[2])
+                    glTexCoord2f(ll_uv[0], ll_uv[1])
+                    glVertex3f(ll_vector[0], ll_vector[1], ll_vector[2])
 
-                    glTexCoord2f(llUV[0], llUV[1])
-                    glVertex3f(llVector[0], llVector[1], llVector[2])
+                    glTexCoord2f(ur_uv[0], ur_uv[1])
+                    glVertex3f(ur_vector[0], ur_vector[1], ur_vector[2])
 
-                    glTexCoord2f(urUV[0], urUV[1])
-                    glVertex3f(urVector[0], urVector[1], urVector[2])
+                    norm = self.calc_surface_normal(ur_vector, ll_vector, lr_vector)
+                    glNormal3f(norm[0], norm[1], norm[2])
 
-                    N = self.calc_surface_normal(urVector, llVector, lrVector)
-                    glNormal3f(N[0], N[1], N[2])
+                    glTexCoord2f(ur_uv[0], ur_uv[1])
+                    glVertex3f(ur_vector[0], ur_vector[1], ur_vector[2])
 
-                    glTexCoord2f(urUV[0], urUV[1])
-                    glVertex3f(urVector[0], urVector[1], urVector[2])
+                    glTexCoord2f(ll_uv[0], ll_uv[1])
+                    glVertex3f(ll_vector[0], ll_vector[1], ll_vector[2])
 
-                    glTexCoord2f(llUV[0], llUV[1])
-                    glVertex3f(llVector[0], llVector[1], llVector[2])
-
-                    glTexCoord2f(lrUV[0], lrUV[1])
-                    glVertex3f(lrVector[0], lrVector[1], lrVector[2])
+                    glTexCoord2f(lr_uv[0], lr_uv[1])
+                    glVertex3f(lr_vector[0], lr_vector[1], lr_vector[2])
                 glEnd()
             glEndList()
         glCallList(self.__program_id)
@@ -386,8 +381,8 @@ class RenderEngine:
         self.__window_size = window_size
 
     def reshape(self, width, height):
-        glViewport(0, 0, width, height);
-        glMatrixMode(GL_PROJECTION);
+        glViewport(0, 0, width, height)
+        glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         aspect = float(width) / float(height)
         gluPerspective(self.__fov, aspect, 100, 900000.0)
@@ -559,38 +554,28 @@ class RenderEngine:
 
 
 
-def load_kernels(kernelbase):
+def load_kernels(kernelbase, allow_predicted=False):
     kernels = [
-        "juno/kernels/pck/pck00010.tpc",
-        "juno/kernels/fk/juno_v12.tf",
-        "juno/kernels/ik/juno_junocam_v02.ti",
-        "juno/kernels/lsk/naif0012.tls",
-        "juno/kernels/sclk/JNO_SCLKSCET.00074.tsc",
-        "juno/kernels/spk/spk_ref_180429_210731_180509.bsp",
-        "juno/kernels/spk/spk_ref_160226_180221_160226.bsp",
-        "juno/kernels/spk/spk_ref_160829_190912_161027.bsp",
-        "juno/kernels/spk/spk_ref_161212_210731_170320.bsp",
-        "juno/kernels/tspk/de436s.bsp",
-        "juno/kernels/tspk/jup310.bsp",
-        "juno/kernels/spk/juno_struct_v04.bsp",
-        "juno/kernels/ck/juno_sc_rec_180715_180716_v01.bc",
-        "juno/kernels/ck/juno_sc_rec_180701_180707_v01.bc",
-        "juno/kernels/ck/juno_sc_rec_180624_180630_v01.bc",
-        "juno/kernels/ck/juno_sc_rec_180617_180623_v01.bc",
-        "juno/kernels/ck/juno_sc_rec_180610_180616_v01.bc",
-        "juno/kernels/ck/juno_sc_rec_180603_180609_v01.bc"
+        "%s/juno/kernels/pck/pck00010.tpc"%kernelbase,
+        "%s/juno/kernels/fk/juno_v12.tf"%kernelbase,
+        "%s/juno/kernels/ik/juno_junocam_v02.ti"%kernelbase,
+        "%s/juno/kernels/lsk/naif0012.tls"%kernelbase,
+        "%s/juno/kernels/sclk/JNO_SCLKSCET.00074.tsc"%kernelbase,
+        "%s/juno/kernels/tspk/de436s.bsp"%kernelbase,
+        "%s/juno/kernels/tspk/jup310.bsp"%kernelbase,
+        "%s/juno/kernels/spk/juno_struct_v04.bsp"%kernelbase
     ]
 
-    for file in os.listdir("%s/juno/kernels/spk"%kernelbase):
-        if file[-4:] == ".bsp":
-            kernels.append("juno/kernels/spk/%s" % (file))
+    kernel_prefix = "spk_rec_" if not allow_predicted else ""
+    for file in glob.glob("%s/juno/kernels/spk/%s*bsp"%(kernelbase, kernel_prefix)):
+        kernels.append(file)
 
-    for file in os.listdir("%s/juno/kernels/ck"%kernelbase):
-        if file[-3:] == ".bc":
-            kernels.append("juno/kernels/ck/%s" % (file))
+    kernel_prefix = "juno_sc_rec_" if not allow_predicted else ""
+    for file in glob.glob("%s/juno/kernels/ck/%s*bc"%(kernelbase, kernel_prefix)):
+        kernels.append(file)
 
     for kernel in kernels:
-        spice.furnsh("%s/%s" % (kernelbase, kernel))
+        spice.furnsh(kernel)
 
 
 
@@ -617,6 +602,8 @@ if __name__ == "__main__":
     parser.add_argument("-W", "--width", help="Image width in pixels", required=False, type=int, default=2048)
     parser.add_argument("-H", "--height", help="Image height in pixels", required=False, type=int, default=2048)
     parser.add_argument("-s", "--scale", help="Image height in pixels", required=False, type=float, default=1.0)
+    parser.add_argument("-p", "--predicted", help="Utilize predicted kernels", action="store_true")
+
     args = parser.parse_args()
 
     lbl_file = args.label
@@ -630,12 +617,13 @@ if __name__ == "__main__":
     output_width = args.width
     output_height = args.height
     scale = args.scale
+    allow_predicted = args.predicted
 
     ratio = min(float(1024) / float(output_width), float(1024) / float(output_height))
     window_size = (int(output_width * ratio), int(output_height * ratio))
 
     FOV = args.fov
-    load_kernels(kernelbase)
+    load_kernels(kernelbase, allow_predicted)
 
     engine = RenderEngine(cube_file_red, cube_file_green, cube_file_blue, lbl_file, output, output_width, output_height, frame_offset, window_size=window_size)
     sys.exit(engine.main())
