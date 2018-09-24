@@ -152,13 +152,13 @@ class Model:
         self.__texture = Texture(cube_file)
 
         self.image_time = info.get_field_value(self.__label_file, "IMAGE_TIME")
-        self.interframe_delay = float(info.get_field_value(self.__label_file, "INTERFRAME_DELAY"))
+        self.interframe_delay = float(info.get_field_value(self.__label_file, "INTERFRAME_DELAY")) + 0.001
 
-        self.start_time = spice.str2et(info.get_field_value(self.__label_file, "START_TIME"))
-        self.stop_time = spice.str2et(info.get_field_value(self.__label_file, "STOP_TIME"))
+        self.start_time = spice.str2et(info.get_field_value(self.__label_file, "START_TIME")) + 0.06188
+        self.stop_time = spice.str2et(info.get_field_value(self.__label_file, "STOP_TIME")) + 0.06188
         self.mid_time = (self.start_time + self.stop_time) / 2.0
 
-        self.num_lines = info.get_field_value(self.__label_file, "LINES")
+        self.num_lines = int(info.get_field_value(self.__label_file, "LINES"))
 
         self.min_lat = float(scripting.getkey(self.__cube_file, "MinimumLatitude", grpname="Mapping"))
         self.max_lat = float(scripting.getkey(self.__cube_file, "MaximumLatitude", grpname="Mapping"))
