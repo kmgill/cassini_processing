@@ -33,14 +33,20 @@ def output_filename(file_name):
 
 def is_supported_file(file_name):
 
-    if file_name[-3:].upper() in ("LBL", "BEL"):
-        p = load_pvl(file_name)
-        instument_host_name = p["INSTRUMENT_HOST_NAME"]
-        return instument_host_name == "CASSINI ORBITER"
-    elif file_name[-3:].upper() == "CUB":
-        value = info.get_field_value(file_name, "SpacecraftName", grpname="Instrument")
-        return value == "Cassini-Huygens"
-    else:
+    try:
+        if file_name[-3:].upper() in ("LBL", "BEL"):
+            p = load_pvl(file_name)
+            if "INSTRUMENT_HOST_NAME" in p:
+                instument_host_name = p["INSTRUMENT_HOST_NAME"]
+                return instument_host_name == "CASSINI ORBITER"
+            else:
+                return False
+        elif file_name[-3:].upper() == "CUB":
+            value = info.get_field_value(file_name, "SpacecraftName", grpname="Instrument")
+            return value == "Cassini-Huygens"
+        else:
+            return False
+    except:
         return False
 
 

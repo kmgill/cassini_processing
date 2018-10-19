@@ -242,7 +242,7 @@ class Model:
     def is_framebuffer_ready(self):
         return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE
 
-    def render(self, frame_number, rotate_x, rotate_y, rotate_z):
+    def render(self, frame_number, rotate_x, rotate_y, rotate_z, scale):
         spacecraft_orientation, jupiter_state, spacecraft_state, jupiter_rotation, instrument_cube_orientation, instrument_orientation = self.calculate_orientations(
             frame_number=frame_number)
 
@@ -257,12 +257,13 @@ class Model:
             glEnable(GL_LIGHTING)
             glEnable(GL_LIGHT0)
             light_position = (-jupiter_state[0], -jupiter_state[1], -jupiter_state[2])
-            glLightfv(GL_LIGHT0, GL_POSITION, light_position, 0);
-            glShadeModel(GL_SMOOTH);
+            glLightfv(GL_LIGHT0, GL_POSITION, light_position, 0)
+            glShadeModel(GL_SMOOTH)
             glLightfv(GL_LIGHT0, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0), 0)
         else:
             glDisable(GL_LIGHTING)
 
+        glScalef(scale, scale, scale)
         glRotatef(rotate_x, 1, 0, 0)
         glRotatef(rotate_y, 0, 1, 0)
         glRotatef(rotate_z, 0, 0, 1)
@@ -274,6 +275,8 @@ class Model:
         glTranslatef(-spacecraft_state[0], -spacecraft_state[1], -spacecraft_state[2])
 
         glPushMatrix()
+
+
 
         self.draw_image_spherical()
 
@@ -364,13 +367,14 @@ class Model:
 
 class RenderEngine:
 
-    def __init__(self, cube_file_red, cube_file_green, cube_file_blue, label_file, output_file, output_width, output_height, frame_offset, window_size=(1024, 1024)):
+    def __init__(self, cube_file_red, cube_file_green, cube_file_blue, label_file, output_file, output_width, output_height, frame_offset, ortho=False, window_size=(1024, 1024)):
         self.red_model = Model(cube_file_red, label_file)
         self.green_model = Model(cube_file_green, label_file)
         self.blue_model = Model(cube_file_blue, label_file)
         self.output_file = output_file
         self.output_width = output_width
         self.output_height = output_height
+        self.__ortho = ortho
         self.__frame_number = frame_offset
         self.__scale = 1.0
         self.__fov = 90
@@ -384,8 +388,11 @@ class RenderEngine:
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        aspect = float(width) / float(height)
-        gluPerspective(self.__fov, aspect, 100, 900000.0)
+        if self.__ortho:
+            glOrtho(- (width / 2), (width / 2), height / 2, - (height / 2), 10, 90000000.0)
+        else:
+            aspect = float(width) / float(height)
+            gluPerspective(self.__fov, aspect, 100, 900000.0)
         glutPostRedisplay()
 
     def mouse(self, button, state, x, y):
@@ -410,10 +417,10 @@ class RenderEngine:
         elif c == 'B':
             self.__frame_number -= 100.0
             print self.__frame_number
-        elif c == 'i':
-            self.__scale -= 0.1
         elif c == 'o':
-            self.__scale += 0.1
+            self.__scale *= 0.9
+        elif c == 'i':
+            self.__scale *= 1.1
         elif c == 'k':
             self.__fov -= 1.0
             self.reshape(self.__window_size[0], self.__window_size[1])
@@ -443,7 +450,7 @@ class RenderEngine:
 
     def display_standard(self):
         print "Rendering Grayscale frame with red channel..."
-        self.red_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z)
+        self.red_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z, self.__scale)
         glFlush()
         glutSwapBuffers()
 
@@ -475,17 +482,17 @@ class RenderEngine:
         glDrawBuffers(1, GL_COLOR_ATTACHMENT0)
 
         print "Rendering Red..."
-        self.red_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z)
+        self.red_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z, self.__scale)
         self.red_model.unload_textures()
         red_pixels = self.export_frame_buffer(self.red_model.get_model_output_filename())
 
         print "Rendering Green..."
-        self.green_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z)
+        self.green_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z, self.__scale)
         self.green_model.unload_textures()
         green_pixels = self.export_frame_buffer(self.green_model.get_model_output_filename())
 
         print "Rendering Blue"
-        self.blue_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z)
+        self.blue_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z, self.__scale)
         self.blue_model.unload_textures()
         blue_pixels = self.export_frame_buffer(self.blue_model.get_model_output_filename())
 
@@ -603,7 +610,7 @@ if __name__ == "__main__":
     parser.add_argument("-H", "--height", help="Image height in pixels", required=False, type=int, default=2048)
     parser.add_argument("-s", "--scale", help="Image height in pixels", required=False, type=float, default=1.0)
     parser.add_argument("-p", "--predicted", help="Utilize predicted kernels", action="store_true")
-
+    parser.add_argument("-O", "--ortho", help="Use orthographic camera projection", action="store_true")
     args = parser.parse_args()
 
     lbl_file = args.label
@@ -618,6 +625,7 @@ if __name__ == "__main__":
     output_height = args.height
     scale = args.scale
     allow_predicted = args.predicted
+    ortho = args.ortho
 
     ratio = min(float(1024) / float(output_width), float(1024) / float(output_height))
     window_size = (int(output_width * ratio), int(output_height * ratio))
@@ -625,5 +633,5 @@ if __name__ == "__main__":
     FOV = args.fov
     load_kernels(kernelbase, allow_predicted)
 
-    engine = RenderEngine(cube_file_red, cube_file_green, cube_file_blue, lbl_file, output, output_width, output_height, frame_offset, window_size=window_size)
+    engine = RenderEngine(cube_file_red, cube_file_green, cube_file_blue, lbl_file, output, output_width, output_height, frame_offset, ortho, window_size=window_size)
     sys.exit(engine.main())

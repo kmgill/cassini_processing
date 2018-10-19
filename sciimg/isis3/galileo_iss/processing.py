@@ -29,13 +29,16 @@ def output_filename(file_name):
     return out_file
 
 def is_supported_file(file_name):
-    if file_name[-3:].upper() in ("CUB",):
-        value = info.get_field_value(file_name,  "SpacecraftName", grpname="Instrument")
-        return value == "Galileo Orbiter"
-    elif file_name[-3:].upper() in ("LBL", ):
-        value = info.get_field_value(file_name, "SPACECRAFT_NAME")
-        return value == "GALILEO ORBITER"
-    else:
+    try:
+        if file_name[-3:].upper() in ("CUB",):
+            value = info.get_field_value(file_name,  "SpacecraftName", grpname="Instrument")
+            return value == "Galileo Orbiter"
+        elif file_name[-3:].upper() in ("LBL", ):
+            value = info.get_field_value(file_name, "SPACECRAFT_NAME")
+            return value == "GALILEO ORBITER"
+        else:
+            return False
+    except:
         return False
 
 def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=False, init_spice=True, nocleanup=False, additional_options={}):

@@ -45,13 +45,16 @@ def output_filename(file_name):
                                                                                         image_date=image_time.strftime('%Y-%m-%d_%H.%M.%S'))
     return out_file
 
+
 def is_supported_file(file_name):
     if file_name[-3:].upper() in ("CUB", "IMQ"):
         value = info.get_field_value(file_name,  "SpacecraftName", grpname="Instrument")
-        return value == __VOYAGER_1__ or value == __VOYAGER_2__
+        return (value in (__VOYAGER_1__, __VOYAGER_2__))
+    elif file_name[-3:].upper() == "IMG":
+        value = info.get_field_value(file_name, "SpacecraftName")
+        return (value in (__VOYAGER_1__,  __VOYAGER_2__))
     else:
         return False
-
 
 
 def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=False, init_spice=True,  nocleanup=False, additional_options={}):

@@ -133,7 +133,16 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     if not os.path.exists(work_dir):
         os.mkdir(work_dir)
 
+
+
+
     product_id = info.get_product_id(from_file_name)
+    sub_spacecraft_longitude = info.get_property(from_file_name, "SUB_SPACECRAFT_LONGITUDE")
+    print "Product Id:", product_id
+    print "Sub Spacecraft Longitude:", sub_spacecraft_longitude
+    #sys.exit(0)
+
+
     mapped_dir = "%s/work/mapped" % source_dirname
     if not os.path.exists(mapped_dir):
         os.mkdir(mapped_dir)
@@ -142,7 +151,6 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         print "Importing to cube..."
     else:
         printProgress(0, num_steps, prefix="%s: "%from_file_name)
-
 
     s = juno.junocam2isis(from_file_name, "%s/__%s_raw.cub"%(work_dir, product_id))
     if is_verbose:

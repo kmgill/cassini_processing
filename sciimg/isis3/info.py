@@ -6,7 +6,7 @@ from sciimg.isis3.metadata import load_pvl
 
 __UNSUPPORTED_UNRECOGNIZED__ = "Unrecognized/Unsupported file"
 
-LABEL_FILE_EXTENSIONS = ("LBL", "IMQ", "BEL") # Note: 'BEL' is for .LBL_label via atlas wget script
+LABEL_FILE_EXTENSIONS = ("LBL", "IMQ", "BEL", "IMG") # Note: 'BEL' is for .LBL_label via atlas wget script
 
 def has_keyword(file_name, keyword, objname=None, grpname=None):
     try:
