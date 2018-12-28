@@ -196,8 +196,14 @@ class Model:
         return np.array([math.degrees(xyz[0]), math.degrees(xyz[1]), math.degrees(xyz[2])])
 
     def calculate_orientations(self, frame_number=0):
-        et = self.mid_time
-        et = et + (frame_number * self.interframe_delay)
+        observationStartEt = self.start_time
+
+        # https://github.com/USGS-Astrogeology/ISIS3/pull/165
+        # https://naif.jpl.nasa.gov/pub/naif/JUNO/kernels/ik/juno_junocam_v02.ti
+        startTimeBias = 0.06188
+        interFrameDelayBias = 0.001
+        et = observationStartEt + startTimeBias + (frame_number - 1.0) * (self.interframe_delay + interFrameDelayBias);
+
         jupiter_state, lt = spice.spkpos('JUPITER', et, 'IAU_SUN', 'NONE', 'SUN')
         jupiter_state = np.array(jupiter_state)
 
@@ -220,15 +226,7 @@ class Model:
              (0.0, 0.0, 0.0, 1.0))
         )
 
-        m = spice.pxform("JUNO_JUNOCAM_CUBE", "JUNO_SPACECRAFT", et)
-        instrument_cube_orientation = np.array(
-            ((m[0][0], m[0][1], m[0][2], 0.0),
-             (m[1][0], m[1][1], m[1][2], 0.0),
-             (m[2][0], m[2][1], m[2][2], 0.0),
-             (0.0, 0.0, 0.0, 1.0))
-        )
-
-        m = spice.pxform("JUNO_JUNOCAM", "JUNO_JUNOCAM_CUBE", et)
+        m = spice.pxform("JUNO_JUNOCAM", "IAU_JUPITER", et)
         instrument_orientation = np.array(
             ((m[0][0], m[0][1], m[0][2], 0.0),
              (m[1][0], m[1][1], m[1][2], 0.0),
@@ -236,14 +234,14 @@ class Model:
              (0.0, 0.0, 0.0, 1.0))
         )
 
-        return spacecraft_orientation, jupiter_state, spacecraft_state, jupiter_rotation, instrument_cube_orientation, instrument_orientation
+        return spacecraft_orientation, jupiter_state, spacecraft_state, jupiter_rotation, instrument_orientation
 
 
     def is_framebuffer_ready(self):
         return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE
 
     def render(self, frame_number, rotate_x, rotate_y, rotate_z, scale):
-        spacecraft_orientation, jupiter_state, spacecraft_state, jupiter_rotation, instrument_cube_orientation, instrument_orientation = self.calculate_orientations(
+        spacecraft_orientation, jupiter_state, spacecraft_state, jupiter_rotation, instrument_orientation = self.calculate_orientations(
             frame_number=frame_number)
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -269,14 +267,10 @@ class Model:
         glRotatef(rotate_z, 0, 0, 1)
 
         glMultMatrixf(instrument_orientation)
-        glMultMatrixf(instrument_cube_orientation)
-        glMultMatrixf(spacecraft_orientation)
 
         glTranslatef(-spacecraft_state[0], -spacecraft_state[1], -spacecraft_state[2])
 
         glPushMatrix()
-
-
 
         self.draw_image_spherical()
 
