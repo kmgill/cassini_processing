@@ -43,16 +43,16 @@ def apply_weights(img_data, r, g, b, verbose=False):
     img_height = img_data.shape[0]
 
     if verbose:
-        print "Image height:", img_height
+        print("Image height: %s"%img_height)
 
     bands_per_image = (img_height / BAND_HEIGHT / 3)
 
     if verbose:
-        print "Detected", bands_per_image, "RGB bands"
+        print("Detected %s RGB bands"% bands_per_image)
 
-    for band in range(0, bands_per_image):
+    for band in range(0, int(bands_per_image)):
         if verbose:
-            print "Applying weights to RGB band triplet #", band
+            print("Applying weights to RGB band triplet #%s"%band)
         apply_weight_to_band(img_data, band * 3 + 0, b, band_height=BAND_HEIGHT)
         apply_weight_to_band(img_data, band * 3 + 1, g, band_height=BAND_HEIGHT)
         apply_weight_to_band(img_data, band * 3 + 2, r, band_height=BAND_HEIGHT)
@@ -88,21 +88,21 @@ if __name__ == "__main__":
 
     if fill_dead_pixels:
         if verbose:
-            print "User requested to fill dead pixels. So that's what I'll do..."
+            print("User requested to fill dead pixels. So that's what I'll do...")
         fillpixels(image_data, verbose=verbose)
 
     if do_flat_fields:
         if verbose:
-            print "Applying flat fields for RGB bands..."
+            print("Applying flat fields for RGB bands...")
         apply_flat(image_data, apply_filling=fill_dead_pixels, verbose=verbose)
 
     if do_decompand:
         if verbose:
-            print "Decompanding pixel values..."
+            print("Decompanding pixel values...")
         decompand(image_data, verbose=verbose)
 
     if verbose:
-        print "Applying filter weights..."
+        print("Applying filter weights...")
     apply_weights(image_data, use_red_weight, use_green_weight, use_blue_weight, verbose=verbose)
 
     image_data /= image_data.max()
@@ -114,14 +114,14 @@ if __name__ == "__main__":
     output_base = img_file[:-4]
 
     if verbose:
-        print "Creating output files with basename of", output_base
+        print("Creating output files with basename of %s"%output_base)
 
     if verbose:
-        print "Creating label file..."
+        print("Creating label file...")
     create_label(output_base, metadata)
 
     if verbose:
-        print "Creating PDS file..."
+        print("Creating PDS file...")
     create_pds(output_base, img_file)
 
 

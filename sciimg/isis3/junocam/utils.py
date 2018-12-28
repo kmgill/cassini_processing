@@ -2,12 +2,13 @@
 import json
 import types
 import re
+from six import string_types
 
 
 def is_number(value):
     if re.match("^-*[0-9]+[.]?[0-9e+]*$", value) is not None:
         return True
-    elif re.match("[0-9]+\.[0-9\e+]+ <[\w]+>", value) is not None:
+    elif re.match("[0-9]+\.[0-9e+]+ <[\w]+>", value) is not None:
         return True
     else:
         return False
@@ -30,10 +31,10 @@ def json_to_lbl(input_json_path, img_file):
 
     for key in label_data:
         value = label_data[key]
-        if (isinstance(value, types.StringType) or isinstance(value, types.UnicodeType)) and not is_number(value):
+        if isinstance(value, string_types) and not is_number(value):
             value = "\"%s\"" % value
-        if isinstance(value, types.ListType):
-            value = str(map(str, value)).replace("[", "(").replace("]", ")")
+        if type(value) == list or type(value) == map:
+            value = "(%s)" % ','.join(["'%s'" % f for f in value])
         lbl_line = "%-30s= %s" % (key, value)
         s += "%s\n"%lbl_line
 

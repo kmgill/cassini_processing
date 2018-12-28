@@ -64,7 +64,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     out_file_cub = "%s.cub" % output_filename(from_file_name)
 
     if skip_if_cub_exists and os.path.exists(out_file_cub):
-        print "File %s exists, skipping processing" % out_file_cub
+        print("File %s exists, skipping processing" % out_file_cub)
         return
 
     if "ringplane" in additional_options:
@@ -81,49 +81,49 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         os.mkdir(work_dir)
 
     if is_verbose:
-        print "Importing to cube..."
+        print("Importing to cube...")
     else:
         printProgress(0, 11, prefix="%s: "%from_file_name)
     s = voyager.voy2isis(from_file_name, "%s/__%s_raw.cub"%(work_dir, product_id))
     if is_verbose:
-        print s
+        print(s)
 
     if is_verbose:
-        print "Finding Reseaus..."
+        print("Finding Reseaus...")
     else:
         printProgress(1, 11, prefix="%s: "%from_file_name)
     s = geometry.findrx("%s/__%s_raw.cub"%(work_dir, product_id))
     if is_verbose:
-        print s
+        print(s)
 
     if is_verbose:
-        print "Removing Reseaus..."
+        print("Removing Reseaus...")
     else:
         printProgress(2, 11, prefix="%s: "%from_file_name)
     s = geometry.remrx("%s/__%s_raw.cub"%(work_dir, product_id),
                        "%s/__%s_remrx.cub" % (work_dir, product_id),
                        action="BILINEAR")
     if is_verbose:
-        print s
+        print(s)
 
     try:
         if init_spice is True:
             if is_verbose:
-                print "Initializing Spice..."
+                print("Initializing Spice...")
             else:
                 printProgress(3, 11, prefix="%s: "%from_file_name)
             s = cameras.spiceinit("%s/__%s_remrx.cub" % (work_dir, product_id), is_ringplane)
             if is_verbose:
-                print s
+                print(s)
 
         if is_verbose:
-            print "Calibrating cube..."
+            print("Calibrating cube...")
         else:
             printProgress(4, 11, prefix="%s: "%from_file_name)
         s = voyager.voycal("%s/__%s_raw.cub"%(work_dir, product_id),
                                 "%s/__%s_cal.cub"%(work_dir, product_id))
         if is_verbose:
-            print s
+            print(s)
 
         # TODO: Determine when to run this (on Io approach) and do so
         #if is_verbose:
@@ -143,43 +143,43 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         last_cube = "%s/__%s_remrx.cub" % (work_dir, product_id)
 
     if is_verbose:
-        print "Filling in Gaps..."
+        print("Filling in Gaps...")
     else:
         printProgress(5, 11, prefix="%s: "%from_file_name)
     s = mathandstats.fillgap(last_cube,
                        "%s/__%s_fill.cub" % (work_dir, product_id))
     if is_verbose:
-        print s
+        print(s)
 
     if is_verbose:
-        print "Stretch Fix..."
+        print("Stretch Fix...")
     else:
         printProgress(5, 11, prefix="%s: "%from_file_name)
     s = utility.stretch("%s/__%s_fill.cub" % (work_dir, product_id),
                        "%s/__%s_stretch.cub" % (work_dir, product_id))
     if is_verbose:
-        print s
+        print(s)
 
     if is_verbose:
-        print "Running Noise Filter..."
+        print("Running Noise Filter...")
     else:
         printProgress(6, 11, prefix="%s: "%from_file_name)
     s = filters.noisefilter("%s/__%s_stretch.cub"%(work_dir, product_id),
                             "%s/__%s_stdz.cub"%(work_dir, product_id))
     if is_verbose:
-        print s
+        print(s)
 
     if is_verbose:
-        print "Filling in Nulls..."
+        print("Filling in Nulls...")
     else:
         printProgress(7, 11, prefix="%s: "%from_file_name)
     s = filters.lowpass("%s/__%s_stdz.cub"%(work_dir, product_id),
                         "%s/__%s_fill0.cub"%(work_dir, product_id))
     if is_verbose:
-        print s
+        print(s)
 
     if is_verbose:
-        print "Removing Frame-Edge Noise..."
+        print("Removing Frame-Edge Noise...")
     else:
         printProgress(8, 11, prefix="%s: "%from_file_name)
     s = trimandmask.trim("%s/__%s_fill0.cub"%(work_dir, product_id),
@@ -189,7 +189,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
                          bottom=2,
                          left=2)
     if is_verbose:
-        print s
+        print(s)
 
     """
     if is_verbose:
@@ -204,23 +204,23 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     """
 
     if is_verbose:
-        print "Exporting TIFF..."
+        print("Exporting TIFF...")
     else:
         printProgress(9, 11, prefix="%s: "%from_file_name)
     s = importexport.isis2std_grayscale("%s"%(out_file_cub),
                                     "%s"%(out_file_tiff))
     if is_verbose:
-        print s
+        print(s)
 
     if nocleanup is False:
         if is_verbose:
-            print "Cleaning up..."
+            print("Cleaning up...")
         else:
             printProgress(10, 11, prefix="%s: "%from_file_name)
         map(os.unlink, glob.glob('%s/__%s*.cub'%(work_dir, product_id)))
     else:
         if is_verbose:
-            print "Skipping clean up..."
+            print("Skipping clean up...")
         else:
             printProgress(10, 11, prefix="%s: "%from_file_name)
 

@@ -4,7 +4,7 @@ import pvl
 from sciimg.isis3.scripting import getkey
 import tempfile
 import traceback
-import utility
+import sciimg.isis3.utility
 from sciimg.isis3 import voyager
 
 __METADATA_CACHE__ = {}
@@ -56,7 +56,7 @@ def load_pvl(from_file, verbose=False):
 
     if from_file in __METADATA_CACHE__:
         if verbose:
-            print "File %s already loaded in cache."%from_file
+            print("File %s already loaded in cache."%from_file)
         return __METADATA_CACHE__[from_file]
 
     p = None

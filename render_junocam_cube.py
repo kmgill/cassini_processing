@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 import spiceypy as spice
 import math
@@ -76,9 +76,9 @@ class Texture:
         output_file = "%s/%s.tif" % (work_dir, bn[:-4])
         if os.path.exists(output_file):
             return output_file
-        print "Converting", cube_file, "to tiff...",
+        print("Converting", cube_file, "to tiff...")
         importexport.isis2std_grayscale(to_tiff=output_file, from_cube=cube_file)
-        print "done"
+        print("done")
         return output_file
 
     def convert_16bitgrayscale_to_8bitRGB(self, im):
@@ -91,17 +91,17 @@ class Texture:
     def downscale_texture(self, img, max_dimension=16384):
 
         if img.shape[0] > max_dimension or img.shape[1] > max_dimension:
-            print "Size Before:", img.shape
+            print("Size Before:", img.shape)
             ratio = min(float(max_dimension) / float(img.shape[0]), float(max_dimension) / float(img.shape[1]))
             resize_to = (int(img.shape[0] * ratio), int(img.shape[1] * ratio))
             img = imresize(img, resize_to, interp='bilinear')
-            print "Size After:", img.shape
+            print("Size After:", img.shape)
             return img
         else:
             return img
 
     def get_max_texture_size(self):
-        print glGetIntegerv(GL_MAX_TEXTURE_SIZE, 0)
+        print(glGetIntegerv(GL_MAX_TEXTURE_SIZE, 0))
 
     def pillow_to_gl_texture(self, image, from16bitTiff=False):
         if from16bitTiff:
@@ -121,7 +121,7 @@ class Texture:
     def load_texture(self, name, from16bitTiff=False):
         if self.__tex_id is not None:
             return
-        print "Loading texture '", name, "...",
+        print("Loading texture '", name, "...")
 
         # global texture
         image = Image.open(name)
@@ -140,7 +140,7 @@ class Texture:
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
 
-        print "Done"
+        print("Done")
         return self.__tex_id
 
 
@@ -304,7 +304,6 @@ class Model:
 
 
     def draw_image_spherical(self, lat_slices=128, lon_slices=128):
-
         if self.__program_id is None:
             self.__program_id = glGenLists(1)
             glNewList(self.__program_id, GL_COMPILE)
@@ -336,6 +335,12 @@ class Model:
                     ll_uv = (x / float(lon_slices), 1.0 - (y + 1.0) / float(lat_slices))
                     ur_uv = ((x + 1.0) / float(lon_slices), 1.0 - y / float(lat_slices))
                     lr_uv = ((x + 1.0) / float(lon_slices), 1.0 - (y + 1.0) / float(lat_slices))
+
+                    print("Upper Left: ", ul_uv)
+                    print("Lower Left: ", ll_uv)
+                    print("Upper Right: ", ur_uv)
+                    print("Lower Right: ", lr_uv)
+
 
                     norm = self.calc_surface_normal(ul_vector, ll_vector, ur_vector)
                     glNormal3f(norm[0], norm[1], norm[2])
@@ -407,16 +412,16 @@ class RenderEngine:
             sys.exit(0)
         elif c == 'f':
             self.__frame_number += 1.0
-            print self.__frame_number
+            print(self.__frame_number)
         elif c == 'F':
             self.__frame_number += 100.0
-            print self.__frame_number
+            print(self.__frame_number)
         elif c == 'b':
             self.__frame_number -= 1.0
-            print self.__frame_number
+            print(self.__frame_number)
         elif c == 'B':
             self.__frame_number -= 100.0
-            print self.__frame_number
+            print(self.__frame_number)
         elif c == 'o':
             self.__scale *= 0.9
         elif c == 'i':
@@ -449,7 +454,7 @@ class RenderEngine:
         glutPostRedisplay()
 
     def display_standard(self):
-        print "Rendering Grayscale frame with red channel..."
+        print("Rendering Grayscale frame with red channel...")
         self.red_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z, self.__scale)
         glFlush()
         glutSwapBuffers()
@@ -481,22 +486,22 @@ class RenderEngine:
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, fb_tex_id, 0)
         glDrawBuffers(1, GL_COLOR_ATTACHMENT0)
 
-        print "Rendering Red..."
+        print("Rendering Red...")
         self.red_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z, self.__scale)
         self.red_model.unload_textures()
         red_pixels = self.export_frame_buffer(self.red_model.get_model_output_filename())
 
-        print "Rendering Green..."
+        print("Rendering Green...")
         self.green_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z, self.__scale)
         self.green_model.unload_textures()
         green_pixels = self.export_frame_buffer(self.green_model.get_model_output_filename())
 
-        print "Rendering Blue"
+        print("Rendering Blue")
         self.blue_model.render(self.__frame_number, self.__rotate_x, self.__rotate_y, self.__rotate_z, self.__scale)
         self.blue_model.unload_textures()
         blue_pixels = self.export_frame_buffer(self.blue_model.get_model_output_filename())
 
-        print "Building RGB Composite..."
+        print("Building RGB Composite...")
         rgba_buffer = np.zeros(red_pixels.shape, dtype=np.uint8)
         rgba_buffer[:, :, 0] = red_pixels[:,:,1]
         rgba_buffer[:, :, 1] = green_pixels[:, :, 1]
@@ -591,7 +596,7 @@ if __name__ == "__main__":
     try:
         _core.is_isis3_initialized()
     except:
-        print "ISIS3 has not been initialized. Please do so. Now."
+        print("ISIS3 has not been initialized. Please do so. Now.")
         sys.exit(1)
 
     parser = argparse.ArgumentParser()

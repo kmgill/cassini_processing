@@ -12,14 +12,14 @@ from sciimg.isis3 import _core
 
 def print_if_verbose(s, is_verbose=True):
     if is_verbose:
-        print s
+        print(s)
 
 if __name__ == "__main__":
 
     try:
         _core.is_isis3_initialized()
     except:
-        print "ISIS3 has not been initialized. Please do so. Now."
+        print("ISIS3 has not been initialized. Please do so. Now.")
         sys.exit(1)
 
     parser = argparse.ArgumentParser()
@@ -57,20 +57,20 @@ if __name__ == "__main__":
 
     additional_options = {}
 
-    if isinstance(args.option, types.ListType):
+    if type(args.option) == list:
         for option in args.option:
             if re.match("^[0-9a-zA-Z]+=[0-9a-zA-Z]+$", option) is not None:
                 parts = option.split("=")
                 additional_options[parts[0]] = parts[1]
             else:
-                print "Invalid option format:", option
+                print("Invalid option format:", option)
                 sys.exit(1)
 
 
     try:
         process_data_file(source, require_target, require_filters, require_width, require_height, metadata_only, is_verbose, skip_existing, not skip_spice, nocleanup=nocleanup, additional_options=additional_options)
     except Exception as ex:
-        print "Error processing files"
+        print("Error processing files")
         if is_verbose:
             traceback.print_exc(file=sys.stdout)
 
