@@ -52,6 +52,8 @@ def is_supported_file(file_name):
         return (value in (__VOYAGER_1__, __VOYAGER_2__))
     elif file_name[-3:].upper() == "IMG":
         value = info.get_field_value(file_name, "SpacecraftName")
+        if value is None:
+            value = info.get_field_value(file_name, "SPACECRAFT_NAME")
         return (value in (__VOYAGER_1__,  __VOYAGER_2__))
     else:
         return False
