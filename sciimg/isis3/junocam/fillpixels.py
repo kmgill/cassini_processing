@@ -3,7 +3,7 @@ import os
 import numpy as np
 from libtiff import TIFFimage
 from PIL import Image
-from corrections import DEAD_PIXEL_MAP
+from sciimg.isis3.junocam.corrections import DEAD_PIXEL_MAP
 
 BAND_HEIGHT = 128
 
@@ -64,16 +64,16 @@ def fillpixels(img_data, verbose=False):
     img_height = img_data.shape[0]
 
     if verbose:
-        print "Image height:", img_height
+        print("Image height: %s"%img_height)
 
     bands_per_image = (img_height / BAND_HEIGHT / 3)
 
     if verbose:
-        print "Detected", bands_per_image, "RGB bands"
+        print("Detected %s RGB bands"%bands_per_image)
 
-    for band in range(0, bands_per_image):
+    for band in range(0, int(bands_per_image)):
         if verbose:
-            print "Filling pixels for RGB band triplet #", band
+            print("Filling pixels for RGB band triplet #%s "%band)
         fill_dead_pixel(img_data, band * 3 + 0, 0, band_height=BAND_HEIGHT)
         fill_dead_pixel(img_data, band * 3 + 1, 1, band_height=BAND_HEIGHT)
         fill_dead_pixel(img_data, band * 3 + 2, 2, band_height=BAND_HEIGHT)
@@ -83,7 +83,7 @@ def fillpixels(img_data, verbose=False):
 def process_image(img_path, save_file_path=None, verbose=False):
 
     if verbose:
-        print "Filling dead pixels in", img_path
+        print("Filling dead pixels in %s"%img_path)
 
     data = open_image(img_path)
 
@@ -93,7 +93,7 @@ def process_image(img_path, save_file_path=None, verbose=False):
         save_file_path = "%s-filled.tif" % (img_path[0:-4])
 
     if verbose:
-        print "Saving processed data to", save_file_path
+        print("Saving processed data to", save_file_path)
 
     tiff = TIFFimage(data, description='')
     tiff.write_file(save_file_path, compression='none', verbose=False)

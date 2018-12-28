@@ -57,7 +57,7 @@ def process_pds_data_file(lbl_file_name, is_verbose=False, skip_if_cub_exists=Fa
     out_file_cub = "%s.cub"%output_filename(lbl_file_name)
 
     if skip_if_cub_exists and os.path.exists(out_file_cub):
-        print "File %s exists, skipping processing"%out_file_cub
+        print("File %s exists, skipping processing"%out_file_cub)
         return
 
     if "ringplane" in additional_options:
@@ -75,91 +75,91 @@ def process_pds_data_file(lbl_file_name, is_verbose=False, skip_if_cub_exists=Fa
 
 
     if is_verbose:
-        print "Importing to cube..."
+        print("Importing to cube...")
     else:
         printProgress(0, 9, prefix="%s: "%lbl_file_name)
     s = cassini.ciss2isis(lbl_file_name, "%s/__%s_raw.cub"%(work_dir, product_id))
     if is_verbose:
-        print s
+        print(s)
 
 
     if is_verbose:
-        print "Filling in Gaps..."
+        print("Filling in Gaps...")
     else:
         printProgress(1, 9, prefix="%s: "%lbl_file_name)
     s = mathandstats.fillgap("%s/__%s_raw.cub"%(work_dir, product_id),
                         "%s/__%s_fill0.cub"%(work_dir, product_id))
     if is_verbose:
-        print s
+        print(s)
 
 
     if init_spice is True:
         if is_verbose:
-            print "Initializing Spice..."
+            print("Initializing Spice...")
         else:
             printProgress(2, 9, prefix="%s: "%lbl_file_name)
         s = cameras.spiceinit("%s/__%s_fill0.cub"%(work_dir, product_id), is_ringplane)
         if is_verbose:
-            print s
+            print(s)
 
 
     if is_verbose:
-        print "Calibrating cube..."
+        print("Calibrating cube...")
     else:
         printProgress(3, 9, prefix="%s: "%lbl_file_name)
     s = cassini.cisscal("%s/__%s_fill0.cub"%(work_dir, product_id),
                             "%s/__%s_cal.cub"%(work_dir, product_id))
     if is_verbose:
-        print s
+        print(s)
 
 
     if is_verbose:
-        print "Running Noise Filter..."
+        print("Running Noise Filter...")
     else:
         printProgress(4, 9, prefix="%s: "%lbl_file_name)
     s = filters.noisefilter("%s/__%s_cal.cub"%(work_dir, product_id),
                             "%s/__%s_stdz.cub"%(work_dir, product_id))
     if is_verbose:
-        print s
+        print(s)
 
     if is_verbose:
-        print "Filling in Nulls..."
+        print("Filling in Nulls...")
     else:
         printProgress(5, 9, prefix="%s: "%lbl_file_name)
     s = filters.lowpass("%s/__%s_stdz.cub"%(work_dir, product_id),
                         "%s/__%s_fill.cub"%(work_dir, product_id))
     if is_verbose:
-        print s
+        print(s)
 
 
     if is_verbose:
-        print "Removing Frame-Edge Noise..."
+        print("Removing Frame-Edge Noise...")
     else:
         printProgress(6, 9, prefix="%s: "%lbl_file_name)
     s = trimandmask.trim("%s/__%s_fill.cub"%(work_dir, product_id),
                         "%s"%(out_file_cub))
     if is_verbose:
-        print s
+        print(s)
 
 
     if is_verbose:
-        print "Exporting TIFF..."
+        print("Exporting TIFF...")
     else:
         printProgress(7, 9, prefix="%s: "%lbl_file_name)
     s = importexport.isis2std_grayscale("%s"%(out_file_cub),
                                     "%s"%(out_file_tiff))
     if is_verbose:
-        print s
+        print(s)
 
     if nocleanup is False:
         if is_verbose:
-            print "Cleaning up..."
+            print("Cleaning up...")
         else:
             printProgress(8, 9, prefix="%s: "%lbl_file_name)
         map(os.unlink, glob.glob('%s/__%s*.cub'%(work_dir, product_id)))
     else:
         if is_verbose:
-            print "Skipping clean up..."
+            print("Skipping clean up...")
         else:
             printProgress(8, 9, prefix="%s: "%lbl_file_name)
 

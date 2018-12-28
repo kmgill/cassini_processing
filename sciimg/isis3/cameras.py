@@ -29,7 +29,7 @@ def spiceinit(from_cube, is_ringplane=False, spkpredict=False, ckpredicted=False
 def cam2map(from_cube, to_cube, projection="equirectangular", map=None, resolution="CAMERA", minlat=None, maxlat=None, minlon=None, maxlon=None):
 
     if map is None:
-        map = "%s/../data/base/templates/maps/%s.map"%(os.environ["ISISROOT"], projection)
+        map = "%s/base/templates/maps/%s.map"%(os.environ["ISIS3DATA"], projection)
 
     params = {
         "from": from_cube,

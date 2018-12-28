@@ -56,7 +56,9 @@ setup(
         'pyopengl',
         'libtiff',
         'scipy',
-        'utm'
+        'utm',
+        'pillow',
+        'six'
     ],
 
     classifiers=[

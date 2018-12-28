@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from PIL import Image
-from fillpixels import fill_dead_pixel
+from sciimg.isis3.junocam.fillpixels import fill_dead_pixel
 
 """
 Note: This stuff isn't even close to correct and reflects some messing around. Don't use it. 
@@ -58,16 +58,16 @@ def apply_flat(img_data, apply_filling=False, verbose=False):
     img_height = img_data.shape[0]
 
     if verbose:
-        print "Image height:", img_height
+        print("Image height:", img_height)
 
     bands_per_image = (img_height / BAND_HEIGHT / 3)
 
     if verbose:
-        print "Detected", bands_per_image, "RGB bands"
+        print("Detected", bands_per_image, "RGB bands")
 
     for band in range(0, bands_per_image):
         if verbose:
-            print "Applying flat field for RGB band triplet #", band
+            print("Applying flat field for RGB band triplet #", band)
 
         apply_flat_for_band(img_data, band * 3 + 0, 0, apply_filling=apply_filling, band_height=BAND_HEIGHT)
         apply_flat_for_band(img_data, band * 3 + 1, 1, apply_filling=apply_filling, band_height=BAND_HEIGHT)
