@@ -44,14 +44,17 @@ def is_invalid(value):
 
 
 def apply_flat_for_band(data, band_num, band_id, apply_filling=False, band_height=BAND_HEIGHT):
-
-
     top = band_num * band_height
     bottom = top + band_height
 
-    flat_data = open_flat_field_image(band_id, apply_filling)
+    F = open_flat_field_image(band_id, apply_filling)
 
-    data[top:bottom] /= flat_data
+    R = data[top:bottom]
+    m = F.mean()
+
+    C = (R * m) / F
+
+    data[top:bottom] = C
 
 
 def apply_flat(img_data, apply_filling=False, verbose=False):
@@ -60,7 +63,7 @@ def apply_flat(img_data, apply_filling=False, verbose=False):
     if verbose:
         print("Image height:", img_height)
 
-    bands_per_image = (img_height / BAND_HEIGHT / 3)
+    bands_per_image = int((img_height / BAND_HEIGHT / 3))
 
     if verbose:
         print("Detected", bands_per_image, "RGB bands")

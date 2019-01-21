@@ -4,3 +4,4 @@ build/
 print.prt
 dist/
 *.egg-info/
+venv
