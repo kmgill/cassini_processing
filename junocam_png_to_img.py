@@ -91,15 +91,15 @@ if __name__ == "__main__":
             print("User requested to fill dead pixels. So that's what I'll do...")
         fillpixels(image_data, verbose=verbose)
 
-    if do_flat_fields:
-        if verbose:
-            print("Applying flat fields for RGB bands...")
-        apply_flat(image_data, apply_filling=fill_dead_pixels, verbose=verbose)
-
     if do_decompand:
         if verbose:
             print("Decompanding pixel values...")
         decompand(image_data, verbose=verbose)
+
+    if do_flat_fields:
+        if verbose:
+            print("Applying flat fields for RGB bands...")
+        apply_flat(image_data, apply_filling=fill_dead_pixels, verbose=verbose)
 
     if verbose:
         print("Applying filter weights...")

@@ -218,7 +218,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     params = [{"cub_file": cub_file, "out_file": "%s/%s"%(mapped_dir, os.path.basename(cub_file)), "map": map_file} for cub_file in cub_files]
     p = multiprocessing.Pool(multiprocessing.cpu_count())
     xs = p.map(map_project_cube, params)
-    print(xs)
+
     min_lat = np.min([l[0] for l in xs if l is not None])
     max_lat = np.max([l[1] for l in xs if l is not None])
     min_lon = np.min([l[2] for l in xs if l is not None])

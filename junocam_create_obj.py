@@ -43,7 +43,7 @@ def generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=128, lon_slic
     norm_list = []
     face_list = []
 
-    for y in range(0, int(lat_slices)):
+    for y in range(0, int(lat_slices + 1)):
         for x in range(0, int(lon_slices)):
             mx_lat = max_lat - (lat_res * y)
             mn_lon = min_lon + (lon_res * x)
@@ -60,7 +60,7 @@ def generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=128, lon_slic
             vertex_list.append(ul_vector)
             uv_list.append(ul_uv)
             norm_list.append(norm)
-    for y in range(0, int(lat_slices - 1)):
+    for y in range(0, int(lat_slices)):
         for x in range(0, int(lon_slices - 1)):
             ul_i = int(x + (y * lon_slices))
             ur_i = int(ul_i + 1)
@@ -223,7 +223,7 @@ if __name__ == "__main__":
     print("JunoCam Orientation: ", rot)
 
     print("Generating Sphere...")
-    vertex_list, uv_list, norm_list, face_list = generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=64, lon_slices=128)
+    vertex_list, uv_list, norm_list, face_list = generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=128, lon_slices=256)
 
     f = open(output_file_path, "w")
     f.write("o Sphere\n")
@@ -241,4 +241,3 @@ if __name__ == "__main__":
         f.write("\n")
     f.close()
     print("Done")
-
