@@ -12,7 +12,7 @@ if __name__ == "__main__":
     try:
         _core.is_isis3_initialized()
     except:
-        print "ISIS3 has not been initialized. Please do so. Now."
+        print("ISIS3 has not been initialized. Please do so. Now.")
         sys.exit(1)
 
     parser = argparse.ArgumentParser()

@@ -23,12 +23,15 @@ def output_filename(file_name):
 
 
 def is_supported_file(file_name):
+    if file_name is None:
+        return False
+
     if file_name[-3:].upper() in ("CUB",):
         value = info.get_field_value(file_name,  "SpacecraftName", grpname="Instrument")
-        return value.decode('UTF-8') == "JUNO"
+        return value is not None and value.decode('UTF-8') == "JUNO"
     elif file_name[-3:].upper() in ("LBL", ):
         value = info.get_field_value(file_name, "SPACECRAFT_NAME")
-        return value.decode('UTF-8') == "JUNO"
+        return value is not None and value.decode('UTF-8') == "JUNO"
     else:
         return False
 
@@ -84,11 +87,11 @@ def trim_cube(args):
     trim_pixels = args["trim_pixels"]
     trim_vertical(cub_file, trim_pixels)
 
-def trim_cubes(work_dir, product_id, trim_pixels=2):
+def trim_cubes(work_dir, product_id, trim_pixels=2, num_threads=multiprocessing.cpu_count()):
     cub_files = glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))
 
     params = [{"cub_file":cub_file, "trim_pixels": trim_pixels} for cub_file in cub_files]
-    p = multiprocessing.Pool(multiprocessing.cpu_count())
+    p = multiprocessing.Pool(num_threads)
     xs = p.map(trim_cube, params)
 
 
@@ -127,13 +130,12 @@ def map_project_cube(args):
     vt=<number>
     histeq=true|false
 """
-def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=False, init_spice=True, nocleanup=False, additional_options={}):
+def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=False, init_spice=True, nocleanup=False, additional_options={}, num_threads=multiprocessing.cpu_count()):
     #out_file = output_filename(from_file_name)
     #out_file_tiff = "%s.tif" % out_file
     #out_file_cub = "%s.cub" % out_file
 
-    num_steps = 15
-
+    num_steps = 16
 
     if "projection" in additional_options:
         projection = additional_options["projection"]
@@ -177,18 +179,18 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
             print("Trimming Framelets...")
             print("Vertical trimming: %d pixels"%trim_pixels)
         else:
-            printProgress(0, num_steps, prefix="%s: "%from_file_name)
+            printProgress(1, num_steps, prefix="%s: "%from_file_name)
 
-        trim_cubes(work_dir, product_id, trim_pixels=trim_pixels)
+        trim_cubes(work_dir, product_id, trim_pixels=trim_pixels, num_threads=num_threads)
 
 
     if init_spice is True:
         if is_verbose:
             print("Initializing Spice...")
         else:
-            printProgress(1, num_steps, prefix="%s: "%from_file_name)
+            printProgress(2, num_steps, prefix="%s: "%from_file_name)
         cub_files = glob.glob('%s/__%s_raw_*.cub'%(work_dir, product_id))
-        p = multiprocessing.Pool(multiprocessing.cpu_count())
+        p = multiprocessing.Pool(num_threads)
         xs = p.map(initspice_for_cube, cub_files)
     
 
@@ -201,7 +203,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     if is_verbose:
         print("Starting Map...")
     else:
-        printProgress(2, num_steps, prefix="%s: " % from_file_name)
+        printProgress(3, num_steps, prefix="%s: " % from_file_name)
 
     s = cameras.cam2map(mid_file, map_file, projection=projection)
     if is_verbose:
@@ -210,13 +212,13 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     if is_verbose:
         print("Map Projecting Stripes...")
     else:
-        printProgress(3, num_steps, prefix="%s: " % from_file_name)
+        printProgress(4, num_steps, prefix="%s: " % from_file_name)
     
 
     cub_files = glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))
 
     params = [{"cub_file": cub_file, "out_file": "%s/%s"%(mapped_dir, os.path.basename(cub_file)), "map": map_file} for cub_file in cub_files]
-    p = multiprocessing.Pool(multiprocessing.cpu_count())
+    p = multiprocessing.Pool(num_threads)
     xs = p.map(map_project_cube, params)
 
     min_lat = np.min([l[0] for l in xs if l is not None])
@@ -227,21 +229,21 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     if is_verbose:
         print("Assembling Red Mosaic...")
     else:
-        printProgress(4, num_steps, prefix="%s: " % from_file_name)
+        printProgress(5, num_steps, prefix="%s: " % from_file_name)
 
     out_file_red = assemble_mosaic("RED", source_dirname, product_id, min_lat, max_lat, min_lon, max_lon, is_verbose)
 
     if is_verbose:
         print("Assembling Green Mosaic...")
     else:
-        printProgress(5, num_steps, prefix="%s: " % from_file_name)
+        printProgress(6, num_steps, prefix="%s: " % from_file_name)
 
     out_file_green = assemble_mosaic("GREEN", source_dirname, product_id, min_lat, max_lat, min_lon, max_lon, is_verbose)
 
     if is_verbose:
         print("Assembling Blue Mosaic...")
     else:
-        printProgress(6, num_steps, prefix="%s: " % from_file_name)
+        printProgress(7, num_steps, prefix="%s: " % from_file_name)
 
     out_file_blue = assemble_mosaic("BLUE", source_dirname, product_id, min_lat, max_lat, min_lon, max_lon, is_verbose)
 
@@ -250,7 +252,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         if is_verbose:
             print("Running histogram equalization on map projected cubes...")
         else:
-            printProgress(7, num_steps, prefix="%s: " % from_file_name)
+            printProgress(8, num_steps, prefix="%s: " % from_file_name)
         histeq_cube(out_file_red, work_dir, product_id)
         histeq_cube(out_file_green, work_dir, product_id)
         histeq_cube(out_file_blue, work_dir, product_id)
@@ -258,7 +260,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     if is_verbose:
         print("Exporting Map Projected Tiffs...")
     else:
-        printProgress(8, num_steps, prefix="%s: " % from_file_name)
+        printProgress(9, num_steps, prefix="%s: " % from_file_name)
 
     export(out_file_red, is_verbose)
     export(out_file_green, is_verbose)
@@ -269,7 +271,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     if is_verbose:
         print("Exporting Color Map Projected Tiff...")
     else:
-        printProgress(9, num_steps, prefix="%s: " % from_file_name)
+        printProgress(10, num_steps, prefix="%s: " % from_file_name)
 
     out_file_map_rgb_tiff = "%s/%s_Mosaic_RGB.tif" % (source_dirname, product_id)
     s = importexport.isis2std_rgb(from_cube_red=out_file_red, from_cube_green=out_file_green, from_cube_blue=out_file_blue, to_tiff=out_file_map_rgb_tiff)
@@ -283,7 +285,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     if is_verbose:
         print("Camera Projecting Mosaics...")
     else:
-        printProgress(10, num_steps, prefix="%s: " % from_file_name)
+        printProgress(11, num_steps, prefix="%s: " % from_file_name)
 
     pad_file = "%s/__%s_raw_GREEN_00%d_padded.cub"%(work_dir, product_id, mid_num)
 
@@ -303,7 +305,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         if is_verbose:
             print("Running histogram equalization on camera projected cubes...")
         else:
-            printProgress(11, num_steps, prefix="%s: " % from_file_name)
+            printProgress(12, num_steps, prefix="%s: " % from_file_name)
         histeq_cube(out_file_red_cam, work_dir, product_id)
         histeq_cube(out_file_green_cam, work_dir, product_id)
         histeq_cube(out_file_blue_cam, work_dir, product_id)
@@ -312,7 +314,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     if is_verbose:
         print("Exporting Camera Projected Tiffs...")
     else:
-        printProgress(12, num_steps, prefix="%s: " % from_file_name)
+        printProgress(13, num_steps, prefix="%s: " % from_file_name)
 
     export(out_file_red_cam, is_verbose)
     export(out_file_green_cam, is_verbose)
@@ -322,7 +324,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     if is_verbose:
         print("Exporting Color Camera Projected Tiff...")
     else:
-        printProgress(13, num_steps, prefix="%s: " % from_file_name)
+        printProgress(14, num_steps, prefix="%s: " % from_file_name)
 
     out_file_cam_rgb_tiff = "%s/%s_RGB.tif" % (source_dirname, product_id)
     s = importexport.isis2std_rgb(from_cube_red=out_file_red_cam, from_cube_green=out_file_green_cam, from_cube_blue=out_file_blue_cam, to_tiff=out_file_cam_rgb_tiff)
@@ -333,7 +335,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         if is_verbose:
             print("Cleaning up...")
         else:
-            printProgress(14, num_steps, prefix="%s: " % from_file_name)
+            printProgress(15, num_steps, prefix="%s: " % from_file_name)
 
         clean_dir(work_dir, product_id)
         clean_dir(mapped_dir, product_id)

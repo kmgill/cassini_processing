@@ -8,13 +8,14 @@ from sciimg.isis3 import filters
 from sciimg.isis3 import trimandmask
 from sciimg.isis3 import importexport
 from sciimg.isis3._core import printProgress
+from traceback import print_exc
 
 
 def output_filename(file_name):
     dirname = os.path.dirname(file_name)
     if len(dirname) > 0:
         dirname += "/"
-    product_id = info.get_product_id(file_name)
+    product_id = str(info.get_product_id(file_name)).replace("+", "_")
     target = info.get_target(file_name)
     filter1, filter2 = info.get_filters(file_name)
     image_time = info.get_image_time(file_name)
@@ -42,7 +43,7 @@ def is_supported_file(file_name):
         return False
 
 def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=False, init_spice=True, nocleanup=False, additional_options={}):
-    product_id = info.get_product_id(from_file_name)
+    product_id = str(info.get_product_id(from_file_name)).replace("+", "_")
 
     out_file_tiff = "%s.tif" % output_filename(from_file_name)
     out_file_cub = "%s.cub" % output_filename(from_file_name)
