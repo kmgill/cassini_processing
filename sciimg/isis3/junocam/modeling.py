@@ -233,3 +233,32 @@ def create_obj(lbl_file, cube_file, output_file_path, scalar=1.0, lat_slices=128
     return model_spec_dict
 
 
+def get_image_locations(data_homes, scalar=1.0):
+    vecs = []
+    for data_home in data_homes:
+        lbl_files = glob.glob('%s/*.lbl'%data_home)
+        for lbl_file in lbl_files:
+            image_time = spice.str2et(info.get_field_value(lbl_file, "IMAGE_TIME"))
+            stop_name = info.get_field_value(lbl_file, "PRODUCT_ID")
+            spacecraft_vec, lt = spice.spkpos('JUNO_SPACECRAFT', image_time, 'IAU_JUPITER', 'NONE', 'JUPITER')
+            stop_spec = {
+                "name": stop_name,
+                "vec": ((spacecraft_vec[0] * scalar), (spacecraft_vec[1] * scalar), (spacecraft_vec[2] * scalar))
+            }
+            vecs.append(stop_spec)
+    return vecs
+
+
+def get_perijove_path(begin_time, end_time, num_points=250, scalar=1.0):
+    time_sep = float(end_time - begin_time) / float(num_points - 1)
+    time_iter = begin_time
+
+    vecs = []
+
+    while time_iter <= end_time:
+        spacecraft_vec, lt = spice.spkpos('JUNO_SPACECRAFT', time_iter, 'IAU_JUPITER', 'NONE', 'JUPITER')
+
+        vecs.append(((spacecraft_vec[0] * scalar), (spacecraft_vec[1] * scalar), (spacecraft_vec[2] * scalar)))
+        time_iter += time_sep
+
+    return vecs
