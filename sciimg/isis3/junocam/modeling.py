@@ -7,6 +7,7 @@ import math
 import numpy as np
 import argparse
 import glob
+import json
 from sciimg.isis3 import info
 from sciimg.isis3 import scripting
 from sciimg.isis3 import importexport
@@ -139,8 +140,7 @@ def calculate_orientations(mid_time, interframe_delay, frame_number=0):
     return spacecraft_orientation, jupiter_state, spacecraft_state, jupiter_rotation, instrument_cube_orientation, instrument_orientation
 
 
-
-def create_obj(lbl_file, cube_file_red, output_file_path, allow_predicted=False, scalar=1.0):
+def build_model_spec_dict(lbl_file, cube_file, spacecraft_state, instrument_orientation, scalar=1.0, verbose=False):
     image_time = info.get_field_value(lbl_file, "IMAGE_TIME")
     interframe_delay = float(info.get_field_value(lbl_file, "INTERFRAME_DELAY")) + 0.001
 
@@ -148,33 +148,68 @@ def create_obj(lbl_file, cube_file_red, output_file_path, allow_predicted=False,
     stop_time = spice.str2et(info.get_field_value(lbl_file, "STOP_TIME")) + 0.06188
     mid_time = (start_time + stop_time) / 2.0
 
-    num_lines = int(info.get_field_value(lbl_file, "LINES"))
+    min_lat = float(scripting.getkey(cube_file, "MinimumLatitude", grpname="Mapping"))
+    max_lat = float(scripting.getkey(cube_file, "MaximumLatitude", grpname="Mapping"))
+    min_lon = float(scripting.getkey(cube_file, "MinimumLongitude", grpname="Mapping"))
+    max_lon = float(scripting.getkey(cube_file, "MaximumLongitude", grpname="Mapping"))
 
-    min_lat = float(scripting.getkey(cube_file_red, "MinimumLatitude", grpname="Mapping"))
-    max_lat = float(scripting.getkey(cube_file_red, "MaximumLatitude", grpname="Mapping"))
-    min_lon = float(scripting.getkey(cube_file_red, "MinimumLongitude", grpname="Mapping"))
-    max_lon = float(scripting.getkey(cube_file_red, "MaximumLongitude", grpname="Mapping"))
-
-    print("Image Time: ", image_time)
-    print("Interframe Delay: ", interframe_delay)
-    print("Start Time: ", start_time)
-    print("Stop Time: ", stop_time)
-    print("Middle Time: ", mid_time)
-    print("Num Lines: ", num_lines)
-    print("Minimum Latitude: ", min_lat)
-    print("Maximum Latitude: ", max_lat)
-    print("Minimum Longitude: ", min_lon)
-    print("Maximum Longitude: ", max_lon)
-    print("Using Predicted Kernels: ", allow_predicted)
-
-    spacecraft_orientation, jupiter_state, spacecraft_state, jupiter_rotation, instrument_cube_orientation, instrument_orientation = calculate_orientations(mid_time, interframe_delay, frame_number=0)
-    print("Spacecraft Location: ", spacecraft_state * scalar)
     rot = rotation_matrix_to_euler_angles(instrument_orientation)
     rot = radians_xyz_to_degrees_xyz(rot)
-    print("JunoCam Orientation: ", rot)
 
-    print("Generating Sphere...")
-    vertex_list, uv_list, norm_list, face_list = generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=128, lon_slices=256)
+    if verbose:
+        print("Image Time: ", image_time)
+        print("Interframe Delay: ", interframe_delay)
+        print("Start Time: ", start_time)
+        print("Stop Time: ", stop_time)
+        print("Middle Time: ", mid_time)
+        print("Minimum Latitude: ", min_lat)
+        print("Maximum Latitude: ", max_lat)
+        print("Minimum Longitude: ", min_lon)
+        print("Maximum Longitude: ", max_lon)
+        print("Scalar: ", scalar)
+        print("Spacecraft Location: ", spacecraft_state * scalar)
+        print("JunoCam Orientation: ", rot)
+
+    model_spec_dict = {
+        "image_time": image_time,
+        "interframe_delay": interframe_delay,
+        "start_time": start_time,
+        "stop_time": stop_time,
+        "middle_time": mid_time,
+        "latitude_minimum": min_lat,
+        "latitude_maximum": max_lat,
+        "longitude_minimum": min_lon,
+        "longitude_maximum": max_lon,
+        "scalar": scalar,
+        "spacecraft_location": (spacecraft_state * scalar).tolist(),
+        "instrument_orientation": rot.tolist()
+    }
+
+    return model_spec_dict
+
+
+
+
+def create_obj(lbl_file, cube_file, output_file_path, scalar=1.0, lat_slices=128, lon_slices=256, verbose=False):
+    image_time = info.get_field_value(lbl_file, "IMAGE_TIME")
+
+    interframe_delay = float(info.get_field_value(lbl_file, "INTERFRAME_DELAY")) + 0.001
+
+    start_time = spice.str2et(info.get_field_value(lbl_file, "START_TIME")) + 0.06188
+    stop_time = spice.str2et(info.get_field_value(lbl_file, "STOP_TIME")) + 0.06188
+    mid_time = (start_time + stop_time) / 2.0
+    min_lat = float(scripting.getkey(cube_file, "MinimumLatitude", grpname="Mapping"))
+    max_lat = float(scripting.getkey(cube_file, "MaximumLatitude", grpname="Mapping"))
+    min_lon = float(scripting.getkey(cube_file, "MinimumLongitude", grpname="Mapping"))
+    max_lon = float(scripting.getkey(cube_file, "MaximumLongitude", grpname="Mapping"))
+
+    spacecraft_orientation, jupiter_state, spacecraft_state, jupiter_rotation, instrument_cube_orientation, instrument_orientation = calculate_orientations(mid_time, interframe_delay, frame_number=0)
+
+    model_spec_dict = build_model_spec_dict(lbl_file, cube_file, spacecraft_state, instrument_orientation, scalar=scalar,verbose=verbose)
+
+    if verbose:
+        print("Generating Sphere...")
+    vertex_list, uv_list, norm_list, face_list = generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=lat_slices, lon_slices=lon_slices)
 
     f = open(output_file_path, "w")
     f.write("o Sphere\n")
@@ -191,6 +226,10 @@ def create_obj(lbl_file, cube_file_red, output_file_path, allow_predicted=False,
             f.write(" %d/%d/%d"%(il[0]+1, il[1]+1, il[2]+1))
         f.write("\n")
     f.close()
-    print("Done")
+
+    if verbose:
+        print("Done")
+
+    return model_spec_dict
 
 

@@ -4,6 +4,7 @@ import sys
 import re
 import argparse
 from glob import glob
+import json
 import traceback
 import types
 from sciimg.isis3.junocam import processing
@@ -153,20 +154,26 @@ if __name__ == "__main__":
     product_id = info.get_product_id(label_file)
     cube_file_red = "%s_%s_Mosaic.cub" % (product_id, "RED")
 
-    if not (skip_existing and os.path.exists(cube_file_red)):
-        processing.process_pds_data_file(label_file, is_verbose=is_verbose, skip_if_cub_exists=False, init_spice=True, nocleanup=nocleanup, additional_options=additional_options, num_threads=num_threads)
+    out_file_map_rgb_tiff = "%s_Mosaic_RGB.tif" % product_id
+    if not (skip_existing and os.path.exists(cube_file_red) and os.path.exists(out_file_map_rgb_tiff)):
+        out_file_map_rgb_tiff = processing.process_pds_data_file(label_file, is_verbose=is_verbose, skip_if_cub_exists=False, init_spice=True, nocleanup=nocleanup, additional_options=additional_options, num_threads=num_threads)
 
     if is_verbose:
         print("Creating output model...")
 
-
-
     obj_file_path = "%s_model.obj"%product_id
-
+    model_spec_file_path = "%s_model-spec.json" % product_id
     if is_verbose:
         print("Creating Wavefront OBJ file: %s"%obj_file_path)
 
-    modeling.create_obj(label_file, cube_file_red, obj_file_path, allow_predicted=allow_predicted, scalar=scalar)
+    model_spec_dict = modeling.create_obj(label_file, cube_file_red, obj_file_path, scalar=scalar, verbose=is_verbose)
+
+    model_spec_dict["rgb_map_tiff"] = out_file_map_rgb_tiff
+    model_spec_dict["obj_file"] = obj_file_path
+
+    f = open(model_spec_file_path, "w")
+    f.write(json.dumps(model_spec_dict, indent=4))
+    f.close()
 
 
 
