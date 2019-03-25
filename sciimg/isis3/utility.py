@@ -28,3 +28,15 @@ def pad(from_file, to_file, left=0, right=0, bottom=0, top=0):
     }
     s = isis_command("pad", params)
     return s
+
+
+def cubeit(fromlist, to_file, proplab=None):
+    params = {
+        "fromlist": fromlist,
+        "to": to_file
+    }
+    if proplab is not None:
+        params["proplab"] = proplab
+
+    s = isis_command("cubeit", params)
+    return s

@@ -135,7 +135,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     #out_file_tiff = "%s.tif" % out_file
     #out_file_cub = "%s.cub" % out_file
 
-    num_steps = 16
+    num_steps = 17
 
     if "projection" in additional_options:
         projection = additional_options["projection"]
@@ -269,9 +269,32 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
 
 
     if is_verbose:
-        print("Exporting Color Map Projected Tiff...")
+        print("Exporting Color Map Projected Cube...")
     else:
         printProgress(10, num_steps, prefix="%s: " % from_file_name)
+
+    out_file_map_rgb_cube_inputs = "%s/%s_Mosaic_RGB.txt" % (source_dirname, product_id)
+    out_file_map_rgb_cube = "%s/%s_Mosaic_RGB.cub" % (source_dirname, product_id)
+
+    f = open(out_file_map_rgb_cube_inputs, "w")
+    f.write("%s\n"%out_file_red)
+    f.write("%s\n" % out_file_green)
+    f.write("%s\n" % out_file_blue)
+    f.close()
+
+    s = utility.cubeit(out_file_map_rgb_cube_inputs, out_file_map_rgb_cube)
+    if is_verbose:
+        print(s)
+
+    out_file_map_rgb_tiff = "%s/%s_Mosaic_RGB.tif" % (source_dirname, product_id)
+    s = importexport.isis2std_rgb(from_cube_red=out_file_red, from_cube_green=out_file_green, from_cube_blue=out_file_blue, to_tiff=out_file_map_rgb_tiff)
+    if is_verbose:
+        print(s)
+
+    if is_verbose:
+        print("Exporting Color Map Projected Tiff...")
+    else:
+        printProgress(11, num_steps, prefix="%s: " % from_file_name)
 
     out_file_map_rgb_tiff = "%s/%s_Mosaic_RGB.tif" % (source_dirname, product_id)
     s = importexport.isis2std_rgb(from_cube_red=out_file_red, from_cube_green=out_file_green, from_cube_blue=out_file_blue, to_tiff=out_file_map_rgb_tiff)
@@ -285,7 +308,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     if is_verbose:
         print("Camera Projecting Mosaics...")
     else:
-        printProgress(11, num_steps, prefix="%s: " % from_file_name)
+        printProgress(12, num_steps, prefix="%s: " % from_file_name)
 
     pad_file = "%s/__%s_raw_GREEN_00%d_padded.cub"%(work_dir, product_id, mid_num)
 
@@ -305,7 +328,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         if is_verbose:
             print("Running histogram equalization on camera projected cubes...")
         else:
-            printProgress(12, num_steps, prefix="%s: " % from_file_name)
+            printProgress(13, num_steps, prefix="%s: " % from_file_name)
         histeq_cube(out_file_red_cam, work_dir, product_id)
         histeq_cube(out_file_green_cam, work_dir, product_id)
         histeq_cube(out_file_blue_cam, work_dir, product_id)
@@ -314,7 +337,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     if is_verbose:
         print("Exporting Camera Projected Tiffs...")
     else:
-        printProgress(13, num_steps, prefix="%s: " % from_file_name)
+        printProgress(14, num_steps, prefix="%s: " % from_file_name)
 
     export(out_file_red_cam, is_verbose)
     export(out_file_green_cam, is_verbose)
@@ -324,7 +347,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     if is_verbose:
         print("Exporting Color Camera Projected Tiff...")
     else:
-        printProgress(14, num_steps, prefix="%s: " % from_file_name)
+        printProgress(15, num_steps, prefix="%s: " % from_file_name)
 
     out_file_cam_rgb_tiff = "%s/%s_RGB.tif" % (source_dirname, product_id)
     s = importexport.isis2std_rgb(from_cube_red=out_file_red_cam, from_cube_green=out_file_green_cam, from_cube_blue=out_file_blue_cam, to_tiff=out_file_cam_rgb_tiff)
@@ -335,7 +358,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         if is_verbose:
             print("Cleaning up...")
         else:
-            printProgress(15, num_steps, prefix="%s: " % from_file_name)
+            printProgress(16, num_steps, prefix="%s: " % from_file_name)
 
         clean_dir(work_dir, product_id)
         clean_dir(mapped_dir, product_id)
@@ -349,9 +372,9 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         if is_verbose:
             print("Skipping clean up...")
         else:
-            printProgress(15, num_steps, prefix="%s: " % from_file_name)
+            printProgress(16, num_steps, prefix="%s: " % from_file_name)
 
     if not is_verbose:
-        printProgress(16, num_steps, prefix="%s: "%from_file_name)
+        printProgress(17, num_steps, prefix="%s: "%from_file_name)
 
     return out_file_cam_rgb_tiff
