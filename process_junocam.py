@@ -131,6 +131,7 @@ if __name__ == "__main__":
     predicted_label_file = "%s-raw-adjusted.lbl"%predicted_product_id
     predicted_img_file ="%s-raw-adjusted.img"%predicted_product_id
 
+
     if skip_existing and os.path.exists(predicted_label_file) and os.path.exists(predicted_img_file):
         label_file = predicted_label_file
         img_file = predicted_img_file
@@ -150,6 +151,13 @@ if __name__ == "__main__":
 
     if is_verbose:
         print("Processing...")
+
+    #label_file = predicted_label_file
+    #img_file = predicted_img_file
+
+
+
+
 
     product_id = info.get_product_id(label_file)
     cube_file_red = "%s_%s_Mosaic.cub" % (product_id, "RED")
