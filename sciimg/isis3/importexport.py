@@ -40,10 +40,13 @@ def isis2pds(from_file, to_file, labtype="fixed", bittype="32bit", pdsversion="p
     return s
 
 
-def isis2std_grayscale(from_cube, to_tiff, format="tiff", bittype="u16bit", minimum=None, maximum=None, maxpercent=99.999, cleanup_print_file=True):
+def isis2std_grayscale(from_cube, to_tiff, format="tiff", bittype="u16bit", minimum=None, maximum=None, maxpercent=99.999, cleanup_print_file=True, band=1):
     cmd = "isis2std"
+
+    from_cube = "%s+%s"%(from_cube, band)
+
     params = {
-        "from": "%s+1"%from_cube,
+        "from": from_cube,
         "to": to_tiff,
         "format": format,
         "bittype": bittype

@@ -21,7 +21,11 @@ def histeq(from_cube, to_cube, minper=0.5, maxper=99.5):
     return s
 
 
-def get_data_min_max(from_cube):
+def get_data_min_max(from_cube, band=-1):
+
+    if band >= 1:
+        from_cube = "%s+%s"%(from_cube, band)
+
     out = isis_command("stats", {"from": from_cube})
 
     min = 0

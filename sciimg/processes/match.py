@@ -26,12 +26,12 @@ def get_files_min_max_values(file_names, is_verbose=False):
 
 
 
-def match(files, targets, filters, require_width, require_height):
+def match(files, targets, filters, require_width, require_height, band=-1):
     matching_files = []
 
     for f in files:
         if f[-3:].upper() != "CUB":
-            print "File %s is not supported, skipping" % f
+            print("File %s is not supported, skipping" % f)
             continue
         target = None
         try:
@@ -61,22 +61,22 @@ def match(files, targets, filters, require_width, require_height):
 
     values = []
     for f in matching_files:
-        _min, _max = mathandstats.get_data_min_max(f)
+        _min, _max = mathandstats.get_data_min_max(f, band)
         values.append(_min)
         values.append(_max)
-        print _min, _max
+        print(_min, _max)
 
     minimum = np.min(values)
     maximum = np.max(values)
 
-    print "Minimun:", minimum, "Maximum:", maximum
+    print("Minimun:", minimum, "Maximum:", maximum)
     # maximum -= ((maximum - minimum) * 0.45)
     # minimum += ((maximum - minimum) * 0.35)
 
     for f in matching_files:
         totiff = f[:-4] + ".tif"
-        print totiff
-        importexport.isis2std_grayscale(f, totiff, minimum=minimum, maximum=maximum)
+        print(totiff)
+        importexport.isis2std_grayscale(f, totiff, minimum=minimum, maximum=maximum, band=band)
 
 
 
@@ -86,8 +86,8 @@ def compose_rgb(cub_file_red, cub_file_green, cub_file_blue, output_tiff_file, m
     min, max = get_files_min_max_values(files, is_verbose=is_verbose)
 
     if is_verbose:
-        print "Max:", max
-        print "Min:", min
+        print("Max:", max)
+        print("Min:", min)
 
     s = importexport.isis2std_rgb(cub_file_red,
                                   cub_file_green,
@@ -98,4 +98,4 @@ def compose_rgb(cub_file_red, cub_file_green, cub_file_blue, output_tiff_file, m
                                   match_stretch=match_stretch)
 
     if is_verbose:
-        print s
+        print(s)

@@ -12,7 +12,7 @@ if __name__ == "__main__":
     try:
         _core.is_isis3_initialized()
     except:
-        print "ISIS3 has not been initialized. Please do so. Now."
+        print("ISIS3 has not been initialized. Please do so. Now.")
         sys.exit(1)
 
     parser = argparse.ArgumentParser()
@@ -43,19 +43,19 @@ if __name__ == "__main__":
 
     for file_name in source:
         if file_name[-3:].upper() != "CUB":
-            print "Not a ISIS cube file file. Skipping '%s'"%file_name
+            print("Not a ISIS cube file file. Skipping '%s'"%file_name)
         else:
             out_file = "%s/%s" % (output, file_name)
             if skip_existing and os.path.exists(out_file) :
-                print "Output exists, skipping."
+                print("Output exists, skipping.")
             else:
                 if reprojecting:
                     try:
                         s = cameras.map2map(file_name, out_file, map=map, minlat=bbox[3], maxlat=bbox[1], minlon=bbox[0], maxlon=bbox[2])
                         if verbose:
-                            print s
+                            print(s)
                     except:
-                        print "Reprojecting", file_name, "failed"
+                        print("Reprojecting", file_name, "failed")
                         if verbose:
                             traceback.print_exc(file=sys.stdout)
                 else:
@@ -66,8 +66,8 @@ if __name__ == "__main__":
                             s = cameras.ringscam2map(file_name, out_file, map=map, resolution="MAP")
 
                         if verbose:
-                            print s
+                            print(s)
                     except:
-                        print "Processing", file_name, "failed"
+                        print("Processing", file_name, "failed")
                         if verbose:
                             traceback.print_exc(file=sys.stdout)

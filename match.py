@@ -21,6 +21,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--targets", help="Require target(s) or exit", required=False, type=str, nargs='+')
     parser.add_argument("-w", "--width", help="Require width or exit", required=False, type=str, nargs='+')
     parser.add_argument("-H", "--height", help="Require height or exit", required=False, type=str, nargs='+')
+    parser.add_argument("-b", "--band", help="Data band", required=False, type=int, default=-1)
     args = parser.parse_args()
 
     filters = args.filters if args.filters is not None else []
@@ -32,6 +33,8 @@ if __name__ == "__main__":
     filters = [f.upper() for f in filters]
     targets = [t.upper() for t in targets]
 
+    band = args.band
+
     files = args.data
 
-    match(files, targets, filters, require_width, require_height)
+    match(files, targets, filters, require_width, require_height, band)

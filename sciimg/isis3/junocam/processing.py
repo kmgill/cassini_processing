@@ -145,6 +145,13 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     else:
         projection = "jupiterequirectangular"
 
+    if "st" in additional_options: # st means "Skip Triplets.
+        skip_triplets = int(additional_options["st"])
+        if is_verbose:
+            print("Skipping first and last", skip_triplets, "triplets")
+    else:
+        skip_triplets = None
+
     source_dirname = os.path.dirname(from_file_name)
     if source_dirname == "":
         source_dirname = "."
@@ -217,12 +224,20 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         print("Map Projecting Stripes...")
     else:
         printProgress(4, num_steps, prefix="%s: " % from_file_name)
-    
-    
 
+    cub_files_blue = glob.glob('%s/__%s_raw_BLUE_*.cub' % (work_dir, product_id))
+    cub_files_green = glob.glob('%s/__%s_raw_GREEN_*.cub' % (work_dir, product_id))
+    cub_files_red = glob.glob('%s/__%s_raw_RED_*.cub' % (work_dir, product_id))
 
+    if skip_triplets is not None:
+        cub_files_blue.sort()
+        cub_files_blue = cub_files_blue[skip_triplets:-skip_triplets]
+        cub_files_green.sort()
+        cub_files_green = cub_files_green[skip_triplets:-skip_triplets]
+        cub_files_red.sort()
+        cub_files_red = cub_files_red[skip_triplets:-skip_triplets]
+    cub_files = cub_files_blue + cub_files_green + cub_files_red
 
-    cub_files = glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))
 
     params = [{"cub_file": cub_file, "out_file": "%s/%s"%(mapped_dir, os.path.basename(cub_file)), "map": map_file} for cub_file in cub_files]
     p = multiprocessing.Pool(num_threads)

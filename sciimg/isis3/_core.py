@@ -42,3 +42,9 @@ def isis_command(cmd, params):
     s = subprocess.check_output(proc_cmd, stderr=subprocess.STDOUT)
     return s
 
+
+def is_any_not_none(values):
+    for f in values:
+        if f is not None:
+            return True
+    return False

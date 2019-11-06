@@ -1,4 +1,5 @@
 from sciimg.isis3._core import isis_command
+from sciimg.isis3._core import is_any_not_none
 import os
 
 
@@ -26,7 +27,7 @@ def spiceinit(from_cube, is_ringplane=False, spkpredict=False, ckpredicted=False
     return s
 
 
-def cam2map(from_cube, to_cube, projection="equirectangular", map=None, resolution="CAMERA", minlat=None, maxlat=None, minlon=None, maxlon=None):
+def cam2map(from_cube, to_cube, projection="equirectangular", map=None, resolution="CAMERA", minlat=None, maxlat=None, minlon=None, maxlon=None, defaultrange="CAMERA"):
 
     if map is None:
         map = "%s/base/templates/maps/%s.map"%(os.environ["ISIS3DATA"], projection)
@@ -37,6 +38,11 @@ def cam2map(from_cube, to_cube, projection="equirectangular", map=None, resoluti
         "map": map
     }
 
+    if defaultrange is None and is_any_not_none([minlat, minlon, maxlat, maxlon]):
+        defaultrange = "camera"
+
+    params["defaultrange"] = defaultrange
+
     if minlat is not None:
         params["minlat"] = minlat
     if maxlat is not None:
@@ -45,6 +51,8 @@ def cam2map(from_cube, to_cube, projection="equirectangular", map=None, resoluti
         params["minlon"] = minlon
     if maxlon is not None:
         params["maxlon"] = maxlon
+
+
 
     if resolution == "MAP":
         params["pixres"] = "map"

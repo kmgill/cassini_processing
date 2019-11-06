@@ -5,3 +5,4 @@ print.prt
 dist/
 *.egg-info/
 venv
+.DS_Store
