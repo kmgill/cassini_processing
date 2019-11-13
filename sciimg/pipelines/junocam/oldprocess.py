@@ -3,7 +3,7 @@ import os
 import numpy as np
 from libtiff import TIFFimage
 from PIL import Image
-from sciimg.isis3.junocam.corrections import DEAD_PIXEL_MAP
+from sciimg.pipelines.junocam.corrections import DEAD_PIXEL_MAP
 
 BAND_HEIGHT = 128
 

@@ -5,17 +5,14 @@ import re
 import argparse
 from glob import glob
 import json
-import traceback
-import types
-from sciimg.isis3.junocam import processing
 import zipfile
 from shutil import copyfile
 from sciimg.isis3 import info
 from sciimg.isis3 import _core
 from sciimg.processes.junocam_conversions import png_to_img
-from sciimg.isis3.junocam import processing
-from sciimg.isis3.junocam import jcspice
-from sciimg.isis3.junocam import modeling
+from sciimg.pipelines.junocam import processing
+from sciimg.pipelines.junocam import jcspice
+from sciimg.pipelines.junocam import modeling
 import multiprocessing
 
 def print_if_verbose(s, is_verbose=True):

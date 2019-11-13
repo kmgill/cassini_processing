@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import os
 
-import sciimg.isis3.cassini_iss.processing as cassproc
+import sciimg.pipelines.cassini_iss.processing as cassproc
 import sciimg.isis3.voyager_iss.processing as voyproc
 import sciimg.isis3.galileo_iss.processing as galproc
 import sciimg.isis3.junocam.processing as jnoproc

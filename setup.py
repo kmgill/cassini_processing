@@ -19,11 +19,12 @@ setup(
 
     packages=['sciimg',
               'sciimg.isis3',
-              'sciimg.isis3.cassini_iss',
-              'sciimg.isis3.galileo_iss',
-              'sciimg.isis3.voyager_iss',
-              'sciimg.isis3.mex_hrsc',
-              'sciimg.isis3.junocam',
+              'sciimg.pipelines',
+              'sciimg.pipelines.cassini_iss',
+              'sciimg.pipelines.galileo_iss',
+              'sciimg.pipelines.voyager_iss',
+              'sciimg.pipelines.mex_hrsc',
+              'sciimg.pipelines.junocam',
               'sciimg.pds',
               'sciimg.processes',
               'sciimg.util'

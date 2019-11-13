@@ -2,12 +2,12 @@
 
 import os
 from sciimg.isis3 import importexport
-from sciimg.isis3.junocam.utils import json_to_lbl
+from sciimg.pipelines.junocam.utils import json_to_lbl
 from PIL import Image
 import numpy as np
-from sciimg.isis3.junocam.fillpixels import fillpixels
-from sciimg.isis3.junocam.decompanding import decompand
-from sciimg.isis3.junocam.flatfield import apply_flat
+from sciimg.pipelines.junocam.fillpixels import fillpixels
+from sciimg.pipelines.junocam.decompanding import decompand
+from sciimg.pipelines.junocam.flatfield import apply_flat
 from libtiff import TIFFimage
 
 def create_label(output_base, metadata_json_path):

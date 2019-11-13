@@ -1,8 +1,7 @@
 import os
 import numpy as np
 from PIL import Image
-from sciimg.isis3.junocam.fillpixels import fill_dead_pixel
-from sciimg.isis3.junocam.decompanding import decompand
+from sciimg.pipelines.junocam.decompanding import decompand
 
 """
 Note: This stuff isn't even close to correct and reflects some messing around. Don't use it. 
