@@ -7,7 +7,7 @@ def load_kernels(kernelbase, allow_predicted=False):
     kernels = [
         "%s/juno/kernels/pck/pck00010.tpc"%kernelbase,
         "%s/juno/kernels/fk/juno_v12.tf"%kernelbase,
-        "%s/juno/kernels/ik/juno_junocam_v02.ti"%kernelbase,
+        "%s/juno/kernels/ik/juno_junocam_v03.ti"%kernelbase,
         "%s/juno/kernels/lsk/naif0012.tls"%kernelbase,
         "%s/juno/kernels/sclk/JNO_SCLKSCET.00074.tsc"%kernelbase,
         "%s/juno/kernels/tspk/de436s.bsp"%kernelbase,
