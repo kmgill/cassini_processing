@@ -14,6 +14,11 @@ from sciimg.isis3 import importexport
 from sciimg.isis3 import _core
 
 
+
+def print_r(*args):
+    s = ' '.join(map(str, args))
+    print(s)
+
 def normalize_vector(vec):
     l = math.sqrt(math.pow(vec[0], 2) + math.pow(vec[1], 2) + math.pow(vec[2], 2))
     if l == 0.0:
@@ -157,18 +162,18 @@ def build_model_spec_dict(lbl_file, cube_file, spacecraft_state, instrument_orie
     rot = radians_xyz_to_degrees_xyz(rot)
 
     if verbose:
-        print("Image Time: ", image_time)
-        print("Interframe Delay: ", interframe_delay)
-        print("Start Time: ", start_time)
-        print("Stop Time: ", stop_time)
-        print("Middle Time: ", mid_time)
-        print("Minimum Latitude: ", min_lat)
-        print("Maximum Latitude: ", max_lat)
-        print("Minimum Longitude: ", min_lon)
-        print("Maximum Longitude: ", max_lon)
-        print("Scalar: ", scalar)
-        print("Spacecraft Location: ", spacecraft_state * scalar)
-        print("JunoCam Orientation: ", rot)
+        print_r("Image Time: ", image_time)
+        print_r("Interframe Delay: ", interframe_delay)
+        print_r("Start Time: ", start_time)
+        print_r("Stop Time: ", stop_time)
+        print_r("Middle Time: ", mid_time)
+        print_r("Minimum Latitude: ", min_lat)
+        print_r("Maximum Latitude: ", max_lat)
+        print_r("Minimum Longitude: ", min_lon)
+        print_r("Maximum Longitude: ", max_lon)
+        print_r("Scalar: ", scalar)
+        print_r("Spacecraft Location: ", spacecraft_state * scalar)
+        print_r("JunoCam Orientation: ", rot)
 
     model_spec_dict = {
         "image_time": image_time,
@@ -208,7 +213,7 @@ def create_obj(lbl_file, cube_file, output_file_path, scalar=1.0, lat_slices=128
     model_spec_dict = build_model_spec_dict(lbl_file, cube_file, spacecraft_state, instrument_orientation, scalar=scalar,verbose=verbose)
 
     if verbose:
-        print("Generating Sphere...")
+        print_r("Generating Sphere...")
     vertex_list, uv_list, norm_list, face_list = generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=lat_slices, lon_slices=lon_slices)
 
     f = open(output_file_path, "w")
@@ -228,7 +233,7 @@ def create_obj(lbl_file, cube_file, output_file_path, scalar=1.0, lat_slices=128
     f.close()
 
     if verbose:
-        print("Done")
+        print_r("Done")
 
     return model_spec_dict
 

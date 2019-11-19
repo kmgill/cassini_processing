@@ -16,6 +16,11 @@ import multiprocessing
 import numpy as np
 import traceback
 
+def print_r(*args):
+    s = ' '.join(map(str, args))
+    print(s)
+
+
 def output_filename(file_name):
     dirname = os.path.dirname(file_name)
     if len(dirname) > 0:
@@ -103,9 +108,24 @@ def histeq_cube(cub_file, work_dir, product_id):
 
 
 
-def initspice_for_cube(cub_file):
+def initspice_for_cube(args):
+    cub_file = args["cub_file"]
+    if "verbose" in args:
+        verbose = args["verbose"]
+    else:
+        verbose = False
+
+    if verbose is True:
+        print_r("Initializing spice on cube file:", cub_file)
+
     s = cameras.spiceinit(cub_file)
+
+    if verbose is True:
+        print_r(s)
+
     return s
+
+
 
 
 def get_coord_range_from_cube(cub_file):
@@ -119,9 +139,18 @@ def map_project_cube(args):
     cub_file = args["cub_file"]
     out_file = args["out_file"]
     map_file = args["map"]
+    if "verbose" in args:
+        verbose = args["verbose"]
+    else:
+        verbose = False
+
+    if verbose is True:
+        print_r("Map projecting cube file", cub_file)
 
     try:
         s = cameras.cam2map(cub_file, out_file, map=map_file, resolution="MAP")
+        if verbose is True:
+            print_r(s)
         return get_coord_range_from_cube(out_file)
     except:
         return None #Just eat the exception for now.
@@ -201,8 +230,10 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         else:
             printProgress(2, num_steps, prefix="%s: "%from_file_name)
         cub_files = glob.glob('%s/__%s_raw_*.cub'%(work_dir, product_id))
+
+        init_spice_params = [{"cub_file": cub_file, "verbose": is_verbose} for cub_file in cub_files]
         p = multiprocessing.Pool(num_threads)
-        xs = p.map(initspice_for_cube, cub_files)
+        xs = p.map(initspice_for_cube, init_spice_params)
     
 
     mid_num = int(round(len(glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))) / 3.0 / 2.0))
@@ -239,7 +270,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     cub_files = cub_files_blue + cub_files_green + cub_files_red
 
 
-    params = [{"cub_file": cub_file, "out_file": "%s/%s"%(mapped_dir, os.path.basename(cub_file)), "map": map_file} for cub_file in cub_files]
+    params = [{"cub_file": cub_file, "out_file": "%s/%s"%(mapped_dir, os.path.basename(cub_file)), "map": map_file, "verbose": is_verbose} for cub_file in cub_files]
     p = multiprocessing.Pool(num_threads)
     xs = p.map(map_project_cube, params)
 
