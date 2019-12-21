@@ -1,0 +1,13 @@
+#!/bin/bash
+
+lblfile=$1
+basefile="${lblfile%.*}"
+
+. ~/initcass.sh
+
+
+
+pds2isis from=$lblfile to=$basefile.cub
+
+
+isis2std red=$basefile.cub+1 green=$basefile.cub+2 blue=$basefile.cub+3 to=$basefile.tif mode=rgb format=tiff bittype=u16bit minpercent=0 maxpercent=100

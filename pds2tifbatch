@@ -1,0 +1,77 @@
+#!/bin/bash
+
+. ~/initcass.sh
+
+
+function get_min_from_cub() {
+  cub=$1
+  stats from=$cub | grep '^  Minimum' | cut -d = -f 2 | awk '{$1=$1};1'
+}
+
+function get_max_from_cub() {
+  cub=$1
+  stats from=$cub | grep '^  Maximum' | cut -d = -f 2 | awk '{$1=$1};1'
+}
+
+function min() {
+  if [ `bc <<< "$1 <= $2"` -eq 1 ]; then
+    echo $1
+  else
+    echo $2
+  fi
+}
+
+function max() {
+  if [ `bc <<< "$1 >= $2"` -eq 1 ]; then
+    echo $1
+  else
+    echo $2
+  fi
+}
+
+function get_min_max_for_channel() {
+  channel=$1
+  data_min=999999
+  data_max=0
+  for f in `ls *cub`; do
+    mn=`get_min_from_cub $f+$channel`
+    mx=`get_max_from_cub $f+$channel`
+    data_min=`min $data_min $mn`
+    data_max=`max $data_max $mx`
+  done
+  echo $data_min $data_max
+}
+
+function get_total_min_max() {
+  data_min=999999
+  data_max=0
+  for c in 1 2 3; do
+      mn_mx=`get_min_max_for_channel $c`
+      mn=`echo $mn_mx | cut -d ' ' -f 1`
+      mx=`echo $mn_mx | cut -d ' ' -f 2`
+      data_min=`min $data_min $mn`
+      data_max=`max $data_max $mx`
+  done
+  echo $data_min $data_max
+}
+
+
+# Convert all PDS files into cube
+for f in `ls *lbl`; do
+  lblfile=$f
+  basefile="${lblfile%.*}"
+  pds2isis from=$lblfile to=$basefile.cub
+done
+
+mn_mx=`get_total_min_max`
+mn=`echo $mn_mx | cut -d ' ' -f 1`
+mx=`echo $mn_mx | cut -d ' ' -f 2`
+
+
+# Convert all cube files to tifs
+for f in `ls *lbl`; do
+  lblfile=$f
+  basefile="${lblfile%.*}"
+  isis2std red=$basefile.cub+1 green=$basefile.cub+2 blue=$basefile.cub+3 to=$basefile.tif mode=rgb\
+   format=tiff bittype=u16bit stretch=manual rmin=$mn rmax=$mx gmin=$mn gmax=$mx bmin=$mn bmax=$mx
+done
