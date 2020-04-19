@@ -7,8 +7,10 @@ from PIL import Image
 import numpy as np
 from sciimg.pipelines.junocam.fillpixels import fillpixels
 from sciimg.pipelines.junocam.decompanding import decompand
+from sciimg.pipelines.junocam.decompanding import SQROOT
 from sciimg.pipelines.junocam.flatfield import apply_flat
 from libtiff import TIFFimage
+import sys
 
 def create_label(output_base, metadata_json_path):
     output_lbl_path = "%s.lbl"%output_base
@@ -76,6 +78,12 @@ def apply_weights(img_data, r, g, b, verbose=False):
         apply_weight_to_band(img_data, band * 3 + 2, r, band_height=BAND_HEIGHT)
 
 
+def round_ints(img_data):
+    for a in range(0, len(img_data)):
+        for b in range(0, len(img_data[a])):
+            img_data[a][b] = round(img_data[a][b])
+
+
 def png_to_img(img_file, metadata, fill_dead_pixels=True, do_decompand=True, do_flat_fields=False, verbose=False, use_red_weight=0.902, use_green_weight=1.0, use_blue_weight=1.8879):
     image_data = open_image(img_file)
 
@@ -98,8 +106,12 @@ def png_to_img(img_file, metadata, fill_dead_pixels=True, do_decompand=True, do_
         print("Applying filter weights...")
     apply_weights(image_data, use_red_weight, use_green_weight, use_blue_weight, verbose=verbose)
 
-    image_data /= image_data.max()
+    image_data /= (float(SQROOT[-1]) * np.array([use_red_weight, use_green_weight, use_blue_weight]).max())
     image_data *= 65535.0
+
+    if verbose:
+        print("Rounding Integers...")
+    round_ints(image_data)
 
     img_file = "%s-adjusted.tif" % (img_file[0:-4])
     save_image(image_data, img_file)

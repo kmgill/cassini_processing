@@ -105,7 +105,7 @@ LIN16 = np.array((0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192,
                   3952, 3968, 3984, 4000, 4016, 4032, 4048, 4064, 4080), dtype=np.float32)
 
 
-def decompand(img_data, table=CompandingTableEnum.SQROOT, normalize=True, verbose=False):
+def decompand(img_data, table=CompandingTableEnum.SQROOT, verbose=False):
     if table == CompandingTableEnum.SQROOT:
         ctable = SQROOT
     elif table == CompandingTableEnum.LIN1:
@@ -120,8 +120,5 @@ def decompand(img_data, table=CompandingTableEnum.SQROOT, normalize=True, verbos
     for a in range(0, len(img_data)):
         for b in range(0, len(img_data[a])):
             img_data[a][b] = ctable[int(round(img_data[a][b]))]
-
-    if normalize:
-        img_data / float(ctable[-1])
 
     return img_data

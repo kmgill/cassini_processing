@@ -2,9 +2,9 @@
 import os
 
 import sciimg.pipelines.cassini_iss.processing as cassproc
-import sciimg.isis3.voyager_iss.processing as voyproc
-import sciimg.isis3.galileo_iss.processing as galproc
-import sciimg.isis3.junocam.processing as jnoproc
+import sciimg.pipelines.voyager_iss.processing as voyproc
+import sciimg.pipelines.galileo_iss.processing as galproc
+import sciimg.pipelines.junocam.processing as jnoproc
 
 
 

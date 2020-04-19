@@ -27,10 +27,13 @@ def spiceinit(from_cube, is_ringplane=False, spkpredict=False, ckpredicted=False
     return s
 
 
-def cam2map(from_cube, to_cube, projection="equirectangular", map=None, resolution="CAMERA", minlat=None, maxlat=None, minlon=None, maxlon=None, defaultrange="CAMERA"):
+def cam2map(from_cube, to_cube, projection="equirectangular", map=None, resolution="CAMERA", minlat=None, maxlat=None, minlon=None, maxlon=None, defaultrange="CAMERA", band=-1):
 
     if map is None:
         map = "%s/base/templates/maps/%s.map"%(os.environ["ISIS3DATA"], projection)
+
+    if band > -1:
+        from_cube = "%s+%s"%(from_cube, band)
 
     params = {
         "from": from_cube,
@@ -60,10 +63,13 @@ def cam2map(from_cube, to_cube, projection="equirectangular", map=None, resoluti
     s = isis_command("cam2map", params)
     return s
 
-def ringscam2map(from_cube, to_cube, projection="ringscylindrical", map=None, resolution="CAMERA"):
+def ringscam2map(from_cube, to_cube, projection="ringscylindrical", map=None, resolution="CAMERA", band=-1):
 
     if map is None:
         map = "%s/../data/base/templates/maps/%s.map"%(os.environ["ISISROOT"], projection)
+
+    if band > -1:
+        from_cube = "%s+%s"%(from_cube, band)
 
     params = {
         "from": from_cube,
@@ -110,12 +116,15 @@ def map2cam(from_cube, to_cube, cam):
     return s
 
 
-def map2map(from_cube, to_cube, map=None, projection="equirectangular", minlat=None, maxlat=None, minlon=None, maxlon=None):
+def map2map(from_cube, to_cube, map=None, projection="equirectangular", minlat=None, maxlat=None, minlon=None, maxlon=None, band=-1):
 
     resolution = "MAP"
     if map is None:
         map = "%s/../data/base/templates/maps/%s.map"%(os.environ["ISISROOT"], projection)
         resolution = "FROM"
+
+    if band > -1:
+        from_cube = "%s+%s"%(from_cube, band)
 
     params = {
         "from": from_cube,

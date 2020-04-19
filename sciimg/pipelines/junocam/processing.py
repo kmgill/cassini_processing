@@ -339,9 +339,9 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     else:
         printProgress(9, num_steps, prefix="%s: " % from_file_name)
 
-    export(out_file_red, is_verbose)
-    export(out_file_green, is_verbose)
-    export(out_file_blue, is_verbose)
+    #export(out_file_red, is_verbose)
+    #export(out_file_green, is_verbose)
+    #export(out_file_blue, is_verbose)
 
 
 
@@ -377,59 +377,6 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     s = importexport.isis2std_rgb(from_cube_red=out_file_red, from_cube_green=out_file_green, from_cube_blue=out_file_blue, to_tiff=out_file_map_rgb_tiff)
     if is_verbose:
         print(s)
-
-
-    # Disabling camera reprojection. No longer really need it.
-    """
-    if is_verbose:
-        print("Camera Projecting Mosaics...")
-    else:
-        printProgress(12, num_steps, prefix="%s: " % from_file_name)
-
-    pad_file = "%s/__%s_raw_GREEN_00%d_padded.cub"%(work_dir, product_id, mid_num)
-
-    utility.pad(mid_file, pad_file, top=2300, right=0, bottom=2300, left=0)
-
-    out_file_red_cam = "%s/%s_%s_Recammed.cub" % (source_dirname, product_id, "RED")
-    cameras.map2cam(out_file_red, out_file_red_cam, pad_file)
-
-    out_file_green_cam = "%s/%s_%s_Recammed.cub" % (source_dirname, product_id, "GREEN")
-    cameras.map2cam(out_file_green, out_file_green_cam, pad_file)
-
-    out_file_blue_cam = "%s/%s_%s_Recammed.cub" % (source_dirname, product_id, "BLUE")
-    cameras.map2cam(out_file_blue, out_file_blue_cam, pad_file)
-
-
-    if "histeq" in additional_options and additional_options["histeq"].upper() in ("TRUE", "YES"):
-        if is_verbose:
-            print("Running histogram equalization on camera projected cubes...")
-        else:
-            printProgress(13, num_steps, prefix="%s: " % from_file_name)
-        histeq_cube(out_file_red_cam, work_dir, product_id)
-        histeq_cube(out_file_green_cam, work_dir, product_id)
-        histeq_cube(out_file_blue_cam, work_dir, product_id)
-
-
-    if is_verbose:
-        print("Exporting Camera Projected Tiffs...")
-    else:
-        printProgress(14, num_steps, prefix="%s: " % from_file_name)
-
-    export(out_file_red_cam, is_verbose)
-    export(out_file_green_cam, is_verbose)
-    export(out_file_blue_cam, is_verbose)
-
-
-    if is_verbose:
-        print("Exporting Color Camera Projected Tiff...")
-    else:
-        printProgress(15, num_steps, prefix="%s: " % from_file_name)
-
-    out_file_cam_rgb_tiff = "%s/%s_RGB.tif" % (source_dirname, product_id)
-    s = importexport.isis2std_rgb(from_cube_red=out_file_red_cam, from_cube_green=out_file_green_cam, from_cube_blue=out_file_blue_cam, to_tiff=out_file_cam_rgb_tiff)
-    if is_verbose:
-        print(s)
-    """
 
     if nocleanup is False:
         if is_verbose:
