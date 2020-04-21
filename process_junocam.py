@@ -88,6 +88,7 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--scale", help="Mesh Scalar", required=False, type=float, default=1.0)
     parser.add_argument("-S", "--skipexisting", help="Skip steps if output files already exist", action="store_true")
     parser.add_argument("-t", "--threads", help="Number of threads to use", required=False, type=int, default=multiprocessing.cpu_count())
+    parser.add_argument("-l", "--linear", help="Use linear colorspace for output", action="store_true")
 
     args = parser.parse_args()
 
@@ -105,6 +106,7 @@ if __name__ == "__main__":
     scalar = args.scale
     skip_existing = args.skipexisting
     num_threads = args.threads
+    linear_colorspace = args.linear
 
     additional_options = {}
 
@@ -128,18 +130,19 @@ if __name__ == "__main__":
     predicted_label_file = "%s-raw-adjusted.lbl"%predicted_product_id
     predicted_img_file ="%s-raw-adjusted.img"%predicted_product_id
 
-
+    max_value = None
     if skip_existing and os.path.exists(predicted_label_file) and os.path.exists(predicted_img_file):
         label_file = predicted_label_file
         img_file = predicted_img_file
     else:
-        label_file, img_file = png_to_img(png_file, metadata_file,
+        label_file, img_file, max_value = png_to_img(png_file, metadata_file,
                                            fill_dead_pixels=fill_dead_pixels,
                                            do_decompand=do_decompand,
                                            do_flat_fields=do_flat_fields,
                                            use_red_weight=use_red_weight,
                                            use_green_weight=use_green_weight,
                                            use_blue_weight=use_blue_weight,
+                                           doSRGB=not linear_colorspace,
                                            verbose=is_verbose)
 
     if is_verbose:
@@ -161,7 +164,14 @@ if __name__ == "__main__":
 
     out_file_map_rgb_tiff = "%s_Mosaic_RGB.tif" % product_id
     if not (skip_existing and os.path.exists(cube_file_red) and os.path.exists(out_file_map_rgb_tiff)):
-        out_file_map_rgb_tiff = processing.process_pds_data_file(label_file, is_verbose=is_verbose, skip_if_cub_exists=False, init_spice=True, nocleanup=nocleanup, additional_options=additional_options, num_threads=num_threads)
+        out_file_map_rgb_tiff = processing.process_pds_data_file(label_file,
+                                                                 is_verbose=is_verbose,
+                                                                 skip_if_cub_exists=False,
+                                                                 init_spice=True,
+                                                                 nocleanup=nocleanup,
+                                                                 additional_options=additional_options,
+                                                                 num_threads=num_threads,
+                                                                 max_value=max_value)
 
     if is_verbose:
         print("Creating output model...")

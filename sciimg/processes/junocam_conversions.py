@@ -23,12 +23,12 @@ def create_label(output_base, metadata_json_path):
     return output_lbl_path
 
 
-def create_pds(output_base, img_file):
+def create_pds(output_base, img_file, samples, lines):
     output_cub = "%s.cub"%output_base
     output_img = "%s.img"%output_base
 
-    importexport.std2isis(img_file, output_cub, mode=importexport.ColorMode.GRAYSCALE)
-    importexport.isis2pds(output_cub, output_img, labtype="fixed", bittype="u16bit")
+    importexport.raw2isis(img_file, output_cub, samples, lines, bittype="real", byteorder="lsb")
+    importexport.isis2pds(output_cub, output_img, labtype="fixed", bittype="32bit")
 
     os.unlink(output_cub)
 
@@ -51,6 +51,9 @@ def save_image(image_data, path):
     tiff = TIFFimage(data_matrix, description='')
     tiff.write_file(path, compression='none')
 
+
+def save_image_raw(image_data, path):
+    image_data.tofile(path, format="d")
 
 def apply_weight_to_band(data, band_num, weight, band_height=BAND_HEIGHT):
     top = band_num * band_height
@@ -84,7 +87,17 @@ def round_ints(img_data):
             img_data[a][b] = round(img_data[a][b])
 
 
-def png_to_img(img_file, metadata, fill_dead_pixels=True, do_decompand=True, do_flat_fields=False, verbose=False, use_red_weight=0.902, use_green_weight=1.0, use_blue_weight=1.8879):
+def convert_to_srgb(img_data):
+    for a in range(0, len(img_data)):
+        for b in range(0, len(img_data[a])):
+            c = img_data[a][b]
+            if c < 0.0031308:
+                c = c * 12.92
+            else:
+                c = c ** (1.0 / 2.4) * 1.055 - 0.055
+            img_data[a][b] = c
+
+def png_to_img(img_file, metadata, fill_dead_pixels=True, do_decompand=True, do_flat_fields=False, verbose=False, doSRGB=True, use_red_weight=0.902, use_green_weight=1.0, use_blue_weight=1.8879):
     image_data = open_image(img_file)
 
     if fill_dead_pixels:
@@ -106,20 +119,24 @@ def png_to_img(img_file, metadata, fill_dead_pixels=True, do_decompand=True, do_
         print("Applying filter weights...")
     apply_weights(image_data, use_red_weight, use_green_weight, use_blue_weight, verbose=verbose)
 
-    image_data /= (float(SQROOT[-1]) * np.array([use_red_weight, use_green_weight, use_blue_weight]).max())
-    image_data *= 65535.0
+    max_value = (float(SQROOT[-1]) * np.array([use_red_weight, use_green_weight, use_blue_weight]).max())
 
-    if verbose:
-        print("Rounding Integers...")
-    round_ints(image_data)
+    if doSRGB is True:
+        if verbose:
+            print("Applying sRGB Conversion...")
+        image_data /= max_value
+        convert_to_srgb(image_data)
+        image_data *= max_value
 
-    img_file = "%s-adjusted.tif" % (img_file[0:-4])
-    save_image(image_data, img_file)
+    max_value = image_data.max()
 
     output_base = img_file[:-4]
+    output_base = "%s-adjusted" % output_base
+    img_file = "%s.raw" % (img_file[0:-4])
 
     if verbose:
-        print("Creating output files with basename of %s"%output_base)
+        print("Creating raw image file...")
+    save_image_raw(image_data, img_file)
 
     if verbose:
         print("Creating label file...")
@@ -128,7 +145,36 @@ def png_to_img(img_file, metadata, fill_dead_pixels=True, do_decompand=True, do_
     if verbose:
         print("Creating PDS file...")
 
+    img_file = create_pds(output_base, img_file, lines=image_data.shape[0], samples=image_data.shape[1])
+
+    return label_file, img_file, max_value
+
+
+    """
+    
+
+    image_data *= 65535.0
+
+    if verbose:
+        print("Rounding Integers...")
+    round_ints(image_data)
+
+    img_file = "%s-adjusted.tif" % (img_file[0:-4])
+    img_file_raw = "%s-adjusted.raw" % (img_file[0:-4])
+    save_image(image_data, img_file)
+    save_image_raw(image_data, img_file_raw)
+    
+
+    if verbose:
+        print("Creating output files with basename of %s"%output_base)
+
+    
+
+    if verbose:
+        print("Creating PDS file...")
+
     img_file = create_pds(output_base, img_file)
 
-    return label_file, img_file
-
+    
+    return label_file, img_file, max_value
+    """

@@ -26,6 +26,17 @@ def std2isis(from_file, to_file, mode=ColorMode.AUTO):
     return s
 
 
+def raw2isis(from_file, to_file, samples, lines, bittype="real", byteorder="lsb"):
+    params = {
+        "from": from_file,
+        "to": to_file,
+        "samples": samples,
+        "lines": lines,
+        "bittype": bittype,
+        "byteorder": byteorder
+    }
+    s = isis_command("raw2isis", params)
+    return s
 
 def isis2pds(from_file, to_file, labtype="fixed", bittype="32bit", pdsversion="pds3"):
     params = {

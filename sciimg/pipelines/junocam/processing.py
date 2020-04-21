@@ -162,7 +162,7 @@ def map_project_cube(args):
     vt=<number>
     histeq=true|false
 """
-def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=False, init_spice=True, nocleanup=False, additional_options={}, num_threads=multiprocessing.cpu_count()):
+def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=False, init_spice=True, nocleanup=False, additional_options={}, num_threads=multiprocessing.cpu_count(), max_value=None):
     #out_file = output_filename(from_file_name)
     #out_file_tiff = "%s.tif" % out_file
     #out_file_cub = "%s.cub" % out_file
@@ -196,6 +196,11 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     sub_spacecraft_longitude = info.get_property(from_file_name, "SUB_SPACECRAFT_LONGITUDE")
     print("Product Id:", product_id)
     print("Sub Spacecraft Longitude:", sub_spacecraft_longitude)
+
+    if "color" in additional_options:
+        trueColor = additional_options["color"] == "true"
+    else:
+        trueColor = False
 
 
     mapped_dir = "%s/work/mapped" % source_dirname
@@ -363,18 +368,26 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     if is_verbose:
         print(s)
 
-    out_file_map_rgb_tiff = "%s/%s_Mosaic_RGB.tif" % (source_dirname, product_id)
-    s = importexport.isis2std_rgb(from_cube_red=out_file_red, from_cube_green=out_file_green, from_cube_blue=out_file_blue, to_tiff=out_file_map_rgb_tiff)
-    if is_verbose:
-        print(s)
-
     if is_verbose:
         print("Exporting Color Map Projected Tiff...")
     else:
         printProgress(11, num_steps, prefix="%s: " % from_file_name)
 
     out_file_map_rgb_tiff = "%s/%s_Mosaic_RGB.tif" % (source_dirname, product_id)
-    s = importexport.isis2std_rgb(from_cube_red=out_file_red, from_cube_green=out_file_green, from_cube_blue=out_file_blue, to_tiff=out_file_map_rgb_tiff)
+
+    if trueColor is True:
+        s = importexport.isis2std_rgb(from_cube_red=out_file_red,
+                                      from_cube_green=out_file_green,
+                                      from_cube_blue=out_file_blue,
+                                      to_tiff=out_file_map_rgb_tiff,
+                                      match_stretch=True,
+                                      minimum=0,
+                                      maximum=max_value)
+    else:
+        s = importexport.isis2std_rgb(from_cube_red=out_file_red,
+                                      from_cube_green=out_file_green,
+                                      from_cube_blue=out_file_blue,
+                                      to_tiff=out_file_map_rgb_tiff)
     if is_verbose:
         print(s)
 
