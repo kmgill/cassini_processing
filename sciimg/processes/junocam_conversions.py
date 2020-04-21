@@ -119,7 +119,9 @@ def png_to_img(img_file, metadata, fill_dead_pixels=True, do_decompand=True, do_
         print("Applying filter weights...")
     apply_weights(image_data, use_red_weight, use_green_weight, use_blue_weight, verbose=verbose)
 
+    # 5436
     max_value = (float(SQROOT[-1]) * np.array([use_red_weight, use_green_weight, use_blue_weight]).max())
+
 
     if doSRGB is True:
         if verbose:
@@ -127,8 +129,6 @@ def png_to_img(img_file, metadata, fill_dead_pixels=True, do_decompand=True, do_
         image_data /= max_value
         convert_to_srgb(image_data)
         image_data *= max_value
-
-    max_value = image_data.max()
 
     output_base = img_file[:-4]
     output_base = "%s-adjusted" % output_base
@@ -149,32 +149,3 @@ def png_to_img(img_file, metadata, fill_dead_pixels=True, do_decompand=True, do_
 
     return label_file, img_file, max_value
 
-
-    """
-    
-
-    image_data *= 65535.0
-
-    if verbose:
-        print("Rounding Integers...")
-    round_ints(image_data)
-
-    img_file = "%s-adjusted.tif" % (img_file[0:-4])
-    img_file_raw = "%s-adjusted.raw" % (img_file[0:-4])
-    save_image(image_data, img_file)
-    save_image_raw(image_data, img_file_raw)
-    
-
-    if verbose:
-        print("Creating output files with basename of %s"%output_base)
-
-    
-
-    if verbose:
-        print("Creating PDS file...")
-
-    img_file = create_pds(output_base, img_file)
-
-    
-    return label_file, img_file, max_value
-    """
