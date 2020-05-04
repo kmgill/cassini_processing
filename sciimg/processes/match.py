@@ -9,6 +9,8 @@ from sciimg.isis3 import utils
 
 def get_file_min_max_values(cub_file, is_verbose=False):
     min_value, max_value = mathandstats.get_data_min_max(cub_file)
+    if is_verbose is True:
+        print("File %s min/max: %d, %d"%(cub_file, min_value, max_value))
     return min_value, max_value
 
 
