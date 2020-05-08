@@ -7,8 +7,8 @@ import math
 import numpy as np
 import argparse
 import glob
-from sciimg.isis3.junocam import jcspice
-from sciimg.isis3.junocam import modeling
+from sciimg.pipelines.junocam import jcspice
+from sciimg.pipelines.junocam import modeling
 from sciimg.isis3 import _core
 
 if __name__ == "__main__":

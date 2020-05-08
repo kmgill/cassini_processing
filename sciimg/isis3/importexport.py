@@ -82,7 +82,8 @@ def isis2std_grayscale(from_cube, to_tiff, format="tiff", bittype="u16bit", mini
     return s
 
 
-def isis2std_rgb(from_cube_red, from_cube_green, from_cube_blue, to_tiff, minimum=None, maximum=None, match_stretch=False, format="tiff", bittype="u16bit", maxpercent=99.999, cleanup_print_file=True):
+def isis2std_rgb(from_cube_red, from_cube_green, from_cube_blue, to_tiff, minimum=None, maximum=None, match_stretch=False, minmaxperband=False, format="tiff", bittype="u16bit", maxpercent=99.999, cleanup_print_file=True,
+                red_min=None, red_max=None, green_min=None, green_max=None, blue_min=None, blue_max=None):
     cmd = "isis2std"
 
     # This isn't a good way to keep it. Seriously.
@@ -112,6 +113,16 @@ def isis2std_rgb(from_cube_red, from_cube_green, from_cube_blue, to_tiff, minimu
             "gmax": maximum,
             "bmin": minimum,
             "bmax": maximum
+        })
+    elif minmaxperband is True:
+        params.update({
+            "stretch": "manual",
+            "rmin": red_min,
+            "rmax": red_max,
+            "gmin": green_min,
+            "gmax": green_max,
+            "bmin": blue_min,
+            "bmax": blue_max
         })
     else:
         params["maxpercent"] = maxpercent
