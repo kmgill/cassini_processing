@@ -12,9 +12,9 @@ DARK_IMG_PATH_RED = os.path.join(os.path.dirname(__file__), 'juno-dark-red.tif')
 DARK_IMG_PATH_GREEN = os.path.join(os.path.dirname(__file__), 'juno-dark-green.tif')
 DARK_IMG_PATH_BLUE = os.path.join(os.path.dirname(__file__), 'juno-dark-blue.tif')
 
-FLAT_IMG_PATH_RED = os.path.join(os.path.dirname(__file__), 'juno-flat-red.tif')
-FLAT_IMG_PATH_GREEN = os.path.join(os.path.dirname(__file__), 'juno-flat-green.tif')
-FLAT_IMG_PATH_BLUE = os.path.join(os.path.dirname(__file__), 'juno-flat-blue.tif')
+FLAT_IMG_PATH_RED = os.path.join(os.path.dirname(__file__), 'junocam_rgb_flatfield_v3_2.png')
+FLAT_IMG_PATH_GREEN = os.path.join(os.path.dirname(__file__), 'junocam_rgb_flatfield_v3_1.png')
+FLAT_IMG_PATH_BLUE = os.path.join(os.path.dirname(__file__), 'junocam_rgb_flatfield_v3_0.png')
 
 
 BAND_HEIGHT = 128
@@ -68,20 +68,24 @@ def apply_flat_for_band(data, band_num, band_id, apply_filling=False, band_heigh
     bottom = top + band_height
 
     F = open_flat_field_image(band_id, apply_filling)
-    F = decompand(F, normalize=False, verbose=False)
+    F = F / 65535.0
 
-    D = open_dark_field_image(band_id, apply_filling)
+    #F = decompand(F, normalize=False, verbose=False)
+
+    #D = open_dark_field_image(band_id, apply_filling)
 
     #print(F.min(), F.max())
 
     R = data[top:bottom]
+
     #m = F.mean()
-    m = (F - D).mean()
+    m = F#(F - D).mean()
     #D = np.zeros(R.shape)
     #G = m / (F - D)
     #C = (R - D) * G
     #print(G.min(), G.max(), F.min(), F.max(), D.min(), D.max(), R.min(), R.max())
-    C = (R * m) / F
+    C = R / F
+    print(R.min(), R.max(), F.min(), F.max(), C.min(), C.max())
     data[top:bottom] = C
 
 
@@ -105,7 +109,7 @@ def apply_flat(img_data, apply_filling=False, verbose=False):
         apply_flat_for_band(img_data, band * 3 + 2, 2, apply_filling=apply_filling, band_height=BAND_HEIGHT)
 
     # Correcting and normalizing
-    img_data[np.isnan(img_data)] = 0.0
-    img_data[np.isinf(img_data)] = 0.0
-    img_data /= img_data.max()
-    img_data *= 255.0
+    #img_data[np.isnan(img_data)] = 0.0
+    #img_data[np.isinf(img_data)] = 0.0
+    #img_data /= img_data.max()
+    #img_data *= 255.0

@@ -195,7 +195,18 @@ def build_model_spec_dict(lbl_file, cube_file, spacecraft_state, instrument_orie
 
 
 
-def create_obj(lbl_file, cube_file, output_file_path, scalar=1.0, lat_slices=128, lon_slices=256, verbose=False):
+def create_obj(lbl_file,
+                cube_file,
+                output_file_path,
+                scalar=1.0,
+                lat_slices=128,
+                lon_slices=256,
+                verbose=False,
+                allow_predicted=False,
+                minlat=None,
+                maxlat=None,
+                minlon=None,
+                maxlon=None):
     image_time = info.get_field_value(lbl_file, "IMAGE_TIME")
 
     interframe_delay = float(info.get_field_value(lbl_file, "INTERFRAME_DELAY")) + 0.001
@@ -207,6 +218,15 @@ def create_obj(lbl_file, cube_file, output_file_path, scalar=1.0, lat_slices=128
     max_lat = float(scripting.getkey(cube_file, "MaximumLatitude", grpname="Mapping"))
     min_lon = float(scripting.getkey(cube_file, "MinimumLongitude", grpname="Mapping"))
     max_lon = float(scripting.getkey(cube_file, "MaximumLongitude", grpname="Mapping"))
+
+    if minlat is not None:
+        min_lat = minlat
+    if maxlat is not None:
+        max_lat = maxlat
+    if minlon is not None:
+        min_lon = minlon
+    if maxlon is not None:
+        max_lon = maxlon
 
     spacecraft_orientation, jupiter_state, spacecraft_state, jupiter_rotation, instrument_cube_orientation, instrument_orientation = calculate_orientations(mid_time, interframe_delay, frame_number=0)
 

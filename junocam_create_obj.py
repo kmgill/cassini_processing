@@ -28,6 +28,10 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--predicted", help="Utilize predicted kernels", action="store_true")
     parser.add_argument("-o", "--output", help="Output file path", required=True, type=str, default=None)
     parser.add_argument("-s", "--scale", help="Mesh Scalar", required=False, type=float, default=1.0)
+    parser.add_argument("-t", "--minlat", help="Minimum Latitude", required=False, type=float, default=None)
+    parser.add_argument("-T", "--maxlat", help="Maximum Latitude", required=False, type=float, default=None)
+    parser.add_argument("-n", "--minlon", help="Minimum Longitude", required=False, type=float, default=None)
+    parser.add_argument("-N", "--maxlon", help="Maximum Longitude", required=False, type=float, default=None)
     args = parser.parse_args()
 
     lbl_file = args.label
@@ -36,7 +40,18 @@ if __name__ == "__main__":
     allow_predicted = args.predicted
     output_file_path = args.output
     scalar = args.scale
+    minlat = args.minlat
+    maxlat = args.maxlat
+    minlon = args.minlon
+    maxlon = args.maxlon
 
     jcspice.load_kernels(kernelbase, allow_predicted)
-    modeling.create_obj(lbl_file, cube_file_red, output_file_path, allow_predicted=allow_predicted, scalar=scalar)
-
+    modeling.create_obj(lbl_file,
+                        cube_file_red,
+                        output_file_path,
+                        allow_predicted=allow_predicted,
+                        scalar=scalar,
+                        minlat=minlat,
+                        maxlat=maxlat,
+                        minlon=minlon,
+                        maxlon=maxlon)
