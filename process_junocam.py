@@ -83,7 +83,7 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--blueweight", help="Apply a weight for the blue band", type=float,
                         default=1.8879)  # 1.0
     parser.add_argument("-k", "--kernelbase", help="Base directory for spice kernels", required=False, type=str,
-                        default=os.environ["ISIS3DATA"])
+                        default=os.environ["ISISDATA"])
     parser.add_argument("-p", "--predicted", help="Utilize predicted kernels", action="store_true")
     parser.add_argument("-s", "--scale", help="Mesh Scalar", required=False, type=float, default=1.0)
     parser.add_argument("-S", "--skipexisting", help="Skip steps if output files already exist", action="store_true")
@@ -189,6 +189,3 @@ if __name__ == "__main__":
     f = open(model_spec_file_path, "w")
     f.write(json.dumps(model_spec_dict, indent=4))
     f.close()
-
-
-

@@ -8,8 +8,8 @@ Note: Probably need a better check than just looking at two environment variable
 def is_isis3_initialized():
     if not "ISISROOT" in os.environ:
         raise Exception("ISISROOT not set!")
-    if not "ISIS3DATA" in os.environ:
-        raise Exception("ISIS3DATA not set!")
+    if not "ISISDATA" in os.environ:
+        raise Exception("ISISDATA not set!")
     return True
 
 
