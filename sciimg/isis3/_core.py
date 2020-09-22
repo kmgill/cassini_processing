@@ -40,7 +40,7 @@ def printProgress (iteration, total, prefix = '', suffix = '', decimals = 1, bar
 def isis_command(cmd, params):
     proc_cmd = [cmd] + ["%s=%s"%(k, params[k]) for k in params.keys()]
     s = subprocess.check_output(proc_cmd, stderr=subprocess.STDOUT)
-    return s
+    return str(s, "UTF-8")
 
 
 def is_any_not_none(values):
