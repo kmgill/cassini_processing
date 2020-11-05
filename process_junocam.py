@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 import os
 import sys
 import re
@@ -152,18 +152,14 @@ if __name__ == "__main__":
     if is_verbose:
         print("Processing...")
 
-    #label_file = predicted_label_file
-    #img_file = predicted_img_file
-
-
-
-
 
     product_id = info.get_product_id(label_file)
     cube_file_red = "%s_%s_Mosaic.cub" % (product_id, "RED")
 
+    out_file_map_rgb_cub = "%s_Mosaic_RGB.cub" % product_id
     out_file_map_rgb_tiff = "%s_Mosaic_RGB.tif" % product_id
-    if not (skip_existing and os.path.exists(cube_file_red) and os.path.exists(out_file_map_rgb_tiff)):
+
+    if not (skip_existing and os.path.exists(out_file_map_rgb_cub) and os.path.exists(out_file_map_rgb_tiff)):
         out_file_map_rgb_tiff = processing.process_pds_data_file(label_file,
                                                                  is_verbose=is_verbose,
                                                                  skip_if_cub_exists=False,
@@ -181,7 +177,7 @@ if __name__ == "__main__":
     if is_verbose:
         print("Creating Wavefront OBJ file: %s"%obj_file_path)
 
-    model_spec_dict = modeling.create_obj(label_file, cube_file_red, obj_file_path, scalar=scalar, verbose=is_verbose)
+    model_spec_dict = modeling.create_obj(label_file, out_file_map_rgb_cub, obj_file_path, scalar=scalar, verbose=is_verbose)
 
     model_spec_dict["rgb_map_tiff"] = out_file_map_rgb_tiff
     model_spec_dict["obj_file"] = obj_file_path
@@ -189,3 +185,6 @@ if __name__ == "__main__":
     f = open(model_spec_file_path, "w")
     f.write(json.dumps(model_spec_dict, indent=4))
     f.close()
+
+    if os.path.exists("print.prt"):
+        os.unlink("print.prt")
