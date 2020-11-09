@@ -24,7 +24,7 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--red", help="Input Projected JunoCam Image for red (cube formatted)", required=True,
                         type=str)
     parser.add_argument("-k", "--kernelbase", help="Base directory for spice kernels", required=False, type=str,
-                    default=os.environ["ISIS3DATA"])
+                    default=os.environ["ISISDATA"])
     parser.add_argument("-p", "--predicted", help="Utilize predicted kernels", action="store_true")
     parser.add_argument("-o", "--output", help="Output file path", required=True, type=str, default=None)
     parser.add_argument("-s", "--scale", help="Mesh Scalar", required=False, type=float, default=1.0)

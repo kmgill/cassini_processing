@@ -1,3 +1,19 @@
+"""
+    Simplified MSL MastCam debayering and color correction routines using
+    JPEG-compressed public raw images.
+
+    References:
+    Bell, J. F., Godber, A., McNair, S., Caplinger, M. A., Maki, J. N., Lemmon, M. T.,
+    Van Beek, J., Malin, M. C., Wellington, D., Kinch, K. M., & Madsen, M. B. (2017).
+    The Mars Science Laboratory Curiosity rover Mast Camera (Mastcam) instruments:
+    Pre‐flight and in‐flight calibration, validation, and data archiving.
+    Earth and Space Science, 4(7), 396– 452.
+
+    Retrieved from: https://agupubs.onlinelibrary.wiley.com/doi/full/10.1002/2016EA000219
+
+"""
+
+
 import numpy as np
 import cv2
 import sys
@@ -54,15 +70,27 @@ def scale_to_uint16(data, no_lut=False):
     data = np.copy(np.asarray(data, dtype=np.uint16))
     return data
 
+"""
+    Applies white balance coefficients [J. F. Bell, et al]
+"""
+def apply_white_balance(data):
+    WB = np.array([1.2, 1.0, 1.26])
+    for a in range(0, len(data)):
+        for b in range(0, len(data[a])):
+            data[a][b] = data[a][b] * WB
+    return data
+
 def write_image(data, tofile):
     cv2.imwrite(tofile, data)
 
-def process_image(input_image, no_lut=False):
+def process_image(input_image, no_lut=False, white_balance=False):
     print("Processing", input_image)
     data = load_image(input_image)
     if not no_lut == True:
         data = apply_lut(data)
     data = apply_debayer(data)
+    if white_balance is True:
+        data = apply_white_balance(data)
     data = scale_to_uint16(data, no_lut)
     write_image(data, "%s.png"%(input_image[:-4]))
 
@@ -70,10 +98,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--image", help="Input bayer patterned image(s)", required=True, type=str, nargs='+')
     parser.add_argument("-r", "--raw", help="Do not apply lookup table (raw debayered)", action="store_true")
-
+    parser.add_argument("-w", "--white_balance", help="Apply white balance multiplication", action="store_true")
     args = parser.parse_args()
     input_images = args.image
     no_lut = args.raw
+    white_balance = args.white_balance
 
     for input_image in input_images:
-        process_image(input_image, no_lut)
+        process_image(input_image, no_lut, white_balance)

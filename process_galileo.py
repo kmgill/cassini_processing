@@ -5,7 +5,7 @@ import re
 import argparse
 import traceback
 import types
-from sciimg.isis3.galileo_iss import processing
+from sciimg.pipelines.galileo_iss import processing
 
 from sciimg.processes.process import process_data_file
 from sciimg.isis3 import _core
@@ -60,5 +60,3 @@ if __name__ == "__main__":
             traceback.print_exc(file=sys.stdout)
 
     print_if_verbose("Done", is_verbose)
-
-
