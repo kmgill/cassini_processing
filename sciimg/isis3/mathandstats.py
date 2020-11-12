@@ -27,7 +27,8 @@ def get_data_min_max(from_cube, band=-1):
         from_cube = "%s+%s"%(from_cube, band)
 
     out = isis_command("stats", {"from": from_cube})
-
+    out = str(out).replace("\\n", "\n")
+    
     min = 0
     max = 0
 
