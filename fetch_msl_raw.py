@@ -99,11 +99,41 @@ def print_list_header():
 def print_item(item):
     print("%35s %15s %6s %27s %7s %25s"%(item["imageid"], item["instrument"], item["sol"], item["date_taken"], item["is_thumbnail"], item["image_credit"]))
 
+def print_results_summary(results, thumbnails=False):
+    c = 0
+    instruments = {}
+    sols = {}
+    # We count the images directly to weed out the thumbnails unless user requested those...
+    for item in results["items"]:
+        if item["is_thumbnail"] is False or (thumbnails is True and item["is_thumbnail"] is True):
+            c = c + 1
+            if not item["instrument"] in instruments:
+                instruments[item["instrument"]] = 0
+            instruments[item["instrument"]] = instruments[item["instrument"]] + 1
+
+            if not item["sol"] in sols:
+                sols[item["sol"]] = 0
+            sols[item["sol"]] = sols[item["sol"]] + 1
+
+    hr = "  |-----------------------------------------"
+    print("")
+    print(hr)
+    print("  | %d images in results."%c)
+    print(hr)
+    for key in instruments:
+        print("  | %-15s: %8d images"%(key, instruments[key]))
+    print(hr)
+    for key in sols:
+        print("  | Sol %-11d: %8d images"%(key, sols[key]))
+    print(hr)
+    print("")
+
 def print_results_list(results, thumbnails=False):
     print_list_header()
     for item in results["items"]:
         if item["is_thumbnail"] is False or (thumbnails is True and item["is_thumbnail"] is True):
             print_item(item)
+    print_results_summary(results, thumbnails)
 
 
 def fetch_image(item):
@@ -125,6 +155,7 @@ def do_fetching(results, thumbnails=False):
         if item["is_thumbnail"] is False or (thumbnails is True and item["is_thumbnail"] is True):
             print_item(item)
             fetch_image(item)
+    print_results_summary(results, thumbnails)
 
 if __name__ == "__main__":
 
@@ -137,7 +168,7 @@ if __name__ == "__main__":
     parser.add_argument("-l", "--list", help="Don't download, only list results", action="store_true")
     parser.add_argument("-r", "--raw", help="Print raw JSON response", action="store_true")
     parser.add_argument("-t", "--thumbnails", help="Download thumbnails in the results", action="store_true")
-    parser.add_argument("-n", "--num", help="Max number of results", required=False, type=int, default=10)
+    parser.add_argument("-n", "--num", help="Max number of results", required=False, type=int, default=100)
     parser.add_argument("-p", "--page", help="Results page (starts at 1)", required=False, type=int, default=1)
 
     args = parser.parse_args()
