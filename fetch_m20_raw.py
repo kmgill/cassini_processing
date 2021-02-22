@@ -22,6 +22,17 @@ INSTRUMENTS = {
     "HAZ_REAR" : [
         "REAR_HAZCAM_LEFT",
         "REAR_HAZCAM_RIGHT"
+    ],
+    "NAVCAM" : [
+        "NAVCAM_LEFT",
+        "NAVCAM_RIGHT"
+    ],
+    "MASTCAM" : [
+        "MCZ_LEFT",
+        "MCZ_RIGHT"
+    ],
+    "EDL_DDCAM" : [
+        "EDL_DDCAM"
     ]
 }
 
