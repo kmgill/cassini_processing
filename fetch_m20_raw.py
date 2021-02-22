@@ -106,13 +106,13 @@ def print_results_summary(results, thumbnails=False, seqid=None):
                 sols[item["sol"]] = 0
             sols[item["sol"]] = sols[item["sol"]] + 1
 
-    hr = "  |-----------------------------------------"
+    hr = "  |----------------------------------------------"
     print("")
     print(hr)
     print("  | %d images in results."%c)
     print(hr)
     for key in instruments:
-        print("  | %-15s: %8d images"%(key, instruments[key]))
+        print("  | %-25s: %8d images"%(key, instruments[key]))
     print(hr)
     for key in sols:
         print("  | Sol %-11d: %8d images"%(key, sols[key]))
