@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
     Simplified MSL MastCam debayering and color correction routines using
     JPEG-compressed public raw images.
@@ -47,6 +48,10 @@ LUT = np.array((0, 2, 3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16,
 def load_image(infile):
     img = Image.open(infile)
     data = np.copy(np.asarray(img, dtype=np.uint16))
+
+    # Mars2020 raw images can come down as RGB PNGs. Convert that to gray.
+    if len(data.shape) == 3:
+        data = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY)
     return data
 
 def apply_lut(data, ctable=LUT):
@@ -92,7 +97,7 @@ def process_image(input_image, no_lut=False, white_balance=False):
     if white_balance is True:
         data = apply_white_balance(data)
     data = scale_to_uint16(data, no_lut)
-    write_image(data, "%s.png"%(input_image[:-4]))
+    write_image(data, "%s-debayer.png"%(input_image[:-4]))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
