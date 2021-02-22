@@ -31,8 +31,11 @@ INSTRUMENTS = {
         "MCZ_LEFT",
         "MCZ_RIGHT"
     ],
-    "EDL_DDCAM" : [
-        "EDL_DDCAM"
+    "EDLCAM" : [
+        "EDL_DDCAM",
+        "EDL_PUCAM1",
+        "EDL_PUCAM2",
+        "EDL_RUCAM"
     ]
 }
 
