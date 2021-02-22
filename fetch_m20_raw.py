@@ -20,10 +20,8 @@ INSTRUMENTS = {
         "FRONT_HAZCAM_RIGHT_B",
     ],
     "HAZ_REAR" : [
-        "REAR_HAZCAM_LEFT_A",
-        "REAR_HAZCAM_LEFT_B",
-        "REAR_HAZCAM_RIGHT_A",
-        "REAR_HAZCAM_RIGHT_B",
+        "REAR_HAZCAM_LEFT",
+        "REAR_HAZCAM_RIGHT"
     ]
 }
 
