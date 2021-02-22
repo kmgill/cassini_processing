@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-    Fetches a set of MSL public raw images based on a simple set of search criteria.
+    Fetches a set of Mars2020 public raw images based on a simple set of search criteria.
 
 """
 
@@ -14,37 +14,29 @@ import ast
 
 INSTRUMENTS = {
     "HAZ_FRONT" : [
-        "FHAZ_RIGHT_A",
-        "FHAZ_LEFT_A",
-        "FHAZ_RIGHT_B",
-        "FHAZ_LEFT_B"
+        "FRONT_HAZCAM_LEFT_A",
+        "FRONT_HAZCAM_LEFT_B",
+        "FRONT_HAZCAM_RIGHT_A",
+        "FRONT_HAZCAM_RIGHT_B",
     ],
     "HAZ_REAR" : [
-        "RHAZ_RIGHT_A",
-        "RHAZ_LEFT_A",
-        "RHAZ_RIGHT_B",
-        "RHAZ_LEFT_B"
+        "REAR_HAZCAM_LEFT",
+        "REAR_HAZCAM_RIGHT"
     ],
-    "NAV_LEFT" : [
-        "NAV_LEFT_A",
-        "NAV_LEFT_B"
-    ],
-    "NAV_RIGHT" : [
-        "NAV_RIGHT_A",
-        "NAV_RIGHT_B"
-    ],
-    "CHEMCAM" : [
-        "CHEMCAM_RMI"
-    ],
-    "MARDI" : [
-        "MARDI"
-    ],
-    "MAHLI" : [
-        "MAHLI"
+    "NAVCAM" : [
+        "NAVCAM_LEFT",
+        "NAVCAM_RIGHT"
     ],
     "MASTCAM" : [
-        "MAST_LEFT",
-        "MAST_RIGHT"
+        "MCZ_LEFT",
+        "MCZ_RIGHT"
+    ],
+    "EDLCAM" : [
+        "EDL_DDCAM",
+        "EDL_PUCAM1",
+        "EDL_PUCAM2",
+        "EDL_RUCAM",
+        "EDL_RDCAM"
     ]
 }
 
@@ -53,10 +45,12 @@ INSTRUMENTS = {
 def request(cameras=None, minsol=None, maxsol=None, num=10, page=1):
 
     params = {
-        "order" : "sol desc,instrument_sort asc,sample_type_sort asc, date_taken desc",
-        "per_page": num,
+        "feed": "raw_images",
+        "category": "mars2020",
+        "feedtype": "json",
+        "num": num,
         "page": page-1,
-        "condition_1": "msl:mission"
+        "order": "sol desc"
     }
 
 
@@ -76,7 +70,7 @@ def request(cameras=None, minsol=None, maxsol=None, num=10, page=1):
     if maxsol is not None:
         params["condition_3"] = "%d:sol:lte"%maxsol
 
-    r = requests.get("https://mars.nasa.gov/api/v1/raw_image_items/", params=params, allow_redirects=True)
+    r = requests.get("https://mars.nasa.gov/rss/api/", params=params, allow_redirects=True)
 
     if not r.status_code == 200:
         print("Error fetching search results. HTTP status code", r.status_code)
@@ -95,45 +89,45 @@ def build_choices_list():
     return choices
 
 def print_list_header():
-    print("%37s %15s %6s %27s %6s %6s %6s %6s %7s"%("ID", "Instrument", "Sol", "Image Date", "Site", "Drive", "Width", "Height", "Thumb"))
+    print("%54s %25s %6s %27s %27s %6s %6s %6s %6s %7s"%("ID", "Instrument", "Sol", "Image Date (UTC)", "Image Date (Mars)", "Site", "Drive", "Width", "Height", "Thumb"))
 
 def print_item(item):
-    #site, drive, subframe_rect "(1,1,1024,1024)"
-    subframe_rect = ast.literal_eval(item["subframe_rect"])
-    print("%37s %15s %6s %27s %6s %6s %6s %6s %7s"%(item["imageid"],
-                                                    item["instrument"],
+    subframe_rect = ast.literal_eval(item["extended"]["dimension"])
+    print("%54s %25s %6s %27s %27s %6s %6s %6s %6s %7s"%(item["imageid"],
+                                                    item["camera"]["instrument"],
                                                     item["sol"],
-                                                    item["date_taken"],
+                                                    item["date_taken_utc"],
+                                                    item["date_taken_mars"],
                                                     item["site"],
                                                     item["drive"],
-                                                    subframe_rect[2],
-                                                    subframe_rect[3],
-                                                    item["is_thumbnail"]))
+                                                    subframe_rect[0],
+                                                    subframe_rect[1],
+                                                    item["sample_type"] == "Thumbnail"))
 
 def print_results_summary(results, thumbnails=False, seqid=None):
     c = 0
     instruments = {}
     sols = {}
     # We count the images directly to weed out the thumbnails unless user requested those...
-    for item in results["items"]:
-        if (item["is_thumbnail"] is False or (thumbnails is True and item["is_thumbnail"] is True)) and \
+    for item in results["images"]:
+        if (item["sample_type"] != "Thumbnail" or (thumbnails is True and item["sample_type"] == "Thumbnail")) and \
             (seqid is None or (seqid in item["imageid"])):
             c = c + 1
-            if not item["instrument"] in instruments:
-                instruments[item["instrument"]] = 0
-            instruments[item["instrument"]] = instruments[item["instrument"]] + 1
+            if not item["camera"]["instrument"] in instruments:
+                instruments[item["camera"]["instrument"]] = 0
+            instruments[item["camera"]["instrument"]] = instruments[item["camera"]["instrument"]] + 1
 
             if not item["sol"] in sols:
                 sols[item["sol"]] = 0
             sols[item["sol"]] = sols[item["sol"]] + 1
 
-    hr = "  |-----------------------------------------"
+    hr = "  |----------------------------------------------"
     print("")
     print(hr)
     print("  | %d images in results."%c)
     print(hr)
     for key in instruments:
-        print("  | %-15s: %8d images"%(key, instruments[key]))
+        print("  | %-25s: %8d images"%(key, instruments[key]))
     print(hr)
     for key in sols:
         print("  | Sol %-11d: %8d images"%(key, sols[key]))
@@ -142,16 +136,16 @@ def print_results_summary(results, thumbnails=False, seqid=None):
 
 def print_results_list(results, thumbnails=False, seqid=None):
     print_list_header()
-    for item in results["items"]:
-        if (item["is_thumbnail"] is False or (thumbnails is True and item["is_thumbnail"] is True)) and \
+    for item in results["images"]:
+        if (item["sample_type"] != "Thumbnail" or (thumbnails is True and item["sample_type"] == "Thumbnail")) and \
             (seqid is None or (seqid in item["imageid"])):
             print_item(item)
     print_results_summary(results, thumbnails, seqid)
 
 
 def fetch_image(item):
-    image_url = item["url"]
-    out_file = "%s.jpg"%item["imageid"]
+    image_url = item["image_files"]["full_res"]
+    out_file = "%s.png"%item["imageid"]
 
     r = requests.get(image_url)
 
@@ -164,8 +158,8 @@ def fetch_image(item):
 
 def do_fetching(results, thumbnails=False, seqid=None):
     print_list_header()
-    for item in results["items"]:
-        if (item["is_thumbnail"] is False or (thumbnails is True and item["is_thumbnail"] is True)) and \
+    for item in results["images"]:
+        if (item["sample_type"] != "Thumbnail" or (thumbnails is True and item["sample_type"] == "Thumbnail")) and \
             (seqid is None or (seqid in item["imageid"])):
             print_item(item)
             fetch_image(item)
