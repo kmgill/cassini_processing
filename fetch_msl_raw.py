@@ -9,7 +9,7 @@ import sys
 import argparse
 import json
 from io import BytesIO
-
+import ast
 
 INSTRUMENTS = {
     "HAZ_FRONT" : [
@@ -94,18 +94,29 @@ def build_choices_list():
     return choices
 
 def print_list_header():
-    print("%35s %15s %6s %27s %7s %25s"%("ID", "Instrument", "Sol", "Image Date", "Thumb", "Credit"))
+    print("%37s %15s %6s %27s %6s %6s %6s %6s %7s"%("ID", "Instrument", "Sol", "Image Date", "Site", "Drive", "Width", "Height", "Thumb"))
 
 def print_item(item):
-    print("%35s %15s %6s %27s %7s %25s"%(item["imageid"], item["instrument"], item["sol"], item["date_taken"], item["is_thumbnail"], item["image_credit"]))
+    #site, drive, subframe_rect "(1,1,1024,1024)"
+    subframe_rect = ast.literal_eval(item["subframe_rect"])
+    print("%37s %15s %6s %27s %6s %6s %6s %6s %7s"%(item["imageid"],
+                                                    item["instrument"],
+                                                    item["sol"],
+                                                    item["date_taken"],
+                                                    item["site"],
+                                                    item["drive"],
+                                                    subframe_rect[2],
+                                                    subframe_rect[3],
+                                                    item["is_thumbnail"]))
 
-def print_results_summary(results, thumbnails=False):
+def print_results_summary(results, thumbnails=False, seqid=None):
     c = 0
     instruments = {}
     sols = {}
     # We count the images directly to weed out the thumbnails unless user requested those...
     for item in results["items"]:
-        if item["is_thumbnail"] is False or (thumbnails is True and item["is_thumbnail"] is True):
+        if (item["is_thumbnail"] is False or (thumbnails is True and item["is_thumbnail"] is True)) and \
+            (seqid is None or (seqid in item["imageid"])):
             c = c + 1
             if not item["instrument"] in instruments:
                 instruments[item["instrument"]] = 0
@@ -128,12 +139,13 @@ def print_results_summary(results, thumbnails=False):
     print(hr)
     print("")
 
-def print_results_list(results, thumbnails=False):
+def print_results_list(results, thumbnails=False, seqid=None):
     print_list_header()
     for item in results["items"]:
-        if item["is_thumbnail"] is False or (thumbnails is True and item["is_thumbnail"] is True):
+        if (item["is_thumbnail"] is False or (thumbnails is True and item["is_thumbnail"] is True)) and \
+            (seqid is None or (seqid in item["imageid"])):
             print_item(item)
-    print_results_summary(results, thumbnails)
+    print_results_summary(results, thumbnails, seqid)
 
 
 def fetch_image(item):
@@ -149,13 +161,14 @@ def fetch_image(item):
             fp.write(r.content)
 
 
-def do_fetching(results, thumbnails=False):
+def do_fetching(results, thumbnails=False, seqid=None):
     print_list_header()
     for item in results["items"]:
-        if item["is_thumbnail"] is False or (thumbnails is True and item["is_thumbnail"] is True):
+        if (item["is_thumbnail"] is False or (thumbnails is True and item["is_thumbnail"] is True)) and \
+            (seqid is None or (seqid in item["imageid"])):
             print_item(item)
             fetch_image(item)
-    print_results_summary(results, thumbnails)
+    print_results_summary(results, thumbnails, seqid)
 
 if __name__ == "__main__":
 
@@ -170,6 +183,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--thumbnails", help="Download thumbnails in the results", action="store_true")
     parser.add_argument("-n", "--num", help="Max number of results", required=False, type=int, default=100)
     parser.add_argument("-p", "--page", help="Results page (starts at 1)", required=False, type=int, default=1)
+    parser.add_argument("-S", "--seqid", help="Specific sequence id", required=False, type=str, default=None)
 
     args = parser.parse_args()
     camera = args.camera
@@ -181,6 +195,11 @@ if __name__ == "__main__":
     page = args.page
     raw = args.raw
     thumbnails = args.thumbnails
+
+    # Looks like we can't filter by seqid on the web query, even as a
+    # subscript of imageid. Until we find a way, we'll have to do
+    # the limiting in the print/download methods
+    seqid = args.seqid
 
     if sol is not None:
         assert minsol is None and maxsol is None
@@ -198,6 +217,6 @@ if __name__ == "__main__":
     if raw is True:
         print(json.dumps(results, indent=4))
     elif onlylist is True:
-        print_results_list(results, thumbnails)
+        print_results_list(results, thumbnails, seqid)
     else:
-        do_fetching(results, thumbnails)
+        do_fetching(results, thumbnails, seqid)
