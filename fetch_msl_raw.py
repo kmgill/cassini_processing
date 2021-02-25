@@ -99,7 +99,10 @@ def print_list_header():
 
 def print_item(item):
     #site, drive, subframe_rect "(1,1,1024,1024)"
-    subframe_rect = ast.literal_eval(item["subframe_rect"])
+    if "subframe_rect" in item and item["subframe_rect"] is not None:
+        subframe_rect = ast.literal_eval(item["subframe_rect"])
+    else:
+        subframe_rect = (None, None, None, None)
     print("%37s %15s %6s %27s %6s %6s %6s %6s %7s"%(item["imageid"],
                                                     item["instrument"],
                                                     item["sol"],
