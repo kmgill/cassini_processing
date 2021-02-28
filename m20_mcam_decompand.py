@@ -140,8 +140,7 @@ def process_image(input_image, rad_corr_mult_red=DEFAULT_RAD_MULTIPLE_RED, rad_c
         inpaint_mask_base_name = INPAINT_MASK_LEFT_PATH
 
     inpaint_mask_path = "%s/%s"%(os.path.dirname(__file__), inpaint_mask_base_name)
-    print(inpaint_mask_path)
-
+    
     data = load_image(input_image)
     data = apply_inpaint_fix(data, inpaint_mask_path=inpaint_mask_path)
     data = apply_lut(data)
