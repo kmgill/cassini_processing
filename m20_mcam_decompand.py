@@ -30,6 +30,12 @@ DEFAULT_RAD_MULTIPLE_RED = 1.0 #1.0797812675266405
 DEFAULT_RAD_MULTIPLE_GREEN = 1.0
 DEFAULT_RAD_MULTIPLE_BLUE = 1.0 #0.932978126752664
 
+INPAINT_MASK_RIGHT_PATH = "cal/M20_MCZ_RIGHT_INPAINT_MASK_V1.png"
+INPAINT_MASK_LEFT_PATH = "cal/M20_MCZ_LEFT_INPAINT_MASK_V1.png"
+
+LEFT_EYE = "L"
+RIGHT_EYE = "R"
+
 # 8bit to 11bit DN inverse lookup table (Table 0), Bell, et al 2017
 LUT = np.array((0, 2, 3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16,
                 18, 19, 20, 22, 24, 25, 27, 29, 31, 33, 35, 37, 39, 41,
@@ -60,8 +66,8 @@ be BGR arranged, so they are swapped to standard RGB.
 """
 def load_image(infile):
     img = Image.open(infile)
-    data = np.copy(np.asarray(img, dtype=np.uint16))
-    data = cv2.cvtColor(data, cv2.COLOR_BGR2RGB)
+    img = np.copy(np.asarray(img, dtype=np.uint8))
+    data = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     return data
 
 """
@@ -94,8 +100,26 @@ def scale_to_uint16(data):
     data = np.copy(np.asarray(data, dtype=np.uint16))
     return data
 
+def load_inpaint_mask(inpaint_mask_path):
+    mask = cv2.imread(inpaint_mask_path, 0)
+    mask = np.copy(np.asarray(mask, dtype=np.uint8))
+    return mask
+
+"""
+Applies OpenCV inpaint using a left or right eye mask image. Similar to using
+content-aware fill in Photoshop.
+"""
+def apply_inpaint_fix(data, inpaint_mask_path=INPAINT_MASK_RIGHT_PATH):
+    mask = load_inpaint_mask(inpaint_mask_path)
+    dst = cv2.inpaint(data, mask, 3, cv2.INPAINT_TELEA)
+    return dst
+
 def write_image(data, tofile):
     cv2.imwrite(tofile, data)
+
+def get_left_or_right(input_image):
+    bn = os.path.basename(input_image)
+    return bn[1]
 
 """
 Runs the image conversion routines.
@@ -107,9 +131,22 @@ def process_image(input_image, rad_corr_mult_red=DEFAULT_RAD_MULTIPLE_RED, rad_c
         print("ERROR: Image not found:", input_image)
         return
 
+    eye_code = get_left_or_right(input_image)
+
+    inpaint_mask_base_name = None
+    if eye_code == RIGHT_EYE:
+        inpaint_mask_base_name = INPAINT_MASK_RIGHT_PATH
+    elif eye_code == LEFT_EYE:
+        inpaint_mask_base_name = INPAINT_MASK_LEFT_PATH
+
+    inpaint_mask_path = "%s/%s"%(os.path.dirname(__file__), inpaint_mask_base_name)
+    print(inpaint_mask_path)
+
     data = load_image(input_image)
+    data = apply_inpaint_fix(data, inpaint_mask_path=inpaint_mask_path)
     data = apply_lut(data)
     data = apply_rad_multiple(data, rad_corr_mult_red, rad_corr_mult_green, rad_corr_mult_blue)
+
 
     # Images will be saved as 16bit PNG files, so need to be scaled to that
     # color range while preserving proportional luminosity.
@@ -117,6 +154,7 @@ def process_image(input_image, rad_corr_mult_red=DEFAULT_RAD_MULTIPLE_RED, rad_c
     write_image(data, "%s-decompanded.png"%(input_image[:-4]))
 
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--image", help="Input bayer patterned image(s)", required=True, type=str, nargs='+')
     parser.add_argument("-R", "--red", help="Radiance correction multiple, red channel", type=float, default=DEFAULT_RAD_MULTIPLE_RED)
