@@ -6,6 +6,7 @@ from sciimg.pipelines.junocam.utils import json_to_lbl
 from PIL import Image
 import numpy as np
 from sciimg.pipelines.junocam.fillpixels import fillpixels
+from sciimg.pipelines.junocam.inpaint_fill import process_inpaint_fill
 from sciimg.pipelines.junocam.decompanding import decompand
 from sciimg.pipelines.junocam.decompanding import SQROOT
 from sciimg.pipelines.junocam.flatfield import apply_flat
@@ -40,7 +41,7 @@ BAND_HEIGHT = 128
 
 def open_image(img_path):
     img = Image.open(img_path)
-    data = np.copy(np.asarray(img, dtype=np.float32))
+    data = np.copy(np.asarray(img, dtype=np.uint8))
     img.close()
 
     return data
@@ -103,7 +104,10 @@ def png_to_img(img_file, metadata, fill_dead_pixels=True, do_decompand=True, do_
     if fill_dead_pixels:
         if verbose:
             print("User requested to fill dead pixels. So that's what I'll do...")
-        fillpixels(image_data, verbose=verbose)
+        process_inpaint_fill(image_data, verbose=verbose)
+        ##fillpixels(image_data, verbose=verbose)
+
+    image_data = np.copy(np.asarray(image_data, dtype=np.float32))
 
     if do_decompand:
         if verbose:
@@ -148,4 +152,3 @@ def png_to_img(img_file, metadata, fill_dead_pixels=True, do_decompand=True, do_
     img_file = create_pds(output_base, img_file, lines=image_data.shape[0], samples=image_data.shape[1])
 
     return label_file, img_file, max_value
-
