@@ -4,13 +4,13 @@ from PIL import Image
 from sciimg.pipelines.junocam.decompanding import decompand
 
 """
-Note: This stuff isn't even close to correct and reflects some messing around. Don't use it. 
+Note: This stuff isn't even close to correct and reflects some messing around. Don't use it.
 
 """
 
-DARK_IMG_PATH_RED = os.path.join(os.path.dirname(__file__), 'juno-dark-red.tif')
-DARK_IMG_PATH_GREEN = os.path.join(os.path.dirname(__file__), 'juno-dark-green.tif')
-DARK_IMG_PATH_BLUE = os.path.join(os.path.dirname(__file__), 'juno-dark-blue.tif')
+DARK_IMG_PATH_RED = os.path.join(os.path.dirname(__file__), 'junocam_dark_pj28_v1_red.tif')
+DARK_IMG_PATH_GREEN = os.path.join(os.path.dirname(__file__), 'junocam_dark_pj28_v1_green.tif')
+DARK_IMG_PATH_BLUE = os.path.join(os.path.dirname(__file__), 'junocam_dark_pj28_v1_blue.tif')
 
 FLAT_IMG_PATH_RED = os.path.join(os.path.dirname(__file__), 'junocam_rgb_flatfield_v3_2.png')
 FLAT_IMG_PATH_GREEN = os.path.join(os.path.dirname(__file__), 'junocam_rgb_flatfield_v3_1.png')
@@ -72,20 +72,25 @@ def apply_flat_for_band(data, band_num, band_id, apply_filling=False, band_heigh
 
     #F = decompand(F, normalize=False, verbose=False)
 
-    #D = open_dark_field_image(band_id, apply_filling)
-
+    D = open_dark_field_image(band_id, apply_filling)
+    D = D / 65535.0
     #print(F.min(), F.max())
 
     R = data[top:bottom]
 
     #m = F.mean()
-    m = F#(F - D).mean()
+    #m = F#(F - D).mean()
     #D = np.zeros(R.shape)
     #G = m / (F - D)
     #C = (R - D) * G
     #print(G.min(), G.max(), F.min(), F.max(), D.min(), D.max(), R.min(), R.max())
-    C = R / F
-    print(R.min(), R.max(), F.min(), F.max(), C.min(), C.max())
+
+    m = (F + D) / 2.0
+
+    C = ((R - D) * m) / (F - D)
+
+    #C = R / F
+    print(R.min(), R.max(), F.min(), F.max(), D.min(), D.max(), C.min(), C.max())
     data[top:bottom] = C
 
 

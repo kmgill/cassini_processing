@@ -124,7 +124,7 @@ def get_left_or_right(input_image):
 """
 Runs the image conversion routines.
 """
-def process_image(input_image, rad_corr_mult_red=DEFAULT_RAD_MULTIPLE_RED, rad_corr_mult_green=DEFAULT_RAD_MULTIPLE_GREEN, rad_corr_mult_blue=DEFAULT_RAD_MULTIPLE_BLUE):
+def process_image(input_image, rad_corr_mult_red=DEFAULT_RAD_MULTIPLE_RED, rad_corr_mult_green=DEFAULT_RAD_MULTIPLE_GREEN, rad_corr_mult_blue=DEFAULT_RAD_MULTIPLE_BLUE, border_crop=0):
     print("Processing", input_image)
 
     if not os.path.exists(input_image):
@@ -140,12 +140,14 @@ def process_image(input_image, rad_corr_mult_red=DEFAULT_RAD_MULTIPLE_RED, rad_c
         inpaint_mask_base_name = INPAINT_MASK_LEFT_PATH
 
     inpaint_mask_path = "%s/%s"%(os.path.dirname(__file__), inpaint_mask_base_name)
-    
+
     data = load_image(input_image)
     data = apply_inpaint_fix(data, inpaint_mask_path=inpaint_mask_path)
     data = apply_lut(data)
     data = apply_rad_multiple(data, rad_corr_mult_red, rad_corr_mult_green, rad_corr_mult_blue)
 
+    if border_crop > 0:
+        data = data[border_crop:data.shape[0]-(border_crop*2),border_crop:data.shape[1]-(border_crop*2)]
 
     # Images will be saved as 16bit PNG files, so need to be scaled to that
     # color range while preserving proportional luminosity.
@@ -159,12 +161,14 @@ if __name__ == "__main__":
     parser.add_argument("-R", "--red", help="Radiance correction multiple, red channel", type=float, default=DEFAULT_RAD_MULTIPLE_RED)
     parser.add_argument("-G", "--green", help="Radiance correction multiple, green channel", type=float, default=DEFAULT_RAD_MULTIPLE_GREEN)
     parser.add_argument("-B", "--blue", help="Radiance correction multiple, blue channel", type=float, default=DEFAULT_RAD_MULTIPLE_BLUE)
+    parser.add_argument("-c", "--crop", help="Crop borders (pixels)", type=int, default=0)
 
     args = parser.parse_args()
     input_images = args.image
     rad_corr_mult_red = args.red
     rad_corr_mult_green = args.green
     rad_corr_mult_blue = args.blue
+    border_crop = args.crop
 
     for input_image in input_images:
-        process_image(input_image, rad_corr_mult_red, rad_corr_mult_green, rad_corr_mult_blue)
+        process_image(input_image, rad_corr_mult_red, rad_corr_mult_green, rad_corr_mult_blue, border_crop)
