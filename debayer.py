@@ -120,12 +120,19 @@ def apply_white_balance(data):
 def write_image(data, tofile):
     cv2.imwrite(tofile, data)
 
-def process_image(input_image, no_lut=False, white_balance=False, color_noise_reduction_amount=0):
+def crop_image(data, crop=0):
+    if crop > 0:
+        data = data[crop:data.shape[0]-(crop*2),crop:data.shape[1]-(crop*2)]
+    return data
+
+def process_image(input_image, no_lut=False, white_balance=False, color_noise_reduction_amount=0, crop=0):
     print("Processing", input_image)
     data = load_image(input_image)
     if not no_lut == True:
         data = apply_lut(data)
     data = apply_debayer(data)
+    if crop > 0:
+        data = crop_image(data, crop)
     if color_noise_reduction_amount > 0:
         data = color_noise_reduction(data, color_noise_reduction_amount)
     if white_balance is True:
@@ -139,15 +146,17 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--raw", help="Do not apply lookup table (raw debayered)", action="store_true")
     parser.add_argument("-w", "--white_balance", help="Apply white balance multiplication", action="store_true")
     parser.add_argument("-c", "--color_noise_reduction", help="Apply color noise reduction by amount (0 for none)", default=0, type=int)
+    parser.add_argument("-C", "--crop", help="Crop borders (pixels)", type=int, default=0)
     args = parser.parse_args()
     input_images = args.image
     no_lut = args.raw
     white_balance = args.white_balance
     color_noise_reduction_amount = args.color_noise_reduction
+    crop = args.crop
 
     if color_noise_reduction_amount < 0 or (color_noise_reduction_amount > 0 and color_noise_reduction_amount % 2 == 0):
         print("Color noise reduction amount must be an positive odd number")
         sys.exit(1)
 
     for input_image in input_images:
-        process_image(input_image, no_lut, white_balance, color_noise_reduction_amount)
+        process_image(input_image, no_lut, white_balance, color_noise_reduction_amount, crop)
