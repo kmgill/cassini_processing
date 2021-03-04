@@ -20,6 +20,8 @@ import cv2
 import sys
 from PIL import Image
 import argparse
+import colour_demosaicing
+import sys
 
 LUT = np.array((0, 2, 3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16,
                 18, 19, 20, 22, 24, 25, 27, 29, 31, 33, 35, 37, 39, 41,
@@ -56,9 +58,39 @@ def load_image(infile):
 
 def apply_lut(data, ctable=LUT):
     ctable = LUT
-    for a in range(0, len(data)):
-        for b in range(0, len(data[a])):
-            data[a][b] = ctable[int(round(data[a][b]))]
+    lut_conv = lambda t: ctable[int(t)]
+    lut_conv_func = np.vectorize(lut_conv)
+    data = lut_conv_func(data)
+    data = np.copy(np.asarray(data, dtype=np.uint16))
+    return data
+
+def color_noise_reduction(data, amount=15):
+
+    # cvtColor will expect uint8 or float32. Getting weird results with
+    # float32 so for now we'll scale to uint8 with a cost of some color depth.
+    orig_max = data.max()
+    data = data / orig_max * 255.0
+
+    lab = cv2.cvtColor(np.copy(np.asarray(data, dtype=np.uint8)), cv2.COLOR_RGB2LAB)
+    L = np.array(cv2.split(lab)[0])
+    a = np.array(cv2.split(lab)[1])
+    b = np.array(cv2.split(lab)[2])
+
+    a = cv2.GaussianBlur(a, (amount, amount), 0)
+    b = cv2.GaussianBlur(b, (amount, amount), 0)
+
+    data = np.zeros(data.shape, dtype=np.uint8)
+
+    data[::,:,0] = L
+    data[::,:,1] = a
+    data[::,:,2] = b
+
+    data = cv2.cvtColor(data, cv2.COLOR_LAB2RGB)
+
+    # Need to scale it back to the original uint16
+    data = data / 255.0 * orig_max
+    data = np.copy(np.asarray(data, dtype=np.uint16))
+
     return data
 
 def apply_debayer(data):
@@ -88,12 +120,14 @@ def apply_white_balance(data):
 def write_image(data, tofile):
     cv2.imwrite(tofile, data)
 
-def process_image(input_image, no_lut=False, white_balance=False):
+def process_image(input_image, no_lut=False, white_balance=False, color_noise_reduction_amount=0):
     print("Processing", input_image)
     data = load_image(input_image)
     if not no_lut == True:
         data = apply_lut(data)
     data = apply_debayer(data)
+    if color_noise_reduction_amount > 0:
+        data = color_noise_reduction(data, color_noise_reduction_amount)
     if white_balance is True:
         data = apply_white_balance(data)
     data = scale_to_uint16(data, no_lut)
@@ -104,10 +138,16 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--image", help="Input bayer patterned image(s)", required=True, type=str, nargs='+')
     parser.add_argument("-r", "--raw", help="Do not apply lookup table (raw debayered)", action="store_true")
     parser.add_argument("-w", "--white_balance", help="Apply white balance multiplication", action="store_true")
+    parser.add_argument("-c", "--color_noise_reduction", help="Apply color noise reduction by amount (0 for none)", default=0, type=int)
     args = parser.parse_args()
     input_images = args.image
     no_lut = args.raw
     white_balance = args.white_balance
+    color_noise_reduction_amount = args.color_noise_reduction
+
+    if color_noise_reduction_amount < 0 or (color_noise_reduction_amount > 0 and color_noise_reduction_amount % 2 == 0):
+        print("Color noise reduction amount must be an positive odd number")
+        sys.exit(1)
 
     for input_image in input_images:
-        process_image(input_image, no_lut, white_balance)
+        process_image(input_image, no_lut, white_balance, color_noise_reduction_amount)
