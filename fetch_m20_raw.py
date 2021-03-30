@@ -36,7 +36,8 @@ INSTRUMENTS = {
         "EDL_PUCAM1",
         "EDL_PUCAM2",
         "EDL_RUCAM",
-        "EDL_RDCAM"
+        "EDL_RDCAM",
+        "LCAM"
     ]
 }
 
