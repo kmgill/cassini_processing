@@ -114,8 +114,9 @@ def apply_flat_field(data, mask_file_path=MAHLI_FLAT_PATH):
     a = np.stack((r, g, b), axis=-1)
     return a
 
-def scale_to_uint16(data):
+def scale_to_uint16(data, rad_corr_mult_red, rad_corr_mult_green, rad_corr_mult_blue):
     prescale_max = 2033.0
+    data[data>prescale_max] = prescale_max
     data = data / prescale_max
     data = data * 65535.0
     data = np.around(data)
@@ -167,7 +168,7 @@ def process_image(image_path, rad_corr_mult_red, rad_corr_mult_green, rad_corr_m
     data = apply_flat_field(data)
     data = apply_rad_multiple(data, rad_corr_mult_red, rad_corr_mult_green, rad_corr_mult_blue)
 
-    data = scale_to_uint16(data)
+    data = scale_to_uint16(data, rad_corr_mult_red, rad_corr_mult_green, rad_corr_mult_blue)
 
     # rjcal == Raw JPEG Calibrated. Need to differentiate this from
     # a fully calibrated image (RDR) derived from the full
