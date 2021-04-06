@@ -41,6 +41,9 @@ INSTRUMENTS = {
         "EDL_RUCAM",
         "EDL_RDCAM",
         "LCAM"
+    ],
+    "WATSON" : [
+        "SHERLOC_WATSON"
     ]
 }
 
