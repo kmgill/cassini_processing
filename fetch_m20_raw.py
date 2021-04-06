@@ -19,6 +19,9 @@ INSTRUMENTS = {
         "FRONT_HAZCAM_RIGHT_A",
         "FRONT_HAZCAM_RIGHT_B",
     ],
+    "SUPERCAM" : [
+        "SUPERCAM_RMI"
+    ],
     "HAZ_REAR" : [
         "REAR_HAZCAM_LEFT",
         "REAR_HAZCAM_RIGHT"
