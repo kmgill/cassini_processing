@@ -49,7 +49,7 @@ INSTRUMENTS = {
 
 
 
-def request(cameras=None, minsol=None, maxsol=None, num=10, page=1):
+def request(cameras=None, minsol=None, maxsol=None, num=10, page=1, only_movie=False, thumbnails=False):
 
     params = {
         "feed": "raw_images",
@@ -60,6 +60,12 @@ def request(cameras=None, minsol=None, maxsol=None, num=10, page=1):
         "order": "sol desc"
     }
 
+    if thumbnails is True:
+        params["extended"] = "sample_type::thumbnail,"
+    elif only_movie is True:
+        params["extended"] = "sample_type::full,product_id::ecv,"
+    else:
+        params["extended"] = "sample_type::full,"
 
     if cameras is not None:
         usecams = []
@@ -186,6 +192,7 @@ if __name__ == "__main__":
     parser.add_argument("-n", "--num", help="Max number of results", required=False, type=int, default=100)
     parser.add_argument("-p", "--page", help="Results page (starts at 1)", required=False, type=int, default=1)
     parser.add_argument("-S", "--seqid", help="Specific sequence id", required=False, type=str, default=None)
+    parser.add_argument("-e", "--movie", help="Only movie frames", action="store_true")
 
     args = parser.parse_args()
     camera = args.camera
@@ -197,6 +204,7 @@ if __name__ == "__main__":
     page = args.page
     raw = args.raw
     thumbnails = args.thumbnails
+    only_movie = args.movie
 
     # Looks like we can't filter by seqid on the web query, even as a
     # subscript of imageid. Until we find a way, we'll have to do
@@ -215,7 +223,7 @@ if __name__ == "__main__":
     elif onlylist is True:
         assert raw is False
 
-    results = request(camera, minsol, maxsol, num, page)
+    results = request(camera, minsol, maxsol, num, page, only_movie, thumbnails)
     if raw is True:
         print(json.dumps(results, indent=4))
     elif onlylist is True:
