@@ -19,6 +19,10 @@ INSTRUMENTS = {
         "FRONT_HAZCAM_RIGHT_A",
         "FRONT_HAZCAM_RIGHT_B",
     ],
+    "HELI" : [
+        "HELI_NAV",
+        "HELI_RTE"
+    ],
     "SUPERCAM" : [
         "SUPERCAM_RMI"
     ],
@@ -53,7 +57,8 @@ def request(cameras=None, minsol=None, maxsol=None, num=10, page=1, only_movie=F
 
     params = {
         "feed": "raw_images",
-        "category": "mars2020",
+        "category": "mars2020,ingenuity",
+        "ver": "1.2",
         "feedtype": "json",
         "num": num,
         "page": page-1,
