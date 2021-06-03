@@ -40,7 +40,8 @@ def calc_surface_normal(v0, v1, v2):
     return n
 
 
-def generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=128, lon_slices=128):
+def generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=128, lon_slices=128, target_id=599):
+
     lat_res = (max_lat - min_lat) / float(lat_slices)
     lon_res = (max_lon - min_lon) / float(lon_slices)
 
@@ -48,6 +49,7 @@ def generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=128, lon_slic
     uv_list = []
     norm_list = []
     face_list = []
+
 
     for y in range(0, int(lat_slices + 1)):
         for x in range(0, int(lon_slices)):
@@ -57,7 +59,7 @@ def generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=128, lon_slic
             mx_lat = math.radians(mx_lat)
             mn_lon = math.radians(mn_lon)
 
-            ul_vector = np.array(spice.srfrec(599, mn_lon, mx_lat))
+            ul_vector = np.array(spice.srfrec(target_id, mn_lon, mx_lat))
 
             ul_uv = (x / float(lon_slices), 1.0 - y / float(lat_slices))
 
@@ -66,18 +68,18 @@ def generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=128, lon_slic
             vertex_list.append(ul_vector)
             uv_list.append(ul_uv)
             norm_list.append(norm)
-    for y in range(0, int(lat_slices)):
-        for x in range(0, int(lon_slices - 1)):
-            ul_i = int(x + (y * lon_slices))
-            ur_i = int(ul_i + 1)
-            ll_i = int(ul_i + lon_slices)
-            lr_i = int(ll_i + 1)
 
-            f_ul = (ul_i, ul_i, ul_i)
-            f_ll = (ll_i, ll_i, ll_i)
-            f_lr = (lr_i, lr_i, lr_i)
-            f_ur = (ur_i, ur_i, ur_i)
-            face_list.append((f_ul, f_ll, f_lr, f_ur))
+            if y < lat_slices and x < lon_slices - 1:
+                ul_i = int(x + (y * lon_slices))
+                ur_i = int(ul_i + 1)
+                ll_i = int(ul_i + lon_slices)
+                lr_i = int(ll_i + 1)
+
+                f_ul = (ul_i, ul_i, ul_i)
+                f_ll = (ll_i, ll_i, ll_i)
+                f_lr = (lr_i, lr_i, lr_i)
+                f_ur = (ur_i, ur_i, ur_i)
+                face_list.append((f_ul, f_ll, f_lr, f_ur))
 
     return vertex_list, uv_list, norm_list, face_list
 
@@ -101,16 +103,18 @@ def rotation_matrix_to_euler_angles(R):
 def radians_xyz_to_degrees_xyz(xyz):
     return np.array([math.degrees(xyz[0]), math.degrees(xyz[1]), math.degrees(xyz[2])])
 
-def calculate_orientations(mid_time, interframe_delay, frame_number=0):
+def calculate_orientations(mid_time, interframe_delay, frame_number=0, target="JUPITER"):
     et = mid_time
     et = et + (frame_number * interframe_delay)
-    jupiter_state, lt = spice.spkpos('JUPITER', et, 'IAU_SUN', 'NONE', 'SUN')
+    jupiter_state, lt = spice.spkpos(target, et, 'IAU_SUN', 'NONE', 'SUN')
     jupiter_state = np.array(jupiter_state)
 
-    spacecraft_state, lt = spice.spkpos('JUNO_SPACECRAFT', et, 'IAU_JUPITER', 'NONE', 'JUPITER')
+    iau_target = "IAU_%s"%target
+
+    spacecraft_state, lt = spice.spkpos('JUNO_SPACECRAFT', et, iau_target, 'NONE', target)
     spacecraft_state = np.array(spacecraft_state)
 
-    m = spice.pxform("IAU_JUPITER", "J2000", et)
+    m = spice.pxform(iau_target, "J2000", et)
     jupiter_rotation = np.array(
         ((m[0][0], m[0][1], m[0][2], 0.0),
          (m[1][0], m[1][1], m[1][2], 0.0),
@@ -118,7 +122,7 @@ def calculate_orientations(mid_time, interframe_delay, frame_number=0):
          (0.0, 0.0, 0.0, 1.0))
     )
 
-    m = spice.pxform("JUNO_SPACECRAFT", "IAU_JUPITER", et)
+    m = spice.pxform("JUNO_SPACECRAFT", iau_target, et)
     spacecraft_orientation = np.array(
         ((m[0][0], m[0][1], m[0][2], 0.0),
          (m[1][0], m[1][1], m[1][2], 0.0),
@@ -134,7 +138,7 @@ def calculate_orientations(mid_time, interframe_delay, frame_number=0):
          (0.0, 0.0, 0.0, 1.0))
     )
 
-    m = spice.pxform("JUNO_JUNOCAM", "IAU_JUPITER", et)
+    m = spice.pxform("JUNO_JUNOCAM", iau_target, et)
     instrument_orientation = np.array(
         ((m[0][0], m[0][1], m[0][2], 0.0),
          (m[1][0], m[1][1], m[1][2], 0.0),
@@ -152,6 +156,7 @@ def build_model_spec_dict(lbl_file, cube_file, spacecraft_state, instrument_orie
     start_time = spice.str2et(info.get_field_value(lbl_file, "START_TIME")) + 0.06188
     stop_time = spice.str2et(info.get_field_value(lbl_file, "STOP_TIME")) + 0.06188
     mid_time = (start_time + stop_time) / 2.0
+    target = info.get_field_value(lbl_file, "TARGET_NAME")
 
     min_lat = float(scripting.getkey(cube_file, "MinimumLatitude", grpname="Mapping"))
     max_lat = float(scripting.getkey(cube_file, "MaximumLatitude", grpname="Mapping"))
@@ -162,6 +167,7 @@ def build_model_spec_dict(lbl_file, cube_file, spacecraft_state, instrument_orie
     rot = radians_xyz_to_degrees_xyz(rot)
 
     if verbose:
+        print_r("Target: ", target)
         print_r("Image Time: ", image_time)
         print_r("Interframe Delay: ", interframe_delay)
         print_r("Start Time: ", start_time)
@@ -209,6 +215,22 @@ def create_obj(lbl_file,
                 maxlon=None):
     image_time = info.get_field_value(lbl_file, "IMAGE_TIME")
 
+    target = info.get_field_value(lbl_file, "TARGET_NAME")
+
+    if target == "JUPITER":
+        target_id = 599
+    elif target == "IO":
+        target_id = 501
+    elif target == "EUROPA":
+        target_id = 502
+    elif target == "GANYMEDE":
+        target_id = 503
+    elif target == "CALLISTO":
+        target_id = 504
+    else:
+        print("ERROR: Unsupported target name found: %s"%target)
+        sys.exit(1) 
+
     interframe_delay = float(info.get_field_value(lbl_file, "INTERFRAME_DELAY")) + 0.001
 
     start_time = spice.str2et(info.get_field_value(lbl_file, "START_TIME")) + 0.06188
@@ -219,6 +241,9 @@ def create_obj(lbl_file,
     min_lon = float(scripting.getkey(cube_file, "MinimumLongitude", grpname="Mapping"))
     max_lon = float(scripting.getkey(cube_file, "MaximumLongitude", grpname="Mapping"))
 
+    if max_lon > 180 and max_lon - min_lon > 360.0:
+        max_lon = 180
+
     if minlat is not None:
         min_lat = minlat
     if maxlat is not None:
@@ -228,13 +253,13 @@ def create_obj(lbl_file,
     if maxlon is not None:
         max_lon = maxlon
 
-    spacecraft_orientation, jupiter_state, spacecraft_state, jupiter_rotation, instrument_cube_orientation, instrument_orientation = calculate_orientations(mid_time, interframe_delay, frame_number=0)
+    spacecraft_orientation, jupiter_state, spacecraft_state, jupiter_rotation, instrument_cube_orientation, instrument_orientation = calculate_orientations(mid_time, interframe_delay, frame_number=0, target=target)
 
     model_spec_dict = build_model_spec_dict(lbl_file, cube_file, spacecraft_state, instrument_orientation, scalar=scalar,verbose=verbose)
 
     if verbose:
         print_r("Generating Sphere...")
-    vertex_list, uv_list, norm_list, face_list = generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=lat_slices, lon_slices=lon_slices)
+    vertex_list, uv_list, norm_list, face_list = generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=lat_slices, lon_slices=lon_slices, target_id=target_id)
 
     f = open(output_file_path, "w")
     f.write("o Sphere\n")
@@ -258,14 +283,16 @@ def create_obj(lbl_file,
     return model_spec_dict
 
 
-def get_image_locations(data_homes, scalar=1.0):
+def get_image_locations(data_homes, scalar=1.0, target="JUPITER"):
+    iau_target = "IAU_%s"%target
+
     vecs = []
     for data_home in data_homes:
         lbl_files = glob.glob('%s/*.lbl'%data_home)
         for lbl_file in lbl_files:
             image_time = spice.str2et(info.get_field_value(lbl_file, "IMAGE_TIME"))
             stop_name = info.get_field_value(lbl_file, "PRODUCT_ID")
-            spacecraft_vec, lt = spice.spkpos('JUNO_SPACECRAFT', image_time, 'IAU_JUPITER', 'NONE', 'JUPITER')
+            spacecraft_vec, lt = spice.spkpos('JUNO_SPACECRAFT', image_time, iau_target, 'NONE', target)
             stop_spec = {
                 "name": stop_name,
                 "vec": ((spacecraft_vec[0] * scalar), (spacecraft_vec[1] * scalar), (spacecraft_vec[2] * scalar))
@@ -274,14 +301,15 @@ def get_image_locations(data_homes, scalar=1.0):
     return vecs
 
 
-def get_perijove_path(begin_time, end_time, num_points=250, scalar=1.0):
+def get_perijove_path(begin_time, end_time, num_points=250, scalar=1.0, target="JUPITER"):
     time_sep = float(end_time - begin_time) / float(num_points - 1)
     time_iter = begin_time
+    iau_target = "IAU_%s"%target
 
     vecs = []
 
     while time_iter <= end_time:
-        spacecraft_vec, lt = spice.spkpos('JUNO_SPACECRAFT', time_iter, 'IAU_JUPITER', 'NONE', 'JUPITER')
+        spacecraft_vec, lt = spice.spkpos('JUNO_SPACECRAFT', time_iter, iau_target, 'NONE', target)
 
         vecs.append(((spacecraft_vec[0] * scalar), (spacecraft_vec[1] * scalar), (spacecraft_vec[2] * scalar)))
         time_iter += time_sep

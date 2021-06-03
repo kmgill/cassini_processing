@@ -3,7 +3,8 @@ import json
 import types
 import re
 from six import string_types
-
+import sys
+from datetime import datetime, timedelta
 
 def is_number(value):
     if re.match("^-*[0-9]+[.]?[0-9e+]*$", value) is not None:
@@ -31,6 +32,19 @@ def json_to_lbl(input_json_path, img_file):
 
     for key in label_data:
         value = label_data[key]
+        """
+        if key == "SPACECRAFT_CLOCK_START_COUNT" and label_data["PJ"] == "33":#9hrs 55m 45 sec
+            print("Applying Perijove 33 spacecraft clock hack")
+            left, right = value.split(":")
+            left = int(left) - ((10 * 60 + 3) * 60)
+            value = "%s:%s"%(left, right)
+        if key in ("IMAGE_TIME", "START_TIME", "STOP_TIME") and label_data["PJ"] == "33":
+            print("Applying Perijove 33 spacecraft time hack")
+            print(value)
+            dt = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f') - timedelta(hours=10, minutes=3)
+            value = dt.strftime('%Y-%m-%dT%H:%M:%S.%f')
+            print(value)
+            """
         if isinstance(value, string_types) and not is_number(value):
             value = "\"%s\"" % value
         if type(value) == list or type(value) == map:

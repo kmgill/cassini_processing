@@ -89,7 +89,6 @@ if __name__ == "__main__":
     parser.add_argument("-S", "--skipexisting", help="Skip steps if output files already exist", action="store_true")
     parser.add_argument("-t", "--threads", help="Number of threads to use", required=False, type=int, default=multiprocessing.cpu_count())
     parser.add_argument("-l", "--linear", help="Use linear colorspace for output", action="store_true")
-
     args = parser.parse_args()
 
     is_verbose = args.verbose
@@ -116,7 +115,7 @@ if __name__ == "__main__":
 
     if type(args.option) == list:
         for option in args.option:
-            if re.match("^[0-9a-zA-Z]+=[0-9a-zA-Z]+$", option) is not None:
+            if re.match("^[0-9a-zA-Z_]+=[0-9a-zA-Z]+$", option) is not None:
                 parts = option.split("=")
                 additional_options[parts[0]] = parts[1]
             else:

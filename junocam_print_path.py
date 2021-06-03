@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 import sys
 import os
@@ -41,4 +41,3 @@ if __name__ == "__main__":
     vecs = modeling.get_perijove_path(begin_time, end_time, num_points, scalar)
 
     print(json.dumps(vecs, indent=4))
-

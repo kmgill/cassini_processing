@@ -15,10 +15,12 @@ def load_kernels(kernelbase, allow_predicted=False):
         "%s/juno/kernels/spk/juno_struct_v04.bsp"%kernelbase
     ]
 
-    kernel_prefix = "spk_rec_" if not allow_predicted else ""
+
+    kernel_prefix = "spk_rec_" if not allow_predicted else "spk_pre_"
     for file in glob.glob("%s/juno/kernels/spk/%s*bsp"%(kernelbase, kernel_prefix)):
         kernels.append(file)
-
+    kernels.append("/home/kevinmgill/anaconda3/envs/isis3/data/juno/kernels/spk/spk_pre_201231_210720_210407_otm33_f.bsp")
+    #kernels = ["/home/kevinmgill/anaconda3/envs/isis3/data/juno/kernels/spk/spk_pre_201231_210720_210407_otm33_f.bsp"]
     kernel_prefix = "juno_sc_rec_" if not allow_predicted else ""
     for file in glob.glob("%s/juno/kernels/ck/%s*bc"%(kernelbase, kernel_prefix)):
         kernels.append(file)

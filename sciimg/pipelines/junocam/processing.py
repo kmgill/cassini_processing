@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 import glob
 from sciimg.isis3 import info
@@ -118,7 +119,7 @@ def initspice_for_cube(args):
     if verbose is True:
         print_r("Initializing spice on cube file:", cub_file)
 
-    s = cameras.spiceinit(cub_file)
+    s = cameras.spiceinit(cub_file)#, spk="/home/kevinmgill/anaconda3/envs/isis3/data/juno/kernels/spk/spk_pre_201231_210720_210407_otm33_f.bsp")
 
     if verbose is True:
         print_r(s)
@@ -182,6 +183,13 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     else:
         skip_triplets = None
 
+    if "tgt_trip" in additional_options:
+        base_map_triplet = int(additional_options["tgt_trip"])
+        if is_verbose:
+            print("Using triplet number %s for mapping base"%base_map_triplet)
+    else:
+        base_map_triplet = None
+
     source_dirname = os.path.dirname(from_file_name)
     if source_dirname == "":
         source_dirname = "."
@@ -242,7 +250,10 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         xs = p.map(initspice_for_cube, init_spice_params)
 
 
-    mid_num = int(round(len(glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))) / 3.0 / 2.0))
+    if base_map_triplet is None:
+        mid_num = int(round(len(glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))) / 3.0 / 2.0))
+    else:
+        mid_num = base_map_triplet
 
     mid_file = "%s/__%s_raw_GREEN_%04d.cub"%(work_dir, product_id, mid_num)
     map_file = "%s/__%s_map.cub"%(work_dir, product_id)
@@ -343,29 +354,43 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     f.write("%s\n" % out_file_blue)
     f.close()
 
-    s = utility.cubeit(out_file_map_rgb_cube_inputs, out_file_map_rgb_cube)
+    full_map_cube = "trim_tmp.cub"
+    
+    s = utility.cubeit(out_file_map_rgb_cube_inputs, full_map_cube)
     if is_verbose:
         print(s)
 
     if is_verbose:
-        print("Exporting Color Map Projected Tiff...")
+        print("Limiting global coordinates...")
     else:
         printProgress(11, num_steps, prefix="%s: " % from_file_name)
+
+    if max_lon - min_lon > 360:
+        s = mapprojection.maptrim(full_map_cube, out_file_map_rgb_cube, "both")
+        if is_verbose:
+            print(s)
+    else:
+        shutil.move(full_map_cube, out_file_map_rgb_cube)
+
+    if is_verbose:
+        print("Exporting Color Map Projected Tiff...")
+    else:
+        printProgress(12, num_steps, prefix="%s: " % from_file_name)
 
     out_file_map_rgb_tiff = "%s/%s_Mosaic_RGB.tif" % (source_dirname, product_id)
 
     if trueColor is True:
-        s = importexport.isis2std_rgb(from_cube_red=out_file_red,
-                                      from_cube_green=out_file_green,
-                                      from_cube_blue=out_file_blue,
+        s = importexport.isis2std_rgb(from_cube_red="%s+1"%out_file_map_rgb_cube,
+                                      from_cube_green="%s+3"%out_file_map_rgb_cube,
+                                      from_cube_blue="%s+5"%out_file_map_rgb_cube,
                                       to_tiff=out_file_map_rgb_tiff,
                                       match_stretch=True,
                                       minimum=0,
                                       maximum=max_value)
     else:
-        s = importexport.isis2std_rgb(from_cube_red=out_file_red,
-                                      from_cube_green=out_file_green,
-                                      from_cube_blue=out_file_blue,
+        s = importexport.isis2std_rgb(from_cube_red="%s+1"%out_file_map_rgb_cube,
+                                      from_cube_green="%s+3"%out_file_map_rgb_cube,
+                                      from_cube_blue="%s+5"%out_file_map_rgb_cube,
                                       to_tiff=out_file_map_rgb_tiff)
     if is_verbose:
         print(s)
@@ -374,7 +399,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         if is_verbose:
             print("Cleaning up...")
         else:
-            printProgress(16, num_steps, prefix="%s: " % from_file_name)
+            printProgress(13, num_steps, prefix="%s: " % from_file_name)
 
         clean_dir(work_dir, product_id)
         clean_dir(mapped_dir, product_id)
@@ -387,6 +412,8 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
             os.unlink(out_file_blue)
         if os.path.exists(out_file_map_rgb_cube_inputs):
             os.unlink(out_file_map_rgb_cube_inputs)
+        if os.path.exists(full_map_cube):
+            os.unlink(full_map_cube)
 
         dirname = os.path.dirname(out_file_red)
         if len(dirname) > 0:
@@ -399,7 +426,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         if is_verbose:
             print("Skipping clean up...")
         else:
-            printProgress(16, num_steps, prefix="%s: " % from_file_name)
+            printProgress(14, num_steps, prefix="%s: " % from_file_name)
 
     if not is_verbose:
         printProgress(17, num_steps, prefix="%s: "%from_file_name)
