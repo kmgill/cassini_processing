@@ -44,7 +44,7 @@ if __name__ == "__main__":
     parser.add_argument("-M", "--maxvalue", help="Use specific output maximum", type=float, default=None)  # 1.0
     parser.add_argument("-c", "--calcminmax", help="Calculate dataset min/max", action="store_true")
     parser.add_argument("-p", "--perband", help="Calculate dataset band min/max separately", action="store_true")
-
+    parser.add_argument("-f", "--format", help="Format (tif, jpeg, png)", type=str, default="tif", choices=("jpeg", "tif", "png"))  # 1.0
 
     args = parser.parse_args()
 
@@ -58,6 +58,7 @@ if __name__ == "__main__":
     use_min = args.minvalue
     calcminmax = args.calcminmax
     perband = args.perband
+    format = args.format
 
     # These values will be overridden if calcminmax is true
     max_value = (float(SQROOT[-1]) * np.array([use_red_weight, use_green_weight, use_blue_weight]).max())
@@ -83,8 +84,17 @@ if __name__ == "__main__":
         blue_min = min_value
         blue_max = max_value
 
+
+    extension = "tif"
+    bittype = "u16bit"
+    if format == "png":
+        extension = "png"
+    elif format == "jpeg":
+        extension = "jpg"
+        bittype = "8bit"
+
     for data_input in data_inputs:
-        output_tiff = "%s.tif"%data_input[:-4]
+        output_tiff = "%s.%s"%(data_input[:-4], extension)
         print("Converting %s to %s..."%(data_input, output_tiff))
 
         if true_color is True:
@@ -94,7 +104,9 @@ if __name__ == "__main__":
                                           to_tiff=output_tiff,
                                           match_stretch=True,
                                           minimum=0,
-                                          maximum=max_value)
+                                          maximum=max_value,
+                                          format=format,
+                                          bittype=bittype)
         elif calcminmax is True and perband is False:
             s = importexport.isis2std_rgb(from_cube_red="%s+1" % data_input,
                                           from_cube_green="%s+3" % data_input,
@@ -102,7 +114,9 @@ if __name__ == "__main__":
                                           to_tiff=output_tiff,
                                           match_stretch=True,
                                           minimum=min_value,
-                                          maximum=max_value)
+                                          maximum=max_value,
+                                          format=format,
+                                          bittype=bittype)
         elif calcminmax is True and perband is True:
             s = importexport.isis2std_rgb(from_cube_red="%s+1" % data_input,
                                           from_cube_green="%s+3" % data_input,
@@ -114,13 +128,17 @@ if __name__ == "__main__":
                                           green_min=green_min,
                                           green_max=green_max,
                                           blue_min=blue_min,
-                                          blue_max=blue_max)
+                                          blue_max=blue_max,
+                                          format=format,
+                                          bittype=bittype)
 
         else:
             s = importexport.isis2std_rgb(from_cube_red="%s+1"%data_input,
                                           from_cube_green="%s+3"%data_input,
                                           from_cube_blue="%s+5"%data_input,
-                                          to_tiff=output_tiff)
+                                          to_tiff=output_tiff,
+                                          format=format,
+                                          bittype=bittype)
 
 
 

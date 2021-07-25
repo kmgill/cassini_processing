@@ -63,7 +63,7 @@ def load_pvl(from_file, verbose=False):
     if from_file[-3:].upper() == "IMQ":
         p = __pvl_string_from_imq(from_file, verbose)
     else:
-        p = pvl.load(from_file, strict=False)
+        p = pvl.load(from_file)
 
     __METADATA_CACHE__[from_file] = p
 

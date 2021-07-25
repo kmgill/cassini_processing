@@ -100,9 +100,11 @@ def isis2std_rgb(from_cube_red, from_cube_green, from_cube_blue, to_tiff, minimu
         "blue": from_cube_blue,
         "to": to_tiff,
         "format": format,
-        "bittype": bittype,
         "mode": "rgb"
     }
+
+    if format != "jpeg":
+        params["bittype"] = bittype
 
     if match_stretch and minimum is not None and maximum is not None:
         params.update({
