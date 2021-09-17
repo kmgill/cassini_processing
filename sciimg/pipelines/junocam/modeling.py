@@ -212,7 +212,8 @@ def create_obj(lbl_file,
                 minlat=None,
                 maxlat=None,
                 minlon=None,
-                maxlon=None):
+                maxlon=None,
+                limit_longitude=False):
     image_time = info.get_field_value(lbl_file, "IMAGE_TIME")
 
     target = info.get_field_value(lbl_file, "TARGET_NAME")
@@ -241,7 +242,7 @@ def create_obj(lbl_file,
     min_lon = float(scripting.getkey(cube_file, "MinimumLongitude", grpname="Mapping"))
     max_lon = float(scripting.getkey(cube_file, "MaximumLongitude", grpname="Mapping"))
 
-    if max_lon > 180 and max_lon - min_lon > 360.0:
+    if limit_longitude is True and max_lon > 180 and max_lon - min_lon > 360.0:
         max_lon = 180
 
     if minlat is not None:

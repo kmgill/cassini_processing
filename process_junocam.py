@@ -89,6 +89,7 @@ if __name__ == "__main__":
     parser.add_argument("-S", "--skipexisting", help="Skip steps if output files already exist", action="store_true")
     parser.add_argument("-t", "--threads", help="Number of threads to use", required=False, type=int, default=multiprocessing.cpu_count())
     parser.add_argument("-l", "--linear", help="Use linear colorspace for output", action="store_true")
+    parser.add_argument("-L", "--limitlon", help="Limit longitude 360 degrees", action="store_true")
     args = parser.parse_args()
 
     is_verbose = args.verbose
@@ -106,6 +107,7 @@ if __name__ == "__main__":
     skip_existing = args.skipexisting
     num_threads = args.threads
     linear_colorspace = args.linear
+    limit_longitude = args.limitlon
 
     additional_options = {}
 
@@ -166,7 +168,8 @@ if __name__ == "__main__":
                                                                  nocleanup=nocleanup,
                                                                  additional_options=additional_options,
                                                                  num_threads=num_threads,
-                                                                 max_value=max_value)
+                                                                 max_value=max_value,
+                                                                 limit_longitude=limit_longitude)
 
     if is_verbose:
         print("Creating output model...")
@@ -176,7 +179,7 @@ if __name__ == "__main__":
     if is_verbose:
         print("Creating Wavefront OBJ file: %s"%obj_file_path)
 
-    model_spec_dict = modeling.create_obj(label_file, out_file_map_rgb_cub, obj_file_path, scalar=scalar, verbose=is_verbose)
+    model_spec_dict = modeling.create_obj(label_file, out_file_map_rgb_cub, obj_file_path, scalar=scalar, verbose=is_verbose, limit_longitude=limit_longitude)
 
     model_spec_dict["rgb_map_tiff"] = out_file_map_rgb_tiff
     model_spec_dict["obj_file"] = obj_file_path

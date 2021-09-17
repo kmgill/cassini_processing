@@ -164,7 +164,7 @@ def map_project_cube(args):
     vt=<number>
     histeq=true|false
 """
-def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=False, init_spice=True, nocleanup=False, additional_options={}, num_threads=multiprocessing.cpu_count(), max_value=None):
+def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=False, init_spice=True, nocleanup=False, additional_options={}, num_threads=multiprocessing.cpu_count(), max_value=None, limit_longitude=False):
     #out_file = output_filename(from_file_name)
     #out_file_tiff = "%s.tif" % out_file
     #out_file_cub = "%s.cub" % out_file
@@ -365,7 +365,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     else:
         printProgress(11, num_steps, prefix="%s: " % from_file_name)
 
-    if max_lon - min_lon > 360:
+    if limit_longitude is True and max_lon - min_lon > 360:
         # This is prone to failure (see JNCE_2021245_36C00053_V01)
         try:
             s = mapprojection.maptrim(full_map_cube, out_file_map_rgb_cube, "both")
