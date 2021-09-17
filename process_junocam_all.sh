@@ -6,7 +6,7 @@ function process_jno() {
 
   pushd $d > /dev/null
 
-  numcubs=`ls *cub 2> /dev/null | wc -l `
+  numcubs=`ls *_Mosaic_RGB.cub 2> /dev/null | wc -l `
   if [ $numcubs == 0 ]; then
     echo Processing $d
     process_junocam.py -fFdvl -o vt=2 projection=jupiterequirectangular -s 0.001 -p

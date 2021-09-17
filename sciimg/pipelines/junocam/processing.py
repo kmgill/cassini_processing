@@ -366,9 +366,16 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         printProgress(11, num_steps, prefix="%s: " % from_file_name)
 
     if max_lon - min_lon > 360:
-        s = mapprojection.maptrim(full_map_cube, out_file_map_rgb_cube, "both")
-        if is_verbose:
-            print(s)
+        # This is prone to failure (see JNCE_2021245_36C00053_V01)
+        try:
+            s = mapprojection.maptrim(full_map_cube, out_file_map_rgb_cube, "both")
+            if is_verbose:
+                print(s)
+        except:
+            if is_verbose:
+                traceback.print_exc(file=sys.stdout)
+            print("Failed to trim cube. Trying to continue with map as-is...")
+            shutil.move(full_map_cube, out_file_map_rgb_cube)
     else:
         shutil.move(full_map_cube, out_file_map_rgb_cube)
 
