@@ -9,9 +9,12 @@ def load_kernels(kernelbase, allow_predicted=False):
         "%s/juno/kernels/fk/juno_v12.tf"%kernelbase,
         "%s/juno/kernels/ik/juno_junocam_v03.ti"%kernelbase,
         "%s/juno/kernels/lsk/naif0012.tls"%kernelbase,
-        "%s/juno/kernels/sclk/jno_sclkscet_00074.tsc"%kernelbase,
+        "%s/juno/kernels/sclk/jno_sclkscet_00094.tsc"%kernelbase,
         "%s/juno/kernels/tspk/de436s.bsp"%kernelbase,
+        "%s/juno/kernels/tspk/jup365.bsp"%kernelbase,
+        "%s/juno/kernels/tspk/de440s.bsp"%kernelbase,
         "%s/juno/kernels/tspk/jup310.bsp"%kernelbase,
+        "%s/juno/kernels/spk/jup380s.bsp"%kernelbase,
         "%s/juno/kernels/spk/juno_struct_v04.bsp"%kernelbase
     ]
 

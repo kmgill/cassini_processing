@@ -242,8 +242,8 @@ def create_obj(lbl_file,
     min_lon = float(scripting.getkey(cube_file, "MinimumLongitude", grpname="Mapping"))
     max_lon = float(scripting.getkey(cube_file, "MaximumLongitude", grpname="Mapping"))
 
-    if limit_longitude is True and max_lon > 180 and max_lon - min_lon > 360.0:
-        max_lon = 180
+    if limit_longitude is True and max_lon - min_lon > 360.0:
+        max_lon = min_lon + 360.0
 
     if minlat is not None:
         min_lat = minlat

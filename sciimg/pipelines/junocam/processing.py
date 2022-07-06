@@ -16,6 +16,7 @@ from sciimg.isis3 import mapprojection
 import multiprocessing
 import numpy as np
 import traceback
+import subprocess
 
 def print_r(*args):
     s = ' '.join(map(str, args))
@@ -154,8 +155,11 @@ def map_project_cube(args):
             print_r(s)
         r = get_coord_range_from_cube(out_file)
         return r
+    except subprocess.CalledProcessError as ex:
+        print(ex.output)
+        return None
     except:
-        return None #Just eat the exception for now.
+        return None
 
 
 """
@@ -198,7 +202,13 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     if not os.path.exists(work_dir):
         os.mkdir(work_dir)
 
-
+    target = info.get_property(from_file_name, "TARGET_NAME")
+    if target != "JUPITER" and projection == "jupiterequirectangular":
+        fallbackto = "europaequirectangular" if target == "EUROPA" else "equirectangular"
+        print("Cannot use 'jupiterequirectangular' on %s, falling back to '%s'."%(target, fallbackto))
+        print("Consider rerunning with a specific, and supported, map projection specification if equirectangular is not desired")
+        projection = fallbackto
+    
 
 
     product_id = info.get_product_id(from_file_name)
@@ -249,13 +259,28 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         p = multiprocessing.Pool(num_threads)
         xs = p.map(initspice_for_cube, init_spice_params)
 
+    mid_file = None
 
-    if base_map_triplet is None:
+    if target == "JUPITER" and base_map_triplet is None:
         mid_num = int(round(len(glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))) / 3.0 / 2.0))
+    elif target != "JUPITER" and base_map_triplet is None:
+        framelets = glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))
+        for i in range(0, len(framelets)):
+            f = framelets[i]
+            test_mid_file = "%s/__%s_raw_GREEN_%04d.cub"%(work_dir, product_id, i)
+            test_map_file = "%s/__%s_map.cub"%(work_dir, product_id)
+            try:
+                s = cameras.cam2map(test_mid_file, test_map_file, projection=projection)
+                mid_file = test_mid_file
+                print("File %s will be used for mapping..."%mid_file)
+                break
+            except subprocess.CalledProcessError as ex:
+                print("File %s is not good for mapping..."%test_mid_file)
     else:
         mid_num = base_map_triplet
 
-    mid_file = "%s/__%s_raw_GREEN_%04d.cub"%(work_dir, product_id, mid_num)
+    if mid_file is None:
+        mid_file = "%s/__%s_raw_GREEN_%04d.cub"%(work_dir, product_id, mid_num)
     map_file = "%s/__%s_map.cub"%(work_dir, product_id)
 
 
@@ -264,7 +289,12 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     else:
         printProgress(3, num_steps, prefix="%s: " % from_file_name)
 
-    s = cameras.cam2map(mid_file, map_file, projection=projection)
+    try:
+        s = cameras.cam2map(mid_file, map_file, projection=projection)
+    except subprocess.CalledProcessError as ex:
+        print(ex.output)
+        raise ex
+
     if is_verbose:
         print(s)
 
@@ -366,16 +396,17 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         printProgress(11, num_steps, prefix="%s: " % from_file_name)
 
     if limit_longitude is True and max_lon - min_lon > 360:
+        max_lon = min_lon + 360.0
         # This is prone to failure (see JNCE_2021245_36C00053_V01)
         try:
-            s = mapprojection.maptrim(full_map_cube, out_file_map_rgb_cube, "both")
+            s = mapprojection.maptrim(full_map_cube, out_file_map_rgb_cube, "both", minlon=min_lon, maxlon=max_lon)
             if is_verbose:
                 print(s)
         except:
             if is_verbose:
                 traceback.print_exc(file=sys.stdout)
             print("Failed to trim cube. Trying to continue with map as-is...")
-            shutil.move(full_map_cube, out_file_map_rgb_cube)
+            shutil.copyfile(full_map_cube, out_file_map_rgb_cube)
     else:
         shutil.move(full_map_cube, out_file_map_rgb_cube)
 
