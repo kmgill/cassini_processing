@@ -70,19 +70,22 @@ for id in `cat id.lis`; do
     echo Fetching Product ID: $product_id -- $id
     if [ ! -d $product_id ]; then
         mkdir $product_id
+        md_url=`get_metadata_download $id`
+        img_url=`get_image_download $id`
+
+        echo ${product_id} Metadata URL: $md_url
+        echo ${product_id} ImageSet URL: $img_url
+        pushd $product_id > /dev/null
+            curl -o "$id-Data.zip" "$md_url"
+            curl -o "$id-ImageSet.zip" "$img_url"
+        popd > /dev/null
+
+        rm page.${id}.html
+    else
+        echo Already have $product_id, skipping
     fi
 
-    md_url=`get_metadata_download $id`
-    img_url=`get_image_download $id`
 
-    echo ${product_id} Metadata URL: $md_url
-    echo ${product_id} ImageSet URL: $img_url
-    pushd $product_id > /dev/null
-        curl -o "$id-Data.zip" "$md_url"
-        curl -o "$id-ImageSet.zip" "$img_url"
-    popd > /dev/null
-
-    rm page.${id}.html
 done
 
 rm id.lis

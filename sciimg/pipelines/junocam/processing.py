@@ -397,6 +397,10 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
 
     if limit_longitude is True and max_lon - min_lon > 360:
         max_lon = min_lon + 360.0
+
+        print("Trimming longitudes....")
+        print("Maximum Longitude: ", max_lon)
+        print("Minimum Longitude: ", min_lon)
         # This is prone to failure (see JNCE_2021245_36C00053_V01)
         try:
             s = mapprojection.maptrim(full_map_cube, out_file_map_rgb_cube, "both", minlon=min_lon, maxlon=max_lon)
@@ -405,8 +409,11 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         except:
             if is_verbose:
                 traceback.print_exc(file=sys.stdout)
-            print("Failed to trim cube. Trying to continue with map as-is...")
-            shutil.copyfile(full_map_cube, out_file_map_rgb_cube)
+            print("Failed to trim cube. Trying second method...")
+            s = mapprojection.map2map(from_cube=full_map_cube, map=full_map_cube, to_cube=out_file_map_rgb_cube, minlon=min_lon, maxlon=max_lon)
+            if is_verbose:
+                print(s)
+            #shutil.copyfile(full_map_cube, out_file_map_rgb_cube)
     else:
         shutil.move(full_map_cube, out_file_map_rgb_cube)
 

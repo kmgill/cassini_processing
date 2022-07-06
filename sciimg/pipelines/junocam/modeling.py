@@ -52,7 +52,7 @@ def generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=128, lon_slic
 
 
     for y in range(0, int(lat_slices + 1)):
-        for x in range(0, int(lon_slices)):
+        for x in range(0, int(lon_slices + 1)):
             mx_lat = max_lat - (lat_res * y)
             mn_lon = min_lon + (lon_res * x)
 
@@ -69,7 +69,7 @@ def generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=128, lon_slic
             uv_list.append(ul_uv)
             norm_list.append(norm)
 
-            if y < lat_slices and x < lon_slices - 1:
+            if y < lat_slices and x < lon_slices:
                 ul_i = int(x + (y * lon_slices))
                 ur_i = int(ul_i + 1)
                 ll_i = int(ul_i + lon_slices)
