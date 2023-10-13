@@ -46,7 +46,7 @@ def is_supported_file(file_name):
 def assemble_mosaic(color, source_dirname, product_id, min_lat, max_lat, min_lon, max_lon, is_verbose=False):
     mapped_dir = "%s/work/mapped" % source_dirname
     list_file = "%s/work/mapped/cubs_%s.lis" % (source_dirname, product_id)
-    cub_files = glob.glob('%s/__%s_raw_%s_*.cub' % (mapped_dir, product_id, color.upper()))
+    cub_files = glob.glob('%s/__%s_pho_%s_*.cub' % (mapped_dir, product_id, color.upper()))
 
     f = open(list_file, "w")
     for cub_file in cub_files:
@@ -107,6 +107,57 @@ def histeq_cube(cub_file, work_dir, product_id):
     mathandstats.histeq("%s+1"%cub_file, hist_file, minper=0.0, maxper=100.0)
     os.unlink(cub_file)
     os.rename(hist_file, cub_file)
+
+
+
+def phocube_for_cube(args):
+    cub_file = args["cub_file"]
+    if "verbose" in args:
+        verbose = args["verbose"]
+    else:
+        verbose = False
+
+    if verbose is True:
+        print_r("Generating photometric and geometric data on cube file:", cub_file)
+
+    to_cube=cub_file.replace("_raw_", "_pho_")
+    s = cameras.phocube(cub_file, to_cube=to_cube, pixelresolution=True, dn=True)
+
+    if verbose is True:
+        print_r(s)
+
+    return s
+
+def phocube_and_combine(args):
+    cub_file = args["cub_file"]
+    if "verbose" in args:
+        verbose = args["verbose"]
+    else:
+        verbose = False
+
+    to_pho_cube=cub_file.replace("_raw_", "_pho_")
+    s = cameras.phocube(cub_file, to_cube=to_pho_cube)
+    if verbose is True:
+        print_r(s)
+    
+    cube_id = cub_file[-8:-4]
+    out_file_cube_inputs = "work/%s_phocombine.lis"%cube_id
+
+    f = open(out_file_cube_inputs, "w")
+    f.write("%s\n"%cub_file)
+    f.write("%s\n" % to_pho_cube)
+    f.close()
+
+    combined_tmp_cube = cub_file.replace("_raw_", "_combined_")
+    
+    s = utility.cubeit(out_file_cube_inputs, combined_tmp_cube)
+    if verbose is True:
+        print_r(s)
+
+
+
+
+
 
 
 
@@ -259,15 +310,26 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         p = multiprocessing.Pool(num_threads)
         xs = p.map(initspice_for_cube, init_spice_params)
 
+
+    if init_spice is True:
+        if is_verbose:
+            print("Creating photometric cubes...")
+        else:
+            printProgress(2, num_steps, prefix="%s: "%from_file_name)
+        cub_files = glob.glob('%s/__%s_raw_*.cub'%(work_dir, product_id))
+        init_spice_params = [{"cub_file": cub_file, "verbose": is_verbose} for cub_file in cub_files]
+        p = multiprocessing.Pool(num_threads)
+        xs = p.map(phocube_for_cube, init_spice_params)
+
     mid_file = None
 
     if target == "JUPITER" and base_map_triplet is None:
-        mid_num = int(round(len(glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))) / 3.0 / 2.0))
+        mid_num = int(round(len(glob.glob('%s/__%s_pho_*.cub' % (work_dir, product_id))) / 3.0 / 2.0))
     elif target != "JUPITER" and base_map_triplet is None:
-        framelets = glob.glob('%s/__%s_raw_*.cub' % (work_dir, product_id))
+        framelets = glob.glob('%s/__%s_pho_*.cub' % (work_dir, product_id))
         for i in range(0, len(framelets)):
             f = framelets[i]
-            test_mid_file = "%s/__%s_raw_GREEN_%04d.cub"%(work_dir, product_id, i)
+            test_mid_file = "%s/__%s_pho_GREEN_%04d.cub"%(work_dir, product_id, i)
             test_map_file = "%s/__%s_map.cub"%(work_dir, product_id)
             try:
                 s = cameras.cam2map(test_mid_file, test_map_file, projection=projection)
@@ -280,7 +342,7 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         mid_num = base_map_triplet
 
     if mid_file is None:
-        mid_file = "%s/__%s_raw_GREEN_%04d.cub"%(work_dir, product_id, mid_num)
+        mid_file = "%s/__%s_pho_GREEN_%04d.cub"%(work_dir, product_id, mid_num)
     map_file = "%s/__%s_map.cub"%(work_dir, product_id)
 
 
@@ -303,9 +365,9 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
     else:
         printProgress(4, num_steps, prefix="%s: " % from_file_name)
 
-    cub_files_blue = glob.glob('%s/__%s_raw_BLUE_*.cub' % (work_dir, product_id))
-    cub_files_green = glob.glob('%s/__%s_raw_GREEN_*.cub' % (work_dir, product_id))
-    cub_files_red = glob.glob('%s/__%s_raw_RED_*.cub' % (work_dir, product_id))
+    cub_files_blue = glob.glob('%s/__%s_pho_BLUE_*.cub' % (work_dir, product_id))
+    cub_files_green = glob.glob('%s/__%s_pho_GREEN_*.cub' % (work_dir, product_id))
+    cub_files_red = glob.glob('%s/__%s_pho_RED_*.cub' % (work_dir, product_id))
 
     if skip_triplets is not None:
         cub_files_blue.sort()
@@ -401,19 +463,29 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         print("Trimming longitudes....")
         print("Maximum Longitude: ", max_lon)
         print("Minimum Longitude: ", min_lon)
-        # This is prone to failure (see JNCE_2021245_36C00053_V01)
         try:
-            s = mapprojection.maptrim(full_map_cube, out_file_map_rgb_cube, "both", minlon=min_lon, maxlon=max_lon)
+            s = mapprojection.map2map(from_cube=full_map_cube, map=full_map_cube, to_cube=out_file_map_rgb_cube, minlon=min_lon, maxlon=max_lon)
             if is_verbose:
                 print(s)
         except:
             if is_verbose:
                 traceback.print_exc(file=sys.stdout)
-            print("Failed to trim cube. Trying second method...")
-            s = mapprojection.map2map(from_cube=full_map_cube, map=full_map_cube, to_cube=out_file_map_rgb_cube, minlon=min_lon, maxlon=max_lon)
-            if is_verbose:
-                print(s)
-            #shutil.copyfile(full_map_cube, out_file_map_rgb_cube)
+            print("Failed to trim cube. Meekly attempting to continue...")
+
+            #shutil.copyfile
+        # This is prone to failure (see JNCE_2021245_36C00053_V01)
+        # try:
+        #     s = mapprojection.maptrim(full_map_cube, out_file_map_rgb_cube, "both", minlon=min_lon, maxlon=max_lon)
+        #     if is_verbose:
+        #         print(s)
+        # except:
+        #     if is_verbose:
+        #         traceback.print_exc(file=sys.stdout)
+        #     print("Failed to trim cube. Trying second method...")
+        #     s = mapprojection.map2map(from_cube=full_map_cube, map=full_map_cube, to_cube=out_file_map_rgb_cube, minlon=min_lon, maxlon=max_lon)
+        #     if is_verbose:
+        #         print(s)
+        #     #shutil.copyfile(full_map_cube, out_file_map_rgb_cube)
     else:
         shutil.move(full_map_cube, out_file_map_rgb_cube)
 
@@ -426,16 +498,16 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
 
     if trueColor is True:
         s = importexport.isis2std_rgb(from_cube_red="%s+1"%out_file_map_rgb_cube,
-                                      from_cube_green="%s+3"%out_file_map_rgb_cube,
-                                      from_cube_blue="%s+5"%out_file_map_rgb_cube,
+                                      from_cube_green="%s+15"%out_file_map_rgb_cube,
+                                      from_cube_blue="%s+29"%out_file_map_rgb_cube,
                                       to_tiff=out_file_map_rgb_tiff,
                                       match_stretch=True,
                                       minimum=0,
                                       maximum=max_value)
     else:
         s = importexport.isis2std_rgb(from_cube_red="%s+1"%out_file_map_rgb_cube,
-                                      from_cube_green="%s+3"%out_file_map_rgb_cube,
-                                      from_cube_blue="%s+5"%out_file_map_rgb_cube,
+                                      from_cube_green="%s+15"%out_file_map_rgb_cube,
+                                      from_cube_blue="%s+29"%out_file_map_rgb_cube,
                                       to_tiff=out_file_map_rgb_tiff)
     if is_verbose:
         print(s)
@@ -446,8 +518,8 @@ def process_pds_data_file(from_file_name, is_verbose=False, skip_if_cub_exists=F
         else:
             printProgress(13, num_steps, prefix="%s: " % from_file_name)
 
-        clean_dir(work_dir, product_id)
-        clean_dir(mapped_dir, product_id)
+        # clean_dir(work_dir, product_id)
+        # clean_dir(mapped_dir, product_id)
 
         if os.path.exists(out_file_red):
             os.unlink(out_file_red)

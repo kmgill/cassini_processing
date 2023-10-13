@@ -14,6 +14,7 @@ from sciimg.pipelines.junocam import processing
 from sciimg.pipelines.junocam import jcspice
 from sciimg.pipelines.junocam import modeling
 import multiprocessing
+import os.path
 
 def print_if_verbose(s, is_verbose=True):
     if is_verbose:
@@ -90,6 +91,9 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--threads", help="Number of threads to use", required=False, type=int, default=multiprocessing.cpu_count())
     parser.add_argument("-l", "--linear", help="Use linear colorspace for output", action="store_true")
     parser.add_argument("-L", "--limitlon", help="Limit longitude 360 degrees", action="store_true")
+
+    parser.add_argument("-I", "--image", help="raw image file", type=str, default=None)
+    parser.add_argument("-m", "--metadata", help="Metadata json file", type=str, default=None)
     args = parser.parse_args()
 
     is_verbose = args.verbose
@@ -109,6 +113,9 @@ if __name__ == "__main__":
     linear_colorspace = args.linear
     limit_longitude = args.limitlon
 
+    input_image_file = args.image
+    input_metadata_file = args.metadata
+
     additional_options = {}
 
     if is_verbose:
@@ -124,8 +131,23 @@ if __name__ == "__main__":
                 print("Invalid option format:", option)
                 sys.exit(1)
 
-    png_file = decompress_image_set(is_verbose)
-    metadata_file = decompress_metadata(is_verbose)
+    if input_image_file is not None:
+        if not os.path.exists(input_image_file):
+            print("Specified image file not found")
+            os.exit(1)
+        else:
+            png_file = input_image_file
+    else:
+        png_file = decompress_image_set(is_verbose)
+    
+    if input_metadata_file is not None:
+        if not os.path.exists(input_metadata_file):
+            print("Specified metadata file not found")
+            os.exit(1)
+        else:
+            metadata_file = input_metadata_file
+    else:
+        metadata_file = decompress_metadata(is_verbose)
 
     predicted_product_id = png_file[0:25]
     predicted_label_file = "%s-raw-adjusted.lbl"%predicted_product_id

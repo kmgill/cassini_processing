@@ -116,6 +116,21 @@ def map2cam(from_cube, to_cube, cam):
     return s
 
 
+def phocube(from_cube, to_cube, pixelresolution=False, dn=False):
+    params = {
+        "from": from_cube,
+        "to": to_cube
+    }
+    if pixelresolution is True:
+        params["pixelresolution"] = "yes"
+    if dn is True:
+        params["dn"] = "yes"
+    
+    s = isis_command("phocube", params)
+
+    return s
+    
+
 def map2map(from_cube, to_cube, map=None, projection="equirectangular", minlat=None, maxlat=None, minlon=None, maxlon=None, band=-1):
 
     resolution = "MAP"

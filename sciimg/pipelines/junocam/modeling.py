@@ -50,6 +50,10 @@ def generate_sphere(min_lat, max_lat, min_lon, max_lon, lat_slices=128, lon_slic
     norm_list = []
     face_list = []
 
+    print("Lat Range: ", min_lat, max_lat)
+    print("Latitude Resolution: ", lat_res)
+    print("Lon Range: ", min_lon, max_lon)
+    print("Longitude Resolution: ", lon_res)
 
     for y in range(0, int(lat_slices + 1)):
         for x in range(0, int(lon_slices + 1)):

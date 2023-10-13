@@ -32,19 +32,24 @@ def json_to_lbl(input_json_path, img_file):
 
     for key in label_data:
         value = label_data[key]
-        """
-        if key == "SPACECRAFT_CLOCK_START_COUNT" and label_data["PJ"] == "33":#9hrs 55m 45 sec
-            print("Applying Perijove 33 spacecraft clock hack")
-            left, right = value.split(":")
-            left = int(left) - ((10 * 60 + 3) * 60)
-            value = "%s:%s"%(left, right)
-        if key in ("IMAGE_TIME", "START_TIME", "STOP_TIME") and label_data["PJ"] == "33":
-            print("Applying Perijove 33 spacecraft time hack")
-            print(value)
-            dt = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f') - timedelta(hours=10, minutes=3)
-            value = dt.strftime('%Y-%m-%dT%H:%M:%S.%f')
-            print(value)
-            """
+        
+        # if key == "SPACECRAFT_CLOCK_START_COUNT" and label_data["PJ"] == "40":#9hrs 55m 45 sec
+        #     print("Applying Perijove 40 spacecraft clock hack")
+
+        #     a = value.split(":")
+        #     #new_value = str(int(a[0]) + float(a[1])*0.01 - 0.000).replace(".", ":")
+        #     new_value = ("%.2f"%(int(a[0]) + float(a[1])*0.01 + .234)).replace(".", ":")
+        #     print(value, new_value)
+        #     value = new_value
+
+            
+        # if key in ("IMAGE_TIME", "START_TIME", "STOP_TIME") and label_data["PJ"] == "40":
+        #     print("Applying Perijove 40 spacecraft time hack")
+        #     print(value)
+        #     dt = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f') + timedelta(hours=0, minutes=0,milliseconds=234)
+        #     value = dt.strftime('%Y-%m-%dT%H:%M:%S.%f')
+        #     print(value)
+            
         if isinstance(value, string_types) and not is_number(value):
             value = "\"%s\"" % value
         if type(value) == list or type(value) == map:
