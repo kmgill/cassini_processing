@@ -122,7 +122,7 @@ def phocube_for_cube(args):
 
     to_cube=cub_file.replace("_raw_", "_pho_")
     s = cameras.phocube(cub_file, to_cube=to_cube, pixelresolution=True, dn=True)
-
+    #shutil.move(cub_file, to_cube)
     if verbose is True:
         print_r(s)
 
@@ -134,7 +134,7 @@ def phocube_and_combine(args):
         verbose = args["verbose"]
     else:
         verbose = False
-
+    
     to_pho_cube=cub_file.replace("_raw_", "_pho_")
     s = cameras.phocube(cub_file, to_cube=to_pho_cube)
     if verbose is True:

@@ -32,6 +32,8 @@ if __name__ == "__main__":
     parser.add_argument("-T", "--maxlat", help="Maximum Latitude", required=False, type=float, default=None)
     parser.add_argument("-n", "--minlon", help="Minimum Longitude", required=False, type=float, default=None)
     parser.add_argument("-N", "--maxlon", help="Maximum Longitude", required=False, type=float, default=None)
+    parser.add_argument("-L", "--limitlon", help="Limit longitude 360 degrees", action="store_true")
+    
     args = parser.parse_args()
 
     lbl_file = args.label
@@ -44,6 +46,7 @@ if __name__ == "__main__":
     maxlat = args.maxlat
     minlon = args.minlon
     maxlon = args.maxlon
+    limit_longitude = args.limitlon
 
     jcspice.load_kernels(kernelbase, allow_predicted)
     modeling.create_obj(lbl_file,
@@ -54,4 +57,5 @@ if __name__ == "__main__":
                         minlat=minlat,
                         maxlat=maxlat,
                         minlon=minlon,
-                        maxlon=maxlon)
+                        maxlon=maxlon,
+                        limit_longitude=limit_longitude)

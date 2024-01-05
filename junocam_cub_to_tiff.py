@@ -10,7 +10,7 @@ from sciimg.processes.match import get_files_min_max_values
 
 
 
-def calc_min_max_multi_cubs(data_inputs, bands=[1, 3, 5], is_verbose=False):
+def calc_min_max_multi_cubs(data_inputs, bands=[1, 2, 3], is_verbose=False):
     check_bands = []
     for data_input in data_inputs:
         for band in bands:
@@ -18,7 +18,7 @@ def calc_min_max_multi_cubs(data_inputs, bands=[1, 3, 5], is_verbose=False):
     min_value, max_value = get_files_min_max_values(check_bands, is_verbose=is_verbose)
     return min_value, max_value
 
-def calc_min_max(data_input, bands=[1, 3, 5], is_verbose=False):
+def calc_min_max(data_input, bands=[1, 2, 3], is_verbose=False):
     min_value, max_value = calc_min_max_multi_cubs((data_input,), bands, is_verbose)
     return min_value, max_value
 
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         max_value = use_max
 
     if calcminmax is True and perband is False:
-        min_value, max_value = calc_min_max_multi_cubs(data_inputs, bands=[1, 3, 5], is_verbose=is_verbose)
+        min_value, max_value = calc_min_max_multi_cubs(data_inputs, bands=[1, 15, 29], is_verbose=is_verbose)
         red_min = min_value
         red_max = max_value
         green_min = min_value
@@ -77,10 +77,10 @@ if __name__ == "__main__":
         min_value, max_value = calc_min_max_multi_cubs(data_inputs, bands=(1,), is_verbose=is_verbose)
         red_min = min_value
         red_max = max_value
-        min_value, max_value = calc_min_max_multi_cubs(data_inputs, bands=(3,), is_verbose=is_verbose)
+        min_value, max_value = calc_min_max_multi_cubs(data_inputs, bands=(15,), is_verbose=is_verbose)
         green_min = min_value
         green_max = max_value
-        min_value, max_value = calc_min_max_multi_cubs(data_inputs, bands=(5,), is_verbose=is_verbose)
+        min_value, max_value = calc_min_max_multi_cubs(data_inputs, bands=(29,), is_verbose=is_verbose)
         blue_min = min_value
         blue_max = max_value
 
@@ -99,8 +99,8 @@ if __name__ == "__main__":
 
         if true_color is True:
             s = importexport.isis2std_rgb(from_cube_red="%s+1"%data_input,
-                                          from_cube_green="%s+3"%data_input,
-                                          from_cube_blue="%s+5"%data_input,
+                                          from_cube_green="%s+15"%data_input,
+                                          from_cube_blue="%s+29"%data_input,
                                           to_tiff=output_tiff,
                                           match_stretch=True,
                                           minimum=0,
@@ -109,8 +109,8 @@ if __name__ == "__main__":
                                           bittype=bittype)
         elif calcminmax is True and perband is False:
             s = importexport.isis2std_rgb(from_cube_red="%s+1" % data_input,
-                                          from_cube_green="%s+3" % data_input,
-                                          from_cube_blue="%s+5" % data_input,
+                                          from_cube_green="%s+15" % data_input,
+                                          from_cube_blue="%s+29" % data_input,
                                           to_tiff=output_tiff,
                                           match_stretch=True,
                                           minimum=min_value,
@@ -119,8 +119,8 @@ if __name__ == "__main__":
                                           bittype=bittype)
         elif calcminmax is True and perband is True:
             s = importexport.isis2std_rgb(from_cube_red="%s+1" % data_input,
-                                          from_cube_green="%s+3" % data_input,
-                                          from_cube_blue="%s+5" % data_input,
+                                          from_cube_green="%s+15" % data_input,
+                                          from_cube_blue="%s+29" % data_input,
                                           to_tiff=output_tiff,
                                           minmaxperband=True,
                                           red_min=red_min,
@@ -134,8 +134,8 @@ if __name__ == "__main__":
 
         else:
             s = importexport.isis2std_rgb(from_cube_red="%s+1"%data_input,
-                                          from_cube_green="%s+3"%data_input,
-                                          from_cube_blue="%s+5"%data_input,
+                                          from_cube_green="%s+15"%data_input,
+                                          from_cube_blue="%s+29"%data_input,
                                           to_tiff=output_tiff,
                                           format=format,
                                           bittype=bittype)

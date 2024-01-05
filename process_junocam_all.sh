@@ -1,4 +1,3 @@
-#!/bin/bash
 
 
 function process_jno() {
