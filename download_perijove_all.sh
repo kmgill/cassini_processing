@@ -35,14 +35,14 @@ function get_product_id_from_page_id() {
 function get_metadata_download() {
     page_id=$1
     page_path=page.${page_id}.html
-    md_url=https://www.missionjuno.swri.edu/Vault`cat $page_path | grep -o "<a.*Metadata</a" | grep -o '/VaultDownload[^"]*' | head -n 1`
+    md_url=https://www.missionjuno.swri.edu/Vault`cat $page_path | grep -o '/VaultDownload[^"]*' | head -n 1`
     echo $md_url
 }
 
 function get_image_download() {
     page_id=$1
     page_path=page.${page_id}.html
-    img_url=https://www.missionjuno.swri.edu/Vault`cat $page_path | grep -o "<a.*Images</a" | grep -o '/VaultDownload[^"]*' | tail -n 1`
+    img_url=https://www.missionjuno.swri.edu/Vault`cat $page_path | grep -o '/VaultDownload[^"]*' | head -n 2 | tail -n 1`
     echo $img_url
 }
 
