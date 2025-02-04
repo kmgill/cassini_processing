@@ -14,8 +14,8 @@ from sciimg.isis3 import geometry
 from sciimg.isis3 import importexport
 from sciimg.isis3._core import printProgress
 
-__VOYAGER_1__ = "VOYAGER_1"
-__VOYAGER_2__ = "VOYAGER_2"
+__VOYAGER_1__ = "VOYAGER 1"
+__VOYAGER_2__ = "VOYAGER 2"
 
 
 def output_filename(file_name):
@@ -25,7 +25,7 @@ def output_filename(file_name):
     target = info.get_target(file_name)
     filter1, filter2 = info.get_filters(file_name)
     image_time = info.get_image_time(file_name)
-    spacecraft = info.get_spacecraft_name(file_name)
+    spacecraft = info.get_instrument_host_name(file_name)
     image_id = file_name[:file_name.index(".")]
     camera = info.get_instrument_id(file_name)
 
@@ -49,11 +49,13 @@ def output_filename(file_name):
 def is_supported_file(file_name):
     if file_name[-3:].upper() in ("CUB", "IMQ"):
         value = info.get_field_value(file_name,  "SpacecraftName", grpname="Instrument")
+        print("Value: ", value)
         return (value in (__VOYAGER_1__, __VOYAGER_2__))
-    elif file_name[-3:].upper() == "IMG":
+    elif file_name[-3:].upper() in ("IMG", "LBL"):
         value = info.get_field_value(file_name, "SpacecraftName")
         if value is None:
-            value = info.get_field_value(file_name, "SPACECRAFT_NAME")
+            value = info.get_field_value(file_name, "INSTRUMENT_HOST_NAME")
+        print("Value: ", value, file_name)
         return (value in (__VOYAGER_1__,  __VOYAGER_2__))
     else:
         return False

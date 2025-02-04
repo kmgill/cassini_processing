@@ -90,6 +90,8 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--threads", help="Number of threads to use", required=False, type=int, default=multiprocessing.cpu_count())
     parser.add_argument("-l", "--linear", help="Use linear colorspace for output", action="store_true")
     parser.add_argument("-L", "--limitlon", help="Limit longitude 360 degrees", action="store_true")
+    parser.add_argument("-B", "--fixbiterror", help="Detect and fix flipped bits", action="store_true")
+
     args = parser.parse_args()
 
     is_verbose = args.verbose
@@ -108,6 +110,7 @@ if __name__ == "__main__":
     num_threads = args.threads
     linear_colorspace = args.linear
     limit_longitude = args.limitlon
+    fix_bit_error = args.fixbiterror
 
     additional_options = {}
 
@@ -144,6 +147,7 @@ if __name__ == "__main__":
                                            use_green_weight=use_green_weight,
                                            use_blue_weight=use_blue_weight,
                                            doSRGB=not linear_colorspace,
+                                           fix_bit_error=fix_bit_error,
                                            verbose=is_verbose)
 
     if is_verbose:

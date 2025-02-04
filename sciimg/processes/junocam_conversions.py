@@ -10,6 +10,7 @@ from sciimg.pipelines.junocam.inpaint_fill import process_inpaint_fill
 from sciimg.pipelines.junocam.decompanding import decompand
 from sciimg.pipelines.junocam.decompanding import SQROOT
 from sciimg.pipelines.junocam.flatfield import apply_flat
+from sciimg.pipelines.junocam.flippedbits import fix_flipped_bits
 from libtiff import TIFFimage
 import sys
 
@@ -61,6 +62,7 @@ def apply_weight_to_band(data, band_num, weight, band_height=BAND_HEIGHT):
     bottom = top + band_height
 
     data[top:bottom] *= weight
+    data[:,0:8] = 0.0
 
 
 def apply_weights(img_data, r, g, b, verbose=False):
@@ -98,16 +100,24 @@ def convert_to_srgb(img_data):
                 c = c ** (1.0 / 2.4) * 1.055 - 0.055
             img_data[a][b] = c
 
-def png_to_img(img_file, metadata, fill_dead_pixels=True, do_decompand=True, do_flat_fields=False, verbose=False, doSRGB=True, use_red_weight=0.902, use_green_weight=1.0, use_blue_weight=1.8879):
+
+
+
+def png_to_img(img_file, metadata, fill_dead_pixels=True, do_decompand=True, do_flat_fields=False, verbose=False, doSRGB=True, fix_bit_error=True, use_red_weight=0.902, use_green_weight=1.0, use_blue_weight=1.8879):
     image_data = open_image(img_file)
 
     if fill_dead_pixels:
         if verbose:
             print("User requested to fill dead pixels. So that's what I'll do...")
-        process_inpaint_fill(image_data, verbose=verbose)
+        img_data = process_inpaint_fill(image_data, verbose=verbose)
         ##fillpixels(image_data, verbose=verbose)
 
     image_data = np.copy(np.asarray(image_data, dtype=np.float32))
+
+    if fix_bit_error:
+        if verbose:
+            print("User requested to fix flipped bits...")
+        fix_flipped_bits(image_data)
 
     if do_decompand:
         if verbose:
@@ -123,9 +133,9 @@ def png_to_img(img_file, metadata, fill_dead_pixels=True, do_decompand=True, do_
         print("Applying filter weights...")
     apply_weights(image_data, use_red_weight, use_green_weight, use_blue_weight, verbose=verbose)
 
+
     # 5436
     max_value = (float(SQROOT[-1]) * np.array([use_red_weight, use_green_weight, use_blue_weight]).max())
-
 
     if doSRGB is True:
         if verbose:

@@ -30,6 +30,15 @@ def time_string_matches_format(s, format):
         return False
 
 
+def get_instrument_host_name(file_name):
+    p = load_pvl(file_name)
+    if file_name[-3:].upper() in LABEL_FILE_EXTENSIONS:
+        return p["INSTRUMENT_HOST_NAME"]
+    elif file_name[-3:].upper() in ("CUB",):
+        return p["IsisCube"]["Instrument"]["InstrumentHostName"]
+    else:
+        raise Exception(__UNSUPPORTED_UNRECOGNIZED__)
+
 def get_spacecraft_name(file_name):
     p = load_pvl(file_name)
     if file_name[-3:].upper() in LABEL_FILE_EXTENSIONS:

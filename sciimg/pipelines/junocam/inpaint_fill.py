@@ -61,7 +61,7 @@ def process_inpaint_fill(img_data, verbose=False):
         img_data[top+BLUE_TOP:top+BLUE_BOTTOM] = cv2.inpaint(triplet_data[BLUE_TOP:BLUE_BOTTOM], inpaint_mask_blue, 3, cv2.INPAINT_TELEA)
         img_data[top+GREEN_TOP:top+GREEN_BOTTOM] = cv2.inpaint(triplet_data[GREEN_TOP:GREEN_BOTTOM], inpaint_mask_green, 3, cv2.INPAINT_TELEA)
         img_data[top+RED_TOP:top+RED_BOTTOM] = cv2.inpaint(triplet_data[RED_TOP:RED_BOTTOM], inpaint_mask_red, 3, cv2.INPAINT_TELEA)
-
+    return img_data
 
 
 if __name__ == "__main__":
